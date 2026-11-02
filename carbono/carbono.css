@@ -1,0 +1,3434 @@
+/*
+ * Carbono 0.80 — tema para Open WebUI (probado con 0.12.5).
+ * https://github.com/YukiChristian/Sakura-OI-Web-Carbono
+ *
+ * El lanzador lo sirve en /static/custom.css mientras exista carbono/ACTIVO (ver README).
+ * Activar/quitar:  carbono\Aplicar-Tema.cmd  /  carbono\Quitar-Tema.cmd
+ *
+ * Para sobrevivir a las actualizaciones:
+ *  - Primero se cambian variables (paleta gray de Tailwind, --app-font-family) que la app ya usa en todas partes.
+ *  - Después se usan ids, roles y atributos estables (#sidebar, #message-input-container, [role=tab]…)
+ *    en lugar de cadenas de clases de Tailwind.
+ *  - Las reglas no van en ningún @layer, así que ganan a las utilidades de Tailwind sin !important.
+ *
+ * No se toca: la imagen de fondo del chat (solo se le pone un velo blanco), los avatares ni la animación del modo voz.
+ */
+@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Next:wght@200..800&family=Atkinson+Hyperlegible+Mono:wght@400;500&display=swap');
+
+/* ---------- Tokens ---------- */
+:root {
+	--sk-bg: #fafafa;
+	--sk-surface: #ffffff;
+	--sk-sidebar: #f4f4f5;
+	--sk-hover: #ebebec;
+	--sk-selected: #e4e4e7;
+	--sk-border: #e4e4e7;
+	--sk-border-strong: #8b8b93;
+	--sk-ink: #18181b;
+	--sk-ink-muted: #52525b;
+	--sk-ink-subtle: #6b6b73;
+	--sk-primary: #18181b;
+	--sk-on-primary: #ffffff;
+	--sk-azul: #2361c7;
+	--sk-azul-soft: #e6eefb;
+	--sk-naranja: #a84f0c;
+	--sk-naranja-soft: #fcecdf;
+	--sk-amarillo: #8f5a00;
+	--sk-amarillo-soft: #fbefd9;
+	--sk-verde: #2b7a3b;
+	--sk-verde-soft: #e5f3e7;
+	--sk-violeta: #6f42c8;
+	--sk-violeta-soft: #efe9fb;
+	--sk-rosa-soft: #fbe9ef;
+	--sk-rosa: #b4325c;
+	--sk-danger: #c0392b;
+	--sk-danger-soft: #fbe6e3;
+	--sk-success: #14706a;
+	--sk-shadow-sm: 0 1px 2px rgba(24, 24, 27, 0.06);
+	--sk-shadow-lg: 0 8px 32px rgba(24, 24, 27, 0.1), 0 1px 3px rgba(24, 24, 27, 0.06);
+	--sk-veil: rgba(250, 250, 250, 0.92);
+	--sk-r-sm: 6px;
+	--sk-r-md: 10px;
+	--sk-r-lg: 16px;
+	--sk-r-xl: 24px;
+	--sk-mono: 'Atkinson Hyperlegible Mono', ui-monospace, 'Cascadia Code', monospace;
+
+	/* Variables propias de Open WebUI */
+	--app-font-family: 'Atkinson Hyperlegible Next';
+	--font-mono: var(--sk-mono);
+
+	/* Paleta gray (zinc neutro del sistema Sakura) */
+	--color-gray-50: #f4f4f5;
+	--color-gray-100: #ebebec;
+	--color-gray-200: #e4e4e7;
+	--color-gray-300: #d4d4d8;
+	--color-gray-400: #a6a6ad;
+	--color-gray-500: #6b6b73;
+	--color-gray-600: #52525b;
+	--color-gray-700: #3f3f46;
+	--color-gray-800: #262626;
+	--color-gray-850: #1b1b1b;
+	--color-gray-900: #131313;
+	--color-gray-950: #0f0f10;
+}
+
+html.dark {
+	--sk-bg: #131313;
+	--sk-surface: #1b1b1b;
+	--sk-sidebar: #171717;
+	--sk-hover: #262626;
+	--sk-selected: #2a2a2a;
+	--sk-border: #2a2a2a;
+	--sk-border-strong: #6a6a72;
+	--sk-ink: #ececee;
+	--sk-ink-muted: #a6a6ad;
+	--sk-ink-subtle: #8b8b93;
+	--sk-primary: #ececee;
+	--sk-on-primary: #18181b;
+	--sk-azul: #8ab4ff;
+	--sk-azul-soft: #1b2840;
+	--sk-naranja: #f5a25d;
+	--sk-naranja-soft: #3a2716;
+	--sk-amarillo: #f2c94c;
+	--sk-amarillo-soft: #332a10;
+	--sk-verde: #72cf88;
+	--sk-verde-soft: #1c3222;
+	--sk-violeta: #bba3ff;
+	--sk-violeta-soft: #2a2240;
+	--sk-rosa-soft: #3a2029;
+	--sk-rosa: #f18fae;
+	--sk-danger: #ff8f80;
+	--sk-danger-soft: #3a1f1b;
+	--sk-success: #5cc8b4;
+	--sk-veil: rgba(19, 19, 19, 0.92);
+	--sk-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+	--sk-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.55), 0 1px 3px rgba(0, 0, 0, 0.4);
+
+	/* En oscuro el texto gris claro sube un paso para ganar contraste */
+	--color-gray-300: #c4c4ca;
+	--color-gray-400: #a6a6ad;
+	--color-gray-500: #8b8b93;
+}
+
+/* ---------- Base ---------- */
+body {
+	font-family: 'Atkinson Hyperlegible Next', 'Segoe UI', system-ui, sans-serif;
+	-webkit-font-smoothing: antialiased;
+}
+
+a:not([class]) {
+	color: var(--sk-azul);
+}
+
+:focus-visible {
+	outline: 2px solid var(--sk-azul);
+	outline-offset: 2px;
+}
+
+::placeholder {
+	color: var(--sk-ink-subtle);
+	opacity: 1;
+}
+
+/* ---------- Sidebar ---------- */
+#sidebar {
+	background-color: var(--sk-sidebar);
+	border-inline-end: 1px solid var(--sk-border);
+	color: var(--sk-ink);
+}
+
+#sidebar-webui-name {
+	font-size: 18px;
+	line-height: 26px;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+}
+
+#sidebar a,
+#sidebar button {
+	border-radius: var(--sk-r-md);
+}
+
+#sidebar-chat-item {
+	border-radius: var(--sk-r-md);
+	font-size: 13px;
+	line-height: 19px;
+	color: var(--sk-ink);
+}
+
+/* Opciones del sidebar (Nuevo Chat, Buscar, Notas, modelos…): su texto trae text-[0.8125rem] (13px);
+   se iguala al de los chats para que todas las filas midan lo mismo */
+:is(#sidebar, [role='navigation']) [class~='text-[0.8125rem]'],
+#sidebar-chat-item :is(a, div, span, input):not(.text-xs, [class~='text-[0.6875rem]'], [class~='text-[0.625rem]'], [class~='text-[0.75rem]']) {
+	font-size: 13px;
+	line-height: 19px;
+}
+
+/* Etiquetas de sección del sidebar en overline (como el sistema de diseño): mismo tamaño
+   pequeño, pero mayúsculas, seminegrita, espaciado y gris más oscuro para que se lean.
+   "Modelos", "Carpetas", "Chats": botón del <h3> de cada [id=sidebar-folder-button];
+   "Hoy", "Ayer"…: el div que precede a cada lista de chats. */
+[id='sidebar-folder-button'] > h3 > button,
+#sidebar-chat-group [class~='text-[0.6875rem]']:has(+ [role='list']),
+[role='navigation'] [class~='text-[0.6875rem]']:has(+ [role='list']),
+:is(#sidebar, [role='navigation']) h3:not(#sidebar-chat-item *),
+:is(#sidebar, [role='navigation']) :is(button, div):is(.text-xs, [class~='text-[0.6875rem]'], [class~='text-[0.75rem]']) > span:not(:has(*)):not(#sidebar-chat-item *, [role='menu'] *, [role='menuitem'] *) {
+	font-size: 9.5px;
+	line-height: 14px;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--sk-ink-subtle);
+}
+
+/* Marcas de tiempo de los chats ("hace 3 h") en caption: 12.5px, ink-subtle */
+#sidebar-chat-item :is(.text-xs, [class~='text-[0.6875rem]'], [class~='text-[0.625rem]'], [class~='text-[0.75rem]']) {
+	font-size: 11.5px;
+	line-height: 16px;
+	color: var(--sk-ink-subtle);
+}
+
+#sidebar-chat-item:hover {
+	background-color: var(--sk-hover);
+}
+
+/* chat abierto: un gris más oscuro + barra primary de 3px (SidebarItem del sistema) */
+#sidebar-chat-item:has(> a[aria-current='page']),
+#sidebar-chat-item[data-selected],
+#sidebar-chat-item.selected {
+	position: relative;
+	background-color: var(--sk-selected);
+	/* barra negra de 3px a todo lo alto, igual que el modelo seleccionado en el selector */
+	box-shadow: inset 3px 0 0 var(--sk-primary);
+	font-weight: 500;
+}
+
+/* ---------- Composer ---------- */
+#message-input-container {
+	background-color: var(--sk-surface);
+	border: 1px solid var(--sk-border);
+	border-radius: var(--sk-r-xl);
+	box-shadow: var(--sk-shadow-lg);
+}
+
+#message-input-container:focus-within {
+	border-color: var(--sk-primary);
+}
+
+/* Velo detrás de la barra superior del chat (h1 = título) para que los mensajes no se lean a
+   través del título; la barra se encima 32px (-mb-8) sobre el chat, ahí se desvanece */
+nav.sticky:has(h1) {
+	background-color: color-mix(in srgb, var(--sk-bg) 96%, transparent);
+}
+
+nav.sticky:has(h1)::after {
+	content: '';
+	position: absolute;
+	left: 0;
+	right: 0;
+	top: 100%;
+	height: 20px;
+	background: linear-gradient(to bottom, color-mix(in srgb, var(--sk-bg) 96%, transparent), transparent);
+	pointer-events: none;
+}
+
+nav.sticky:has(h1) h1 {
+	font-size: 16px;
+	font-weight: 500;
+	color: var(--sk-ink);
+}
+
+#chat-input,
+#chat-input-container {
+	font-size: 16px;
+	line-height: 24px;
+	color: var(--sk-ink);
+}
+
+#send-message-button:not(:disabled) {
+	background-color: var(--sk-primary);
+	color: var(--sk-on-primary);
+}
+
+/* ---------- Saludo de la pantalla vacía (h2 nombre del modelo + frase) ----------
+   Open WebUI lo corta a una línea (line-clamp-1); aquí puede partirse en dos. */
+.text-3xl:has(> div > h2.capitalize) {
+	font-size: 40px;
+	line-height: 48px;
+	letter-spacing: -0.01em;
+}
+
+.text-3xl h2.capitalize {
+	font-weight: 400;
+	color: var(--sk-ink);
+}
+
+.text-3xl:has(> div > h2.capitalize) :is(h2, h2 + div, h2 + div *) {
+	display: block;
+	-webkit-line-clamp: unset;
+	line-clamp: unset;
+	overflow: visible;
+	white-space: normal;
+}
+
+.text-3xl h2.capitalize + div {
+	font-size: 30px;
+	line-height: 38px;
+}
+
+.text-3xl h2.capitalize + div,
+.text-3xl h2.capitalize + div * {
+	color: var(--sk-ink-muted);
+}
+
+/* ---------- Móvil (como los mockups Móvil · Chat y Móvil · Sidebar) ---------- */
+@media (max-width: 767px) {
+	/* Saludo: nombre 34/42 en negrita, frase 24/32 */
+	.text-3xl:has(> div > h2.capitalize) {
+		font-size: 34px;
+		line-height: 42px;
+	}
+
+	.text-3xl h2.capitalize + div {
+		font-size: 24px;
+		line-height: 32px;
+	}
+
+	/* Mensajes del chat: 17/26 (texto, nombre del modelo, burbuja del usuario) */
+	#messages-container {
+		--text-sm: 1.0625rem;
+		--text-sm--line-height: calc(26 / 17);
+		--text-base: 1.0625rem;
+		--text-base--line-height: calc(26 / 17);
+		font-size: 17px;
+		line-height: 26px;
+	}
+
+	#messages-container :is(.markdown-prose, .whitespace-pre-wrap, p, li) {
+		font-size: 17px;
+	}
+
+	#response-message-model-name {
+		font-size: 17px;
+	}
+
+	/* Barra superior del chat: título (h1) 18px, botones de 44px con íconos de 22px */
+	nav.sticky:has(h1) h1 {
+		font-size: 18px;
+		line-height: 26px;
+		font-weight: 500;
+		color: var(--sk-ink);
+	}
+
+	/* sin tocar display: Open WebUI oculta algunos botones con .hidden */
+	nav.sticky:has(h1) button {
+		min-width: 44px;
+		min-height: 44px;
+		align-items: center;
+		justify-content: center;
+	}
+
+	nav.sticky:has(h1) button svg {
+		width: 22px;
+		height: 22px;
+	}
+
+	/* Sidebar: más ancha (316px), filas de 44px y texto 16px.
+	   Open WebUI fija --sidebar-width en <html> por estilo en línea; !important le gana. */
+	html {
+		--sidebar-width: min(316px, 86vw) !important;
+	}
+
+	.sidebar :is(a, button):not([role='menuitem']) {
+		font-size: 16px;
+		line-height: 26px;
+	}
+
+	.sidebar :is(a, button):not([role='menuitem']) svg {
+		width: 22px;
+		height: 22px;
+	}
+
+	#sidebar-chat-item,
+	#sidebar-chat-item :is(a, div, span, input):not(.text-xs, [class~='text-[0.6875rem]'], [class~='text-[0.625rem]'], [class~='text-[0.75rem]']),
+	:is(#sidebar, [role='navigation']) [class~='text-[0.8125rem]'] {
+		font-size: 16px;
+		line-height: 24px;
+	}
+
+	/* Menús (usuario, chat…) al mismo tamaño que la barra lateral, con filas táctiles de 44px */
+	[role='menuitem'][role='menuitem'] {
+		min-height: 44px;
+		font-size: 16px;
+		line-height: 24px;
+	}
+
+	#sidebar-chat-item {
+		min-height: 44px;
+	}
+
+	/* Etiquetas de sección y marcas de tiempo, un paso más grandes en móvil */
+	[id='sidebar-folder-button'] > h3 > button,
+	:is(#sidebar, [role='navigation']) h3:not(#sidebar-chat-item *),
+	:is(#sidebar, [role='navigation']) :is(button, div):is(.text-xs, [class~='text-[0.6875rem]'], [class~='text-[0.75rem]']) > span:not(:has(*)):not(#sidebar-chat-item *, [role='menu'] *, [role='menuitem'] *) {
+		font-size: 11.5px;
+		line-height: 16px;
+	}
+
+	#sidebar-chat-item :is(.text-xs, [class~='text-[0.6875rem]'], [class~='text-[0.625rem]'], [class~='text-[0.75rem]']) {
+		font-size: 14.5px;
+	}
+
+	#sidebar-webui-name {
+		font-size: 20px;
+		line-height: 28px;
+	}
+}
+
+/* ---------- Modo voz: avatar a 196px como el mockup (160px × 1.225).
+   Con scale y no con width/height: Open WebUI cambia su clase size-* según el volumen (animación). */
+button:has(> div.rounded-full.bg-cover[style*='voice=true']) {
+	scale: 1.225;
+}
+
+/* Modo voz, parte inferior (como el mockup): estado 17px con punto de estado; botones de 64px con
+   etiqueta debajo (su aria-label); micrófono en primary y finalizar en danger-soft */
+div.flex-col:has(> [role='status'][aria-live]:not([data-sonner-toast]) > button) {
+	gap: 28px;
+	padding-bottom: 56px;
+}
+
+[role='status'][aria-live]:not([data-sonner-toast]) > button {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	font-size: 17px;
+	line-height: 24px;
+	color: var(--sk-ink-muted);
+}
+
+[role='status'][aria-live]:not([data-sonner-toast]) > button::before {
+	content: '';
+	width: 8px;
+	height: 8px;
+	border-radius: 9999px;
+	background-color: var(--sk-success);
+}
+
+div.flex-col:has(> [role='status'][aria-live]:not([data-sonner-toast]) > button) > div:last-child {
+	gap: 32px;
+	padding-bottom: 26px;
+}
+
+div.flex-col:has(> [role='status'][aria-live]:not([data-sonner-toast]) > button) > div:last-child button.rounded-full {
+	position: relative;
+	width: 64px;
+	height: 64px;
+	padding: 0;
+	display: grid;
+	place-items: center;
+	background-color: var(--sk-sidebar);
+	color: var(--sk-ink);
+}
+
+div.flex-col:has(> [role='status'][aria-live]:not([data-sonner-toast]) > button) > div:last-child button.rounded-full svg {
+	width: 24px;
+	height: 24px;
+}
+
+div.flex-col:has(> [role='status'][aria-live]:not([data-sonner-toast]) > button) > div:last-child button.rounded-full::after {
+	content: attr(aria-label);
+	position: absolute;
+	top: calc(100% + 8px);
+	left: 50%;
+	translate: -50% 0;
+	white-space: nowrap;
+	font-size: 13px;
+	line-height: 18px;
+	font-weight: 500;
+	color: var(--sk-ink-muted);
+	pointer-events: none;
+}
+
+/* micrófono (ícono de mic) en primary */
+div.flex-col:has(> [role='status'][aria-live]:not([data-sonner-toast]) > button) > div:last-child button.rounded-full:has(path[d^='M12 18.75']) {
+	background-color: var(--sk-primary);
+	color: var(--sk-on-primary);
+}
+
+/* finalizar llamada (✕) en danger-soft */
+div.flex-col:has(> [role='status'][aria-live]:not([data-sonner-toast]) > button) > div:last-child button.rounded-full:has(path[d^='M6.28 5.22']) {
+	background-color: var(--sk-danger-soft);
+	color: var(--sk-danger);
+}
+
+/* ---------- Selector de modelo (como el mockup Móvil · Selector de modelo) ----------
+   buscador 16px con divisor, opciones de 48px a 16px, avatar 28px, seleccionado con barra,
+   "Establecer como Predeterminado" en azul 15px */
+div:has(> input#model-search-input) {
+	min-height: 44px;
+	gap: 8px;
+	margin: 0;
+	padding: 4px 8px 4px 12px;
+	border-bottom: 1px solid var(--sk-border);
+}
+
+input#model-search-input {
+	font-size: 16px;
+	line-height: 24px;
+	color: var(--sk-ink);
+}
+
+div:has(> input#model-search-input) svg {
+	width: 20px;
+	height: 20px;
+	color: var(--sk-ink-muted);
+}
+
+#model-selector-list {
+	padding: 6px;
+}
+
+#model-selector-list [role='option'] {
+	min-height: 48px;
+	padding: 4px 6px 4px 12px;
+	border-radius: 12px;
+	font-size: 16px;
+	line-height: 24px;
+	color: var(--sk-ink);
+}
+
+#model-selector-list [role='option'] :is(div, span):not(:has(*)) {
+	font-size: 16px;
+}
+
+#model-selector-list [role='option'] img {
+	width: 28px;
+	height: 28px;
+	aspect-ratio: 1;
+	flex: none;
+	object-fit: cover;
+	border-radius: 9999px;
+}
+
+#model-selector-list [role='option'] div:has(> img) {
+	min-width: 28px;
+	min-height: 28px;
+	flex: none;
+}
+
+#model-selector-list [role='option']:hover {
+	background-color: var(--sk-hover);
+}
+
+#model-selector-list [role='option'][aria-selected='true'] {
+	background-color: var(--sk-selected);
+	box-shadow: inset 3px 0 0 var(--sk-primary);
+	font-weight: 600;
+}
+
+/* pie del selector con divisor arriba */
+:has(#model-selector-list) div:has(> button.text-\[0\.65rem\]) {
+	border-top: 1px solid var(--sk-border);
+	padding: 4px 8px 6px;
+}
+
+/* "Establecer como Predeterminado" (text-[0.65rem] = 10px) */
+:has(> #model-selector-list) button.text-\[0\.65rem\],
+:has(#model-selector-list) button.text-\[0\.65rem\] {
+	font-size: 15px;
+	line-height: 22px;
+	font-weight: 600;
+	color: var(--sk-azul);
+	text-decoration: none;
+	min-height: 40px;
+	padding-inline: 12px;
+	border-radius: var(--sk-r-md);
+}
+
+/* ---------- Mensajes ---------- */
+#messages-container {
+	font-size: 15px;
+	line-height: 24px;
+}
+
+#messages-container .user-message .rounded-3xl,
+#messages-container .chat-bubble {
+	border-radius: var(--sk-r-lg);
+}
+
+/* Texto de los mensajes en escritorio: 16px (móvil ya va a 17px). Solo el contenido del mensaje
+   y el globo del usuario; la línea de estadísticas (⏱️ ⚡ 🚀 🟢) conserva su tamaño. */
+@media (min-width: 768px) {
+	#messages-container .markdown-prose,
+	#messages-container .markdown-prose :is(p, li, td, th, blockquote),
+	#messages-container .user-message .rounded-3xl :is(p, div, span):not(:has(*)) {
+		font-size: 16px;
+		line-height: 26px;
+	}
+}
+
+/* Globo de los mensajes del usuario en azul muy claro (hue-azul-soft) */
+#messages-container .user-message .rounded-3xl {
+	background-color: var(--sk-azul-soft);
+}
+
+/* el texto interior trae su propio gris: se pasa a ink (mismo grosor) */
+#messages-container .user-message .rounded-3xl,
+#messages-container .user-message .rounded-3xl * {
+	color: var(--sk-ink);
+}
+
+#messages-container pre,
+#messages-container .cm-editor {
+	border-radius: var(--sk-r-lg);
+	font-family: var(--sk-mono);
+	font-size: 13px;
+	line-height: 20px;
+}
+
+/* Código resaltado con los cinco pétalos */
+.hljs-keyword,
+.hljs-selector-tag {
+	color: var(--sk-violeta);
+}
+.hljs-string,
+.hljs-attr-value {
+	color: var(--sk-verde);
+}
+.hljs-number,
+.hljs-literal {
+	color: var(--sk-naranja);
+}
+.hljs-title,
+.hljs-built_in {
+	color: var(--sk-azul);
+}
+.hljs-comment {
+	color: var(--sk-ink-subtle);
+	font-style: italic;
+}
+
+#messages-container :not(pre) > code {
+	font-family: var(--sk-mono);
+	font-size: 0.87em;
+	border-radius: var(--sk-r-sm);
+	padding: 0.1em 0.35em;
+}
+
+#response-message-model-name {
+	font-weight: 600;
+	color: var(--sk-ink);
+}
+
+/* ---------- Modales (componente Modal de Open WebUI: [role=dialog][aria-modal] > panel) ---------- */
+[role='dialog'][aria-modal='true'] {
+	background-color: rgba(24, 24, 27, 0.4);
+}
+
+[role='dialog'][aria-modal='true'] > div {
+	background-color: var(--sk-surface);
+	border: 1px solid var(--sk-border);
+	border-radius: var(--sk-r-xl);
+	box-shadow: var(--sk-shadow-lg);
+	color: var(--sk-ink);
+	/* escala de texto legible dentro de cualquier modal */
+	--text-sm: 0.9375rem;
+	--text-sm--line-height: calc(22 / 15);
+	--text-xs: 0.8125rem;
+	--text-xs--line-height: calc(19 / 13);
+	--text-base: 1.1875rem;
+	--text-base--line-height: calc(26 / 19);
+}
+
+/* Tamaños fijos de Open WebUI (text-[0.8125rem] = 13px, text-[0.6875rem] = 11px…) remapeados a la
+   escala del sistema dentro de modales y del login. ~= compara la clase exacta, no subcadenas. */
+:where([role='dialog'][aria-modal='true'] > div, #auth-login-card, div:has(> #workspace-container), main) :is([class~='text-[0.9375rem]'], [class~='text-[0.95rem]']):not(:where(#message-input-container, #messages-container, nav.sticky, .svelte-flow) *) {
+	font-size: 16px;
+	line-height: 24px;
+}
+
+:where([role='dialog'][aria-modal='true'] > div, #auth-login-card, div:has(> #workspace-container), main) :is([class~='text-[0.8125rem]'], .text-sm):not(:where(#message-input-container, #messages-container, nav.sticky, .svelte-flow) *) {
+	font-size: 15px;
+	line-height: 22px;
+}
+
+:where([role='dialog'][aria-modal='true'] > div, #auth-login-card, div:has(> #workspace-container), main) :is([class~='text-[0.6875rem]'], [class~='text-[0.75rem]'], [class~='text-[0.71875rem]'], [class~='text-[0.78125rem]'], [class~='text-[0.7rem]'], [class~='text-[0.65rem]']):not(:where(#message-input-container, #messages-container, nav.sticky, .svelte-flow) *) {
+	font-size: 13px;
+	line-height: 19px;
+}
+
+:where([role='dialog'][aria-modal='true'] > div, #auth-login-card, div:has(> #workspace-container), main) :is([class~='text-[0.625rem]'], [class~='text-[0.6rem]'], [class~='text-[0.5625rem]']):not(:where(#message-input-container, #messages-container, nav.sticky, .svelte-flow) *) {
+	font-size: 11.5px;
+	line-height: 16px;
+}
+
+/* Espacio de Trabajo: textos text-xs (descripciones, "hace 3 horas", autor) a 14px en ink-muted */
+/* (también Notas y demás páginas dentro de <main>; fuera el chat y la barra lateral) */
+:where(div:has(> #workspace-container), main) .text-xs:not(:where(#message-input-container, #messages-container, nav.sticky, #sidebar, [role='navigation'], [role='menu'], [role='dialog'], .svelte-flow) *) {
+	font-size: 14px;
+	line-height: 20px;
+}
+
+:where(div:has(> #workspace-container), main) :is(.text-xs, [class~='text-[0.6875rem]'], [class~='text-[0.75rem]']):is(.text-gray-400, .text-gray-500, .text-gray-600):not(:where(#message-input-container, #messages-container, nav.sticky, #sidebar, [role='navigation']) *) {
+	color: var(--sk-ink-muted);
+}
+
+
+/* Botón dividido "Crear | ˅" en primary (como Guardar y Enviar), atenuado al pasar el ratón.
+   El color va en los botones (no en el contenedor, que cambia entre páginas). */
+/* Acción principal del sistema (primary): negro en claro, casi blanco en oscuro; hover un paso atenuado */
+:root {
+	--sk-crear: var(--sk-primary);
+	--sk-crear-hover: color-mix(in srgb, var(--sk-primary) 86%, var(--sk-bg));
+	--sk-on-crear: var(--sk-on-primary);
+}
+
+main div.flex.overflow-hidden:has(> button.focus-ring.px-2\.5.py-1) {
+	border-radius: var(--sk-r-md);
+	background-color: var(--sk-crear);
+	--tw-ring-color: transparent;
+	box-shadow: var(--sk-shadow-sm);
+}
+
+main :is(button.focus-ring.px-2\.5.py-1, button.focus-ring[aria-haspopup][class~='px-1.5']) {
+	background-color: var(--sk-crear);
+	color: var(--sk-on-crear);
+	border-color: color-mix(in srgb, var(--sk-on-crear) 30%, transparent);
+}
+
+main :is(button.focus-ring.px-2\.5.py-1, button.focus-ring[aria-haspopup][class~='px-1.5']):hover {
+	background-color: var(--sk-crear-hover);
+	color: var(--sk-on-crear);
+}
+
+/* Botón dividido "Crear | ˅" de Notas y Espacio de Trabajo: no trae clase de tamaño (hereda del
+   contenedor, distinto en cada página); se fija igual en ambas, como el Button del sistema */
+main button.focus-ring.px-2\.5.py-1 {
+	min-height: 36px;
+	font-size: 15px;
+	line-height: 22px;
+	font-weight: 600;
+	padding-inline: 18px;
+}
+
+main button.focus-ring.px-2\.5.py-1 svg {
+	width: 16px;
+	height: 16px;
+}
+
+/* Botones de las páginas (Crear, Todos, Acciones, "Actualizado el") sin partir el texto */
+main button:not(:where(#messages-container, #message-input-container) *) {
+	white-space: nowrap;
+}
+
+/* Título del modal (primera fila del panel: título + botón cerrar) */
+[role='dialog'][aria-modal='true'] > div > div > div:first-child > .font-medium:first-child,
+[role='dialog'][aria-modal='true'] > div > div > div:first-child > .text-base:first-child {
+	font-size: 19px;
+	line-height: 26px;
+	font-weight: 600;
+}
+
+[role='dialog'][aria-modal='true'] > div > div > div:first-child > button:last-child {
+	border-radius: 12px;
+	color: var(--sk-ink-muted);
+}
+
+/* Filas de listas desplegables dentro de modales (Herramientas disponibles, servidores…) */
+[role='dialog'][aria-modal='true'] button.text-left .font-normal {
+	font-size: 16px;
+	line-height: 24px;
+	font-weight: 600;
+	color: var(--sk-ink);
+}
+
+[role='dialog'][aria-modal='true'] button.text-left .text-xs {
+	font-size: 14px;
+	line-height: 20px;
+	color: var(--sk-ink-muted);
+}
+
+/* "3 herramientas" como badge */
+[role='dialog'][aria-modal='true'] button.text-left span[class*='text-[0.6875rem]'] {
+	font-size: 12.5px;
+	line-height: 18px;
+	font-weight: 600;
+	color: var(--sk-ink-muted);
+	background: var(--sk-sidebar);
+	border-radius: var(--sk-r-sm);
+	padding: 1px 7px;
+}
+
+#settings-tabs-container,
+#admin-settings-tabs-container {
+	background-color: var(--sk-sidebar);
+	border-color: var(--sk-border);
+}
+
+#settings-tabs-container [role='tab'],
+#admin-settings-tabs-container [role='tab'],
+#settings-tabs-container button,
+#admin-settings-tabs-container button {
+	border-radius: var(--sk-r-md);
+	/* como .sn del lienzo Ajustes: 15px, 38px de alto; el contenido va un paso arriba (16px) */
+	font-size: 15px;
+	line-height: 22px;
+	min-height: 38px;
+	gap: 10px;
+}
+
+#settings-tabs-container [role='tab'] svg,
+#admin-settings-tabs-container [role='tab'] svg,
+#settings-tabs-container > div:first-child button svg {
+	width: 18px;
+	height: 18px;
+}
+
+/* "‹ Volver" y el buscador del menú, al tamaño de las pestañas */
+#settings-tabs-container > div:first-child button {
+	color: var(--sk-ink-muted);
+	gap: 10px;
+}
+
+#settings-tabs-container div:has(> input#search-input-settings-modal) {
+	height: 38px;
+	gap: 10px;
+	/* mismo ancho y sangría que las pestañas de abajo */
+	margin-inline: 4px;
+	padding-inline: 8px;
+	box-sizing: border-box;
+	border-radius: var(--sk-r-md);
+	background-color: var(--sk-surface);
+	border: 1px solid var(--sk-border);
+}
+
+#settings-tabs-container div:has(> input#search-input-settings-modal) svg {
+	width: 18px;
+	height: 18px;
+	color: var(--sk-ink-muted);
+}
+
+#search-input-settings-modal {
+	font-size: 15px;
+	line-height: 22px;
+	color: var(--sk-ink);
+}
+
+/* El anillo de foco va en el recuadro entero, no en el campo interior (que es más chico) */
+#search-input-settings-modal:focus,
+#search-input-settings-modal:focus-visible {
+	outline: none;
+}
+
+/* foco sobre el propio borde (no por fuera) para que el recuadro no crezca */
+#settings-tabs-container div:has(> input#search-input-settings-modal:focus) {
+	border-color: var(--sk-azul);
+	box-shadow: 0 0 0 1px var(--sk-azul);
+}
+
+#settings-tabs-container [role='tab'][aria-selected='false'],
+#admin-settings-tabs-container [role='tab'][aria-selected='false'] {
+	color: var(--sk-ink-muted);
+}
+
+#settings-tabs-container [role='tab'][aria-selected='false']:hover,
+#admin-settings-tabs-container [role='tab'][aria-selected='false']:hover {
+	background-color: var(--sk-hover);
+	color: var(--sk-ink);
+}
+
+#settings-tabs-container [aria-selected='true'],
+#admin-settings-tabs-container [aria-selected='true'] {
+	background-color: var(--sk-selected);
+	color: var(--sk-ink);
+	font-weight: 600;
+}
+
+/* Switch encendido en primary (negro en claro), como en los mockups */
+button[role='switch'][data-state='checked'],
+button[role='switch'][aria-checked='true'] {
+	background-color: var(--sk-primary);
+}
+
+/* Etiquetas de grupo del menú (Personal, Básicos, Servicios…) en overline */
+#settings-tabs-container [class*='text-[0.625rem]'],
+#admin-settings-tabs-container [class*='text-[0.625rem]'] {
+	font-size: 11px;
+	line-height: 16px;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--sk-ink-subtle);
+}
+
+/* ---------- Paneles de Ajustes (#tab-general, #tab-admin-…) ----------
+   Estructura de Open WebUI: <h2> título · <section><h3> grupo · fila .group/setting-row
+   (<label> nombre + control) · <p> descripción. Se usan esos elementos, no clases de tamaño. */
+[id^='tab-'] {
+	/* resto de textos del panel: text-sm 15px, text-xs 14px */
+	--text-sm: 0.9375rem;
+	--text-sm--line-height: calc(22 / 15);
+	--text-xs: 0.875rem;
+	--text-xs--line-height: calc(20 / 14);
+}
+
+/* Título del panel (en algunos paneles, como Cuenta, va anidado) */
+[id^='tab-'] h2 {
+	font-size: 24px;
+	line-height: 32px;
+	font-weight: 600;
+	color: var(--sk-ink);
+	margin-bottom: 20px;
+}
+
+/* Grupo ("WebUI Ajustes", "Prompt del sistema", "Parámetros Avanzados") */
+[id^='tab-'] section > h3 {
+	font-size: 18px;
+	line-height: 26px;
+	font-weight: 600;
+	color: var(--sk-ink);
+	margin-bottom: 12px;
+}
+
+[id^='tab-'] section + section {
+	margin-top: 28px;
+}
+
+[id^='tab-'] [class~='group/setting-row'] {
+	min-height: 36px;
+	gap: 16px;
+}
+
+/* Nombre del ajuste */
+[id^='tab-'] [class~='group/setting-row'] > label {
+	font-size: 16px;
+	line-height: 24px;
+	font-weight: 500;
+	color: var(--sk-ink);
+}
+
+/* Descripción del ajuste */
+[id^='tab-'] section p {
+	font-size: 15px;
+	line-height: 22px;
+	color: var(--sk-ink-muted);
+	margin-top: 0;
+}
+
+/* Controles: selects, campos y botones de texto ("Mostrar") */
+[id^='tab-'] select {
+	height: 36px;
+	font-size: 14px;
+	color: var(--sk-ink);
+	border: 1px solid var(--sk-border-strong);
+	border-radius: var(--sk-r-md);
+	padding-inline-start: 12px;
+}
+
+[id^='tab-'] textarea,
+[id^='tab-'] input:is([type='text'], [type='email'], [type='url'], [type='number'], [type='password'], [type='search'], :not([type])) {
+	font-size: 15px;
+	line-height: 22px;
+	color: var(--sk-ink);
+	border: 1px solid var(--sk-border-strong);
+	border-radius: var(--sk-r-md);
+}
+
+[id^='tab-'] textarea {
+	padding: 10px 12px;
+	min-height: 64px;
+}
+
+[id^='tab-'] [class~='group/setting-row'] button:not([role='switch']) {
+	font-size: 14px;
+	line-height: 20px;
+	font-weight: 500;
+	color: var(--sk-ink-muted);
+	padding: 6px 10px;
+	border-radius: var(--sk-r-md);
+}
+
+[id^='tab-'] [class~='group/setting-row'] button:not([role='switch']):hover {
+	background: var(--sk-hover);
+	color: var(--sk-ink);
+}
+
+/* Botón Guardar (pie del panel) */
+[id^='tab-'] > div:last-child > button:last-child {
+	height: 40px;
+	padding: 0 20px;
+	font-size: 15px;
+	font-weight: 600;
+	border-radius: var(--sk-r-md);
+	background-color: var(--sk-primary);
+	color: var(--sk-on-primary);
+}
+
+/* Inputs y selects con borde visible (≥3:1) */
+[role='dialog'] input:not([type='checkbox']):not([type='radio']):not([type='range']),
+[role='dialog'] select,
+[role='dialog'] textarea {
+	border-radius: var(--sk-r-md);
+}
+
+/* ---------- Panel de Controles del chat (#controls-container) ----------
+   Pestañas (Controles, Archivos…) > sección (Válvulas, Prompt del sistema, Parámetros Avanzados)
+   > parámetro (nombre + valor en columna fija a la derecha) */
+#controls-container > div > div:first-child button:not([aria-label]) {
+	font-size: 15px;
+	line-height: 22px;
+	font-weight: 500;
+	padding: 6px 12px;
+	border-radius: var(--sk-r-md);
+}
+
+/* Títulos de sección: 16px seminegrita, en ink (antes 12px gris) */
+#controls-container [id=''] > button[aria-expanded] {
+	font-size: 16px;
+	line-height: 24px;
+	font-weight: 600;
+	color: var(--sk-ink);
+	padding-block: 10px 6px;
+}
+
+#controls-container [id=''] > button[aria-expanded] svg {
+	width: 14px;
+	height: 14px;
+	color: var(--sk-ink-muted);
+}
+
+/* Filas de parámetro: nombre 14px a la izquierda, valor 13px gris en una columna de 128px */
+#controls-container [class~='group/setting-row'] {
+	gap: 12px;
+	min-height: 34px;
+	align-items: center;
+}
+
+#controls-container [class~='group/setting-row'] > label {
+	flex: 1 1 auto;
+	font-size: 14px;
+	line-height: 20px;
+	font-weight: 400;
+	color: var(--sk-ink);
+	text-decoration-color: color-mix(in srgb, var(--sk-ink-subtle) 45%, transparent);
+}
+
+#controls-container [class~='group/setting-row'] > div:last-child {
+	flex: 0 0 128px;
+	display: flex;
+	justify-content: flex-end;
+}
+
+#controls-container [class~='group/setting-row'] > div:last-child > button:not([role='switch']) {
+	font-size: 13px;
+	line-height: 18px;
+	color: var(--sk-ink-muted);
+	padding: 4px 8px;
+	border-radius: var(--sk-r-sm);
+	white-space: nowrap;
+}
+
+#controls-container [class~='group/setting-row'] > div:last-child > button:not([role='switch']) > span {
+	margin-left: 0;
+}
+
+#controls-container [class~='group/setting-row'] > div:last-child > button:not([role='switch']):hover {
+	background-color: var(--sk-hover);
+	color: var(--sk-ink);
+}
+
+/* Pestaña Archivos (y demás contenido del panel): nombres 14px, tamaños/metadatos 13px gris */
+#controls-container [class~='text-[0.8125rem]']:not(.svelte-flow *) {
+	font-size: 14px;
+	line-height: 20px;
+}
+
+#controls-container :is(.text-xs, [class~='text-[0.6875rem]'], [class~='text-[0.75rem]']):not(:where([id=''] > button[aria-expanded], [id=''] > button[aria-expanded] *, [class~='group/setting-row'] *, .svelte-flow *)) {
+	font-size: 13px;
+	line-height: 18px;
+	color: var(--sk-ink-muted);
+}
+
+/* Archivos: ruta ("Home") como encabezado de sección, igual que en Controles */
+#controls-container button.shrink-0[class~='p-0'].text-xs {
+	font-size: 16px;
+	line-height: 24px;
+	font-weight: 600;
+	color: var(--sk-ink);
+}
+
+/* Archivos: buscador en recuadro con borde (como el de Ajustes), 14px */
+#controls-container input[type='text'].border-none {
+	font-size: 14px;
+	line-height: 20px;
+	color: var(--sk-ink);
+}
+
+#controls-container div:has(> input[type='text'].border-none) {
+	min-height: 36px;
+	margin: 6px 8px;
+	padding-inline: 10px;
+	gap: 8px;
+	border: 1px solid var(--sk-border);
+	border-radius: var(--sk-r-md);
+	background-color: var(--sk-surface);
+}
+
+#controls-container div:has(> input[type='text'].border-none:focus) {
+	border-color: var(--sk-azul);
+	box-shadow: 0 0 0 1px var(--sk-azul);
+}
+
+#controls-container div:has(> input[type='text'].border-none) svg {
+	width: 16px;
+	height: 16px;
+	color: var(--sk-ink-muted);
+}
+
+/* Archivos: cada fila = nombre 14px ink + tamaño 13px gris, ícono 16px */
+#controls-container button[data-link-preview-trigger] {
+	gap: 10px;
+	padding-block: 8px;
+}
+
+#controls-container button[data-link-preview-trigger] > span.flex-1 {
+	font-size: 14px;
+	line-height: 20px;
+	color: var(--sk-ink);
+}
+
+#controls-container button[data-link-preview-trigger] > span.shrink-0 {
+	font-size: 13px;
+	line-height: 18px;
+	color: var(--sk-ink-muted);
+}
+
+#controls-container button[data-link-preview-trigger] > svg {
+	width: 16px;
+	height: 16px;
+	color: var(--sk-ink-muted);
+}
+
+#controls-container textarea {
+	font-size: 14px;
+	line-height: 20px;
+	border: 1px solid var(--sk-border-strong);
+	border-radius: var(--sk-r-md);
+	padding: 8px 10px;
+}
+
+#controls-container button[aria-label][title] span {
+	font-size: 14px;
+}
+
+/* ---------- Inicio de sesión (#auth-login-card) ---------- */
+#auth-login-card {
+	background-color: var(--sk-surface);
+	border: 1px solid var(--sk-border);
+	border-radius: var(--sk-r-xl);
+	box-shadow: var(--sk-shadow-lg);
+	padding: 32px;
+	color: var(--sk-ink);
+}
+
+#auth-login-card form > div:first-child > :first-child {
+	font-size: 24px;
+	line-height: 32px;
+	font-weight: 600;
+	letter-spacing: -0.01em;
+}
+
+#auth-login-card label:not(.sr-only) {
+	font-size: 14px;
+	line-height: 20px;
+	font-weight: 500;
+	color: var(--sk-ink);
+	margin-top: 10px;
+	margin-bottom: 6px;
+}
+
+#auth-login-card input:not([type='checkbox']) {
+	font-size: 15px;
+	line-height: 22px;
+	margin: 0;
+}
+
+/* El campo es el input o, en la contraseña, el contenedor del input + botón de ojo */
+#auth-login-card input#email,
+#auth-login-card input[type='email'],
+#auth-login-card input[type='text'],
+#auth-login-card div:has(> input[type='password']) {
+	height: 44px;
+	padding: 0 12px;
+	border: 1px solid var(--sk-border-strong);
+	border-radius: var(--sk-r-md);
+	background: var(--sk-surface);
+	align-items: center;
+	box-sizing: border-box;
+}
+
+#auth-login-card div:has(> input[type='password']) > input {
+	border: 0;
+	padding: 0;
+	height: 100%;
+}
+
+#auth-login-card input:focus-visible {
+	outline: none;
+}
+
+#auth-login-card input#email:focus-visible,
+#auth-login-card div:has(> input[type='password']:focus-visible) {
+	outline: 2px solid var(--sk-azul);
+	outline-offset: 2px;
+}
+
+#auth-login-card button[type='submit'] {
+	height: 44px;
+	border-radius: var(--sk-r-md);
+	background-color: var(--sk-primary);
+	color: var(--sk-on-primary);
+	font-size: 15px;
+	font-weight: 600;
+}
+
+#auth-login-card button[type='submit']:hover {
+	background-color: var(--sk-primary);
+	opacity: 0.88;
+}
+
+/* ---------- Notificaciones (svelte-sonner: variables del toaster + [data-type]) ----------
+   Fondo *-soft, texto e ícono en el color de estado (success teal, warning ámbar, danger rojo,
+   info azul), como los avisos del sistema. Doble atributo para ganar a los temas de sonner. */
+[data-sonner-toaster][data-sonner-toaster][data-theme] {
+	--normal-bg: #ffffff;
+	--normal-border: #e4e4e7;
+	--normal-text: #18181b;
+	--success-bg: #e2f2ef;
+	--success-border: #b9ddd6;
+	--success-text: #14706a;
+	--info-bg: #e6eefb;
+	--info-border: #c3d5f3;
+	--info-text: #2361c7;
+	--warning-bg: #fbefd9;
+	--warning-border: #f0d7a6;
+	--warning-text: #8f5a00;
+	--error-bg: #fbe6e3;
+	--error-border: #f3c4bd;
+	--error-text: #c0392b;
+	--border-radius: 16px;
+}
+
+[data-sonner-toaster][data-sonner-toaster][data-theme='dark'],
+html.dark [data-sonner-toaster][data-sonner-toaster][data-theme] {
+	--normal-bg: #1b1b1b;
+	--normal-border: #2a2a2a;
+	--normal-text: #ececee;
+	--success-bg: #163330;
+	--success-border: #1f4a45;
+	--success-text: #5cc8b4;
+	--info-bg: #1b2840;
+	--info-border: #2a3d60;
+	--info-text: #8ab4ff;
+	--warning-bg: #372a12;
+	--warning-border: #52401c;
+	--warning-text: #e5ad4a;
+	--error-bg: #3a1f1b;
+	--error-border: #57302a;
+	--error-text: #ff8f80;
+}
+
+[data-sonner-toast][data-styled='true'] {
+	font-family: 'Atkinson Hyperlegible Next', 'Segoe UI', system-ui, sans-serif;
+	border-radius: var(--sk-r-lg);
+	box-shadow: var(--sk-shadow-lg);
+	padding: 14px 16px;
+	gap: 10px;
+	font-size: 14.5px;
+	line-height: 21px;
+}
+
+[data-sonner-toast][data-styled='true'] [data-title] {
+	font-weight: 600;
+	font-size: 14.5px;
+	line-height: 21px;
+}
+
+[data-sonner-toast][data-styled='true'] [data-description] {
+	font-size: 13.5px;
+	line-height: 20px;
+	opacity: 0.9;
+}
+
+[data-sonner-toast][data-styled='true'] [data-icon] {
+	width: 20px;
+	height: 20px;
+	align-self: flex-start;
+	margin-top: 1px;
+}
+
+[data-sonner-toast][data-styled='true'] [data-icon] svg {
+	width: 20px;
+	height: 20px;
+}
+
+/* ---------- Menús ---------- */
+/* El panel visible es .app-dropdown-menu (el [role=menu] que lo envuelve es solo posicionamiento);
+   los menús que no lo usan se estilan en su propio [role=menu]. Radio y padding de Open WebUI van con
+   !important (rounded-xl!, p-0.5!), por eso se cambian sus variables. */
+.app-dropdown-menu,
+[role='menu']:not(:has(.app-dropdown-menu)):not(.app-dropdown-menu *) {
+	--radius-xl: 16px;
+	background-color: var(--sk-surface);
+	border: 1px solid var(--sk-border);
+	border-radius: var(--sk-r-lg);
+	box-shadow: var(--sk-shadow-lg);
+	padding: 6px;
+}
+
+/* .app-dropdown-menu trae p-0.5! (2px, con !important): el resto del relleno lo pone un borde
+   transparente de 4px y la línea visible es un contorno de 1px. (Antes se subía --spacing, pero eso
+   también triplicaba los anchos w-70, etc., y los menús se salían de la ventana.) */
+.app-dropdown-menu {
+	border: 4px solid transparent;
+	outline: 1px solid var(--sk-border);
+	outline-offset: -1px;
+}
+
+.app-dropdown-menu > * {
+	--radius-xl: 0.75rem;
+}
+
+/* Opciones de menú (menú de usuario, de chat…): las de Open WebUI miden 27px y 13px de letra */
+[role='menuitem'] {
+	min-height: 34px;
+	height: auto;
+	padding-inline: 10px;
+	gap: 10px;
+	border-radius: var(--sk-r-md);
+	font-size: 13px;
+	line-height: 19px;
+	color: var(--sk-ink);
+}
+
+[role='menuitem']:hover {
+	background-color: var(--sk-hover);
+}
+
+[role='menuitem'] svg {
+	width: 18px;
+	height: 18px;
+	color: var(--sk-ink-muted);
+}
+
+/* avatares dentro de opciones (perfil en el menú de usuario) */
+[role='menuitem'] img {
+	width: 24px;
+	height: 24px;
+	aspect-ratio: 1;
+	flex: none;
+	object-fit: cover;
+	border-radius: 9999px;
+}
+
+/* el contenedor del avatar trae size-4.5 (18px): se agranda a 24px para que la imagen no se aplaste */
+[role='menuitem'] div:has(> img) {
+	width: 24px;
+	height: 24px;
+	flex: none;
+}
+
+[role='menu'] hr {
+	margin-block: 6px;
+	border-color: var(--sk-border);
+}
+
+/* ---------- Menú de integraciones del composer (.app-dropdown-menu), como el mockup ----------
+   Radio y padding vienen con !important de Tailwind (rounded-xl!, p-0.5!): se cambian sus variables. */
+.app-dropdown-menu:has([role='menuitemcheckbox']) {
+	--radius-xl: 18px;
+	min-width: 300px;
+	max-width: 340px;
+	max-height: none;
+	background-color: var(--sk-surface);
+	box-shadow: var(--sk-shadow-lg);
+}
+
+.app-dropdown-menu:has([role='menuitemcheckbox']) > * {
+	--radius-xl: 0.75rem;
+	max-height: none;
+}
+
+.app-dropdown-menu:has([role='menuitemcheckbox']) :is([role='menuitem'], [role='menuitemcheckbox']) {
+	height: 52px;
+	padding: 0 10px 0 12px;
+	gap: 12px;
+	border-radius: 12px;
+	font-size: 16px;
+	line-height: 24px;
+	font-weight: 500;
+	color: var(--sk-ink);
+}
+
+.app-dropdown-menu:has([role='menuitemcheckbox']) :is([role='menuitem'], [role='menuitemcheckbox']):hover {
+	background-color: var(--sk-hover);
+}
+
+.app-dropdown-menu:has([role='menuitemcheckbox']) :is([role='menuitem'], [role='menuitemcheckbox']) .flex-1.gap-2 {
+	gap: 12px;
+}
+
+/* Ícono de cada opción dentro de un mosaico de 34px */
+.app-dropdown-menu:has([role='menuitemcheckbox']) [role='menuitem'] > svg:first-child,
+.app-dropdown-menu:has([role='menuitemcheckbox']) [role='menuitemcheckbox'] .shrink-0 > svg {
+	box-sizing: border-box;
+	width: 34px;
+	height: 34px;
+	padding: 8px;
+	border-radius: 10px;
+	background-color: var(--sk-sidebar);
+	color: var(--sk-ink-muted);
+	flex: none;
+}
+
+/* Herramientas (llave) en naranja, Búsqueda Web (globo) en azul */
+.app-dropdown-menu:has([role='menuitemcheckbox']) [role='menuitem'] > svg:first-child:has(path[d^='M21.75 6.75']) {
+	background-color: var(--sk-naranja-soft);
+	color: var(--sk-naranja);
+}
+
+.app-dropdown-menu:has([role='menuitemcheckbox']) [role='menuitemcheckbox'] .shrink-0 > svg:has(path[d^='M12 21a9.004']) {
+	background-color: var(--sk-verde-soft);
+	color: var(--sk-verde);
+}
+
+/* Contador "3" como badge naranja; chevron en ink-muted */
+.app-dropdown-menu:has([role='menuitemcheckbox']) [role='menuitem'] .line-clamp-1 > span {
+	margin-left: 8px;
+	padding: 1px 7px;
+	border-radius: var(--sk-r-sm);
+	font-size: 13px;
+	line-height: 18px;
+	font-weight: 600;
+	color: var(--sk-naranja);
+	background-color: var(--sk-naranja-soft);
+}
+
+.app-dropdown-menu:has([role='menuitemcheckbox']) [role='menuitem'] .text-gray-500 svg {
+	width: 20px;
+	height: 20px;
+	color: var(--sk-ink-muted);
+}
+
+/* Divisor entre la opción de Herramientas y los interruptores */
+.app-dropdown-menu:has([role='menuitemcheckbox']) button[role='menuitem'] + div {
+	margin-top: 2px;
+	padding-top: 3px;
+	background: linear-gradient(var(--sk-border), var(--sk-border)) no-repeat 12px 0 / calc(100% - 24px) 1px;
+}
+
+/* Switch 48×28 en primary (negro en claro), pulgar de 22px */
+.app-dropdown-menu:has([role='menuitemcheckbox']) button[role='switch'] {
+	width: 48px;
+	height: 28px;
+	min-height: 28px;
+	margin: 0;
+}
+
+.app-dropdown-menu:has([role='menuitemcheckbox']) button[role='switch'] > span {
+	top: 3px;
+	width: 22px;
+	height: 22px;
+	box-shadow: 0 1px 2px rgba(24, 24, 27, 0.2);
+}
+
+.app-dropdown-menu:has([role='menuitemcheckbox']) button[role='switch'] > span[data-state='checked'] {
+	left: 23px;
+}
+
+.app-dropdown-menu:has([role='menuitemcheckbox']) button[role='switch'] > span[data-state='unchecked'] {
+	left: 3px;
+}
+
+/* ---------- Scrollbars: invisibles en reposo, aparecen al desplazar (carbono.js añade .sk-scrolling) ---------- */
+* {
+	scrollbar-width: thin;
+	scrollbar-color: transparent transparent;
+}
+
+.sk-scrolling {
+	scrollbar-color: var(--sk-border-strong) transparent;
+}
+
+/* ---------- Nombre del modelo en cada respuesta: un paso por encima del texto del mensaje ---------- */
+#response-message-model-name {
+	font-size: 17px;
+	line-height: 24px;
+	font-weight: 600;
+	color: var(--sk-ink);
+}
+
+@media (max-width: 767px) {
+	#response-message-model-name {
+		font-size: 18px;
+		line-height: 26px;
+	}
+}
+
+/* ---------- Composer (mockups "Escritorio · Inicio de chat" y "Móvil · Composer v2") ----------
+   Estructura de Open WebUI: #message-input-container > [div.px-2 (texto), div[dir=ltr] (barra:
+   izquierda: + e Integraciones · centro: herramientas, Web, Terminal · derecha: modelo, micrófono, voz)].
+   Los chips se reconocen por el dibujo de su ícono (path d), no por su texto. */
+#message-input-container {
+	padding: 14px 12px 10px;
+}
+
+#chat-input,
+#chat-input-container,
+#chat-input-container :is(p, [contenteditable]) {
+	font-size: 16px;
+	line-height: 24px;
+}
+
+#chat-input-container {
+	min-height: 32px;
+	padding: 4px 8px;
+}
+
+#message-input-container > div[dir='ltr'] {
+	margin: 8px 0 0;
+	align-items: center;
+	gap: 6px;
+}
+
+#message-input-container > div[dir='ltr'] > div {
+	align-self: center;
+	align-items: center;
+}
+
+/* +, Integraciones y micrófono: botones redondos de 40px */
+:is(#input-menu-button, #integration-menu-button, #voice-input-button) {
+	width: 40px;
+	height: 40px;
+	padding: 0;
+	display: grid;
+	place-items: center;
+	border-radius: 9999px;
+	background: transparent;
+	color: var(--sk-ink-muted);
+}
+
+:is(#input-menu-button, #integration-menu-button, #voice-input-button):hover {
+	background: var(--sk-hover);
+	color: var(--sk-ink);
+}
+
+:is(#input-menu-button, #integration-menu-button, #voice-input-button) svg {
+	width: 20px;
+	height: 20px;
+}
+
+/* Integraciones abierto: negro (primary) */
+#integration-menu-button:is([aria-expanded='true'], [data-state='open']) {
+	background: var(--sk-primary);
+	color: var(--sk-on-primary);
+}
+
+/* Chips de herramientas, Web y Terminal: píldoras de 36px con su color */
+#message-input-container button:is(:has(path[d^='M21.75 6.75']), [aria-pressed='true']:has(path[d^='M12 21a9.004']), :has(path[d^='M12 4C6 4 6 8'])) {
+	height: 36px;
+	padding: 0 12px 0 10px;
+	gap: 6px;
+	display: inline-flex;
+	align-items: center;
+	border: 1px solid;
+	border-radius: 9999px;
+	font-size: 14px;
+	line-height: 20px;
+	font-weight: 600;
+	translate: none;
+	opacity: 1;
+}
+
+#message-input-container button:is(:has(path[d^='M21.75 6.75']), :has(path[d^='M12 21a9.004']), :has(path[d^='M12 4C6 4 6 8'])) svg {
+	width: 17px;
+	height: 17px;
+}
+
+#message-input-container button:has(path[d^='M21.75 6.75']) {
+	background: var(--sk-naranja-soft);
+	border-color: color-mix(in srgb, var(--sk-naranja) 30%, transparent);
+	color: var(--sk-naranja);
+}
+
+#message-input-container button:has(path[d^='M21.75 6.75']) span {
+	font-size: 14px;
+	font-weight: 600;
+}
+
+#message-input-container button:has(path[d^='M21.75 6.75']) span::after {
+	content: ' Herramientas';
+}
+
+#message-input-container button[aria-pressed='true']:has(path[d^='M12 21a9.004']) {
+	background: var(--sk-verde-soft);
+	border-color: color-mix(in srgb, var(--sk-verde) 30%, transparent);
+	color: var(--sk-verde);
+}
+
+#message-input-container button[aria-pressed='true']:has(path[d^='M12 21a9.004'])::after {
+	content: 'Web';
+}
+
+#message-input-container button[aria-pressed='true']:has(path[d^='M12 21a9.004']) > div {
+	display: none;
+}
+
+#message-input-container button:has(path[d^='M12 4C6 4 6 8']) {
+	background: var(--sk-violeta-soft);
+	border-color: color-mix(in srgb, var(--sk-violeta) 30%, transparent);
+	color: var(--sk-violeta);
+}
+
+#message-input-container button:has(path[d^='M12 4C6 4 6 8']) span {
+	font-size: 14px;
+	font-weight: 600;
+	max-width: none;
+}
+
+/* Selector de modelo como chip con borde */
+#model-selector-model-button > div {
+	height: 40px;
+	padding: 0 10px 0 14px;
+	gap: 4px;
+	border: 1px solid #d4d4d8;
+	border-radius: 9999px;
+	background: var(--sk-sidebar);
+	color: var(--sk-ink);
+	font-size: 15px;
+	line-height: 20px;
+	font-weight: 600;
+}
+
+html.dark #model-selector-model-button > div {
+	border-color: var(--sk-border-strong);
+}
+
+#model-selector-model-button > div svg {
+	width: 16px;
+	height: 16px;
+	color: var(--sk-ink-muted);
+}
+
+/* Voz y enviar: círculo negro de 44px con sombra */
+#message-input-container button.rounded-full:is([class*='bg-black'], [class*='bg-gray-900'], [class*='bg-white']):not(.hidden),
+#send-message-button:not(.hidden) {
+	width: 44px;
+	height: 44px;
+	min-width: 44px;
+	padding: 0;
+	display: grid;
+	place-items: center;
+	border-radius: 9999px;
+	background: var(--sk-primary);
+	color: var(--sk-on-primary);
+	box-shadow: 0 2px 6px rgba(24, 24, 27, 0.25);
+}
+
+#message-input-container button.rounded-full:is([class*='bg-black'], [class*='bg-gray-900'], [class*='bg-white']):not(.hidden) svg,
+#send-message-button svg {
+	width: 20px;
+	height: 20px;
+}
+
+/* ---------- Páginas: Espacio de Trabajo, Notas, Calendario, Automatizaciones ----------
+   Mockups "Espacio de Trabajo › Modelos", "Notas", "Calendario" y "Automatizaciones".
+   Patrones comunes de Open WebUI: título (span.select-none + contador), buscador
+   (div.space-y-1 > div.h-8 con input[placeholder]), filtros y botón dividido Crear. */
+
+/* Título de página 24px seminegrita; el contador como etiqueta gris */
+main div.flex.items-center:has(> span.select-none + span.text-gray-500) {
+	gap: 10px;
+	align-items: center;
+}
+
+main div.flex.items-center:has(> span.select-none + span.text-gray-500) > span.select-none {
+	font-size: 24px;
+	line-height: 32px;
+	font-weight: 600;
+	color: var(--sk-ink);
+	padding: 0;
+}
+
+main div.flex.items-center:has(> span.select-none + span.text-gray-500) > span.text-gray-500 {
+	font-size: 15px;
+	line-height: 22px;
+	font-weight: 600;
+	color: var(--sk-ink-muted);
+	background: var(--sk-selected);
+	border-radius: var(--sk-r-sm);
+	padding: 1px 8px;
+}
+
+/* Botón dividido Crear: 40px de alto y esquinas de 10px */
+main div.flex.overflow-hidden:has(> button.focus-ring.px-2\.5.py-1) {
+	border-radius: var(--sk-r-md);
+}
+
+main button.focus-ring.px-2\.5.py-1 {
+	min-height: 40px;
+}
+
+main div.flex.overflow-hidden:has(> button.focus-ring.px-2\.5.py-1) button[aria-haspopup] {
+	width: 40px;
+	min-height: 40px;
+}
+
+/* Buscador: recuadro de 44px con borde visible, máx. 520px */
+main div.space-y-1 > div.flex.h-8:has(input[placeholder]) {
+	height: auto;
+	margin-top: 18px;
+	gap: 16px;
+}
+
+main div.space-y-1 > div.flex.h-8 > div:has(> input[placeholder]) {
+	max-width: 520px;
+	height: 44px;
+	padding: 0 14px;
+	border: 1px solid var(--sk-border-strong);
+	border-radius: var(--sk-r-md);
+	background: var(--sk-surface);
+}
+
+main div.space-y-1 > div.flex.h-8 > div:has(> input[placeholder]):focus-within {
+	border-color: var(--sk-azul);
+	box-shadow: 0 0 0 1px var(--sk-azul);
+}
+
+main div.space-y-1 > div.flex.h-8 > div:has(> input[placeholder]) > div {
+	margin: 0 10px 0 0;
+	color: var(--sk-ink-muted);
+}
+
+main div.space-y-1 > div.flex.h-8 > div:has(> input[placeholder]) svg {
+	width: 20px;
+	height: 20px;
+}
+
+main div.space-y-1 > div.flex.h-8 input[placeholder] {
+	font-size: 15px;
+	line-height: 22px;
+	color: var(--sk-ink);
+}
+
+main div.space-y-1 > div.flex.h-8 input[placeholder]:focus-visible {
+	outline: none;
+}
+
+/* Filtros (Todos, Escribir, Lista, Acciones): botones con borde de 40px */
+main div.space-y-1 > div.flex.h-8 > div:last-child,
+main div.space-y-1 > div.flex.h-8 > div:last-child > div {
+	gap: 8px;
+	overflow: visible;
+}
+
+main div.space-y-1 > div.flex.h-8 > div:last-child button {
+	height: 40px;
+	padding: 0 12px 0 14px;
+	gap: 6px;
+	border: 1px solid var(--sk-border);
+	border-radius: var(--sk-r-md);
+	background: var(--sk-surface);
+	box-shadow: var(--sk-shadow-sm);
+	font-size: 15px;
+	line-height: 22px;
+	font-weight: 500;
+	color: var(--sk-ink);
+}
+
+main div.space-y-1 > div.flex.h-8 > div:last-child button span {
+	font-size: 15px;
+	line-height: 22px;
+	height: auto;
+}
+
+main div.space-y-1 > div.flex.h-8 > div:last-child button svg {
+	width: 16px;
+	height: 16px;
+	color: var(--sk-ink-muted);
+}
+
+/* ----- Espacio de Trabajo: pestañas con contador ----- */
+div:has(> #workspace-container) > nav a:has(> span + span) {
+	height: 40px;
+	padding: 0 14px;
+	gap: 8px;
+	border-radius: var(--sk-r-md);
+	font-size: 15px;
+	line-height: 22px;
+	font-weight: 500;
+	color: var(--sk-ink-muted);
+}
+
+div:has(> #workspace-container) > nav a:has(> span + span):hover {
+	background: var(--sk-hover);
+	color: var(--sk-ink);
+}
+
+div:has(> #workspace-container) > nav a:has(> span + span)[class~='text-gray-900'] {
+	background: var(--sk-selected);
+	color: var(--sk-ink);
+	font-weight: 600;
+}
+
+div:has(> #workspace-container) > nav a:has(> span + span) > span + span {
+	opacity: 1;
+	font-size: 12.5px;
+	line-height: 18px;
+	font-weight: 600;
+	color: var(--sk-ink-muted);
+	background: var(--sk-selected);
+	border-radius: var(--sk-r-sm);
+	padding: 0 7px;
+}
+
+div:has(> #workspace-container) > nav a:has(> span + span)[class~='text-gray-900'] > span + span {
+	background: var(--sk-primary);
+	color: var(--sk-on-primary);
+}
+
+div:has(> #workspace-container) > nav {
+	padding: 16px 28px 12px;
+	border-bottom: 1px solid var(--sk-border);
+}
+
+#workspace-container {
+	padding-inline: 28px;
+}
+
+/* Lista de modelos dentro de una tarjeta */
+#model-list {
+	margin-top: 18px;
+	background: var(--sk-surface);
+	border: 1px solid var(--sk-border);
+	border-radius: var(--sk-r-lg);
+	overflow: hidden;
+}
+
+#model-list > div:first-child {
+	height: 40px;
+	padding: 0 20px;
+	border-bottom: 1px solid var(--sk-border);
+	background: var(--sk-bg);
+	font-size: 13px;
+	line-height: 18px;
+	font-weight: 600;
+	color: var(--sk-ink-muted);
+}
+
+#model-list > div:first-child :is(button, div) {
+	font-size: 13px;
+	font-weight: 600;
+	color: var(--sk-ink-muted);
+}
+
+#model-list > div.grid {
+	gap: 0;
+}
+
+[id^='model-item-'] {
+	min-height: 72px;
+	padding: 14px 12px 14px 20px;
+	gap: 16px;
+	border-radius: 0;
+	border-top: 1px solid var(--sk-border);
+}
+
+[id^='model-item-']:first-child {
+	border-top: 0;
+}
+
+[id^='model-item-']:hover {
+	background: var(--sk-bg);
+}
+
+[id^='model-item-'] > div:first-child img {
+	width: 44px;
+	height: 44px;
+	border-radius: 9999px;
+	object-fit: cover;
+	box-shadow: 0 0 0 1px rgba(24, 24, 27, 0.08);
+}
+
+[id^='model-item-'] a[href*='/edit'] {
+	font-size: 16px;
+	line-height: 24px;
+	font-weight: 600;
+	color: var(--sk-ink);
+}
+
+/* ID del modelo en monoespaciada con fondo; fecha 13px gris; descripción 14px */
+[id^='model-item-'] > div:nth-child(2) div[class~='text-gray-500'][class~='text-[0.6875rem]'] {
+	font-family: var(--sk-mono);
+	font-size: 12.5px;
+	line-height: 18px;
+	color: var(--sk-ink);
+	background: var(--sk-sidebar);
+	border: 1px solid var(--sk-border);
+	border-radius: var(--sk-r-sm);
+	padding: 0 6px;
+	margin-left: 6px;
+}
+
+[id^='model-item-'] > div:nth-child(2) span[class~='text-[0.6875rem]'] {
+	font-size: 13px;
+	line-height: 18px;
+	color: var(--sk-ink-subtle);
+	margin-left: 6px;
+}
+
+[id^='model-item-'] div.min-w-0 > div.truncate[class~='text-gray-400'] {
+	font-size: 14px;
+	line-height: 20px;
+	color: var(--sk-ink-muted);
+	margin-top: 4px;
+}
+
+[id^='model-item-'] > div.hidden {
+	font-size: 14px;
+	line-height: 20px;
+	color: var(--sk-ink-muted);
+	max-width: none;
+}
+
+[id^='model-item-'] > div.hidden img {
+	width: 24px;
+	height: 24px;
+}
+
+[id^='model-item-'] > div.hidden span {
+	max-width: none;
+	font-size: 14px;
+}
+
+[id^='model-item-'] button[aria-haspopup] > div {
+	width: 36px;
+	height: 36px;
+	color: var(--sk-ink-muted);
+}
+
+/* Switch del modelo 44×26 */
+[id^='model-item-'] button[role='switch'] {
+	width: 44px;
+	height: 26px;
+	min-height: 26px;
+}
+
+[id^='model-item-'] button[role='switch'] > span {
+	top: 3px;
+	width: 20px;
+	height: 20px;
+}
+
+[id^='model-item-'] button[role='switch'] > span[data-state='checked'] {
+	left: 21px;
+}
+
+[id^='model-item-'] button[role='switch'] > span[data-state='unchecked'] {
+	left: 3px;
+}
+
+/* "Creado por la Comunidad": etiqueta overline y tarjeta */
+#workspace-container > div.mt-6 {
+	margin-top: 28px;
+	padding: 0;
+}
+
+#workspace-container > div.mt-6 > div:first-child {
+	font-size: 12px;
+	line-height: 16px;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--sk-ink-subtle);
+	padding-left: 4px;
+	margin-bottom: 10px;
+}
+
+#workspace-container > div.mt-6 > a {
+	padding: 16px 16px 16px 20px;
+	background: var(--sk-surface);
+	border: 1px solid var(--sk-border);
+	border-radius: var(--sk-r-lg);
+}
+
+#workspace-container > div.mt-6 > a div.line-clamp-1:first-child {
+	font-size: 16px;
+	line-height: 24px;
+	font-weight: 600;
+	color: var(--sk-ink);
+}
+
+#workspace-container > div.mt-6 > a div.line-clamp-1 + div.line-clamp-1 {
+	font-size: 14px;
+	line-height: 20px;
+	color: var(--sk-ink-muted);
+}
+
+#workspace-container > div.mt-6 > a > svg {
+	width: 20px;
+	height: 20px;
+	color: var(--sk-ink-muted);
+}
+
+/* ----- Notas ----- */
+#notes-container {
+	padding: 20px 32px 0;
+}
+
+#notes-container div.flex.w-full.items-center.gap-2.px-2.pb-2 {
+	height: 36px;
+	padding: 0 16px;
+	margin-top: 20px;
+	border-bottom: 1px solid var(--sk-border);
+}
+
+#notes-container div.flex.w-full.items-center.gap-2.px-2.pb-2 :is(button, div) {
+	font-size: 13px;
+	line-height: 18px;
+	font-weight: 600;
+	color: var(--sk-ink-muted);
+}
+
+/* grupos ("Ayer", "7 días previos") en overline */
+#notes-container div.w-full.px-2.pb-1.text-xs {
+	padding: 16px 16px 6px;
+	font-size: 12px;
+	line-height: 16px;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--sk-ink-subtle);
+}
+
+#notes-container div.group.flex.min-h-8.rounded-xl {
+	min-height: 48px;
+	padding: 0 8px 0 16px;
+	border-radius: var(--sk-r-md);
+}
+
+#notes-container div.group.flex.min-h-8.rounded-xl:hover {
+	background: var(--sk-hover);
+}
+
+#notes-container div.group.flex.min-h-8.rounded-xl > div:first-child :is(a, div, span):not(:has(*)) {
+	font-size: 15px;
+	line-height: 22px;
+	font-weight: 500;
+	color: var(--sk-ink);
+}
+
+#notes-container div.group.flex.min-h-8.rounded-xl > div:first-child :is(div, span)[class*='text-gray']:not(:has(*)) {
+	font-size: 13px;
+	line-height: 18px;
+	font-weight: 400;
+	color: var(--sk-ink-subtle);
+}
+
+#notes-container div.group.flex.min-h-8.rounded-xl > div:last-child {
+	font-size: 14px;
+	color: var(--sk-ink-muted);
+}
+
+#notes-container div.group.flex.min-h-8.rounded-xl > div:last-child img {
+	width: 22px;
+	height: 22px;
+	border-radius: 9999px;
+}
+
+/* ----- Automatizaciones: estado vacío con mosaico, título 20px y texto 15px ----- */
+main div.max-w-sm.text-center:has(> div.mb-1\.5 + div) {
+	max-width: 440px;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 10px;
+}
+
+main div.max-w-sm.text-center:has(> div.mb-1\.5 + div)::before {
+	content: '';
+	width: 56px;
+	height: 56px;
+	margin-bottom: 8px;
+	border-radius: 16px;
+	background: var(--sk-naranja-soft) url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23a84f0c' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='13' r='8'/%3E%3Cpath d='M12 9v4l2.5 2.5M9 2h6'/%3E%3C/svg%3E") center / 28px no-repeat;
+}
+
+main div.max-w-sm.text-center > div.mb-1\.5 {
+	margin: 0;
+	font-size: 20px;
+	line-height: 28px;
+	font-weight: 600;
+	color: var(--sk-ink);
+}
+
+main div.max-w-sm.text-center > div.mb-1\.5 + div {
+	font-size: 15px;
+	line-height: 24px;
+	color: var(--sk-ink-muted);
+}
+
+/* ----- Calendario ----- */
+div.h-screen:has(.grid-cols-7.auto-rows-fr) > nav {
+	padding: 20px 24px 8px 28px;
+}
+
+div.h-screen:has(.grid-cols-7.auto-rows-fr) > nav span.select-none {
+	font-size: 24px;
+	line-height: 32px;
+	font-weight: 600;
+	color: var(--sk-ink);
+	margin-right: 8px;
+}
+
+div.h-screen:has(.grid-cols-7.auto-rows-fr) > nav button[class~='p-1'] {
+	width: 36px;
+	height: 36px;
+	display: grid;
+	place-items: center;
+	border-radius: var(--sk-r-md);
+	color: var(--sk-ink-muted);
+}
+
+div.h-screen:has(.grid-cols-7.auto-rows-fr) > nav button[class~='p-1'] svg {
+	width: 20px;
+	height: 20px;
+	color: currentColor;
+}
+
+/* Hoy, Mes: botones con borde; Crear: primary */
+div.h-screen:has(.grid-cols-7.auto-rows-fr) > nav div.ml-auto {
+	gap: 8px;
+}
+
+div.h-screen:has(.grid-cols-7.auto-rows-fr) > nav div.ml-auto > button {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	height: 40px;
+	padding: 0 14px;
+	border: 1px solid var(--sk-border);
+	border-radius: var(--sk-r-md);
+	background: var(--sk-surface);
+	box-shadow: var(--sk-shadow-sm);
+	font-size: 15px;
+	line-height: 22px;
+	font-weight: 500;
+	color: var(--sk-ink);
+}
+
+div.h-screen:has(.grid-cols-7.auto-rows-fr) > nav div.ml-auto > button.hidden {
+	display: none;
+}
+
+@media (min-width: 640px) {
+	div.h-screen:has(.grid-cols-7.auto-rows-fr) > nav div.ml-auto > button.hidden {
+		display: inline-flex;
+	}
+}
+
+div.h-screen:has(.grid-cols-7.auto-rows-fr) > nav div.ml-auto > button span {
+	font-size: 15px;
+	height: auto;
+}
+
+div.h-screen:has(.grid-cols-7.auto-rows-fr) > nav div.ml-auto > button:last-child {
+	background: var(--sk-primary);
+	border-color: var(--sk-primary);
+	color: var(--sk-on-primary);
+	font-weight: 600;
+}
+
+/* columna izquierda: mini calendario y calendarios */
+div.h-screen:has(.grid-cols-7.auto-rows-fr) div.w-56 {
+	width: 232px;
+	padding: 10px 0 0 28px;
+}
+
+div.h-screen:has(.grid-cols-7.auto-rows-fr) div.w-56 > div {
+	gap: 28px;
+}
+
+div.h-screen:has(.grid-cols-7.auto-rows-fr) div.w-56 div[class~='text-[0.6875rem]'][class~='font-normal'] {
+	font-size: 15px;
+	line-height: 22px;
+	font-weight: 600;
+	color: var(--sk-ink);
+}
+
+div.h-screen:has(.grid-cols-7.auto-rows-fr) div.w-56 div.grid.grid-cols-7:not(:has(button)) div {
+	font-size: 12px;
+	line-height: 28px;
+	font-weight: 600;
+	color: var(--sk-ink-subtle);
+}
+
+div.h-screen:has(.grid-cols-7.auto-rows-fr) div.w-56 div.grid.grid-cols-7 > button {
+	width: 30px;
+	height: 30px;
+	justify-self: center;
+	font-size: 13.5px;
+	font-weight: 500;
+}
+
+div.h-screen:has(.grid-cols-7.auto-rows-fr) div.w-56 div[class~='uppercase'] {
+	font-size: 12px;
+	line-height: 16px;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	color: var(--sk-ink-subtle);
+}
+
+div.h-screen:has(.grid-cols-7.auto-rows-fr) div.w-56 div.group > button {
+	height: 36px;
+	gap: 10px;
+	font-size: 15px;
+	line-height: 22px;
+	color: var(--sk-ink);
+}
+
+div.h-screen:has(.grid-cols-7.auto-rows-fr) div.w-56 div.group > button > span:first-child {
+	width: 12px;
+	height: 12px;
+}
+
+/* rejilla del mes dentro de una tarjeta */
+div.h-screen:has(.grid-cols-7.auto-rows-fr) div.flex-1.flex.flex-col.min-h-0.px-3.pb-3 {
+	padding: 10px 24px 20px 0;
+}
+
+div.h-screen:has(.grid-cols-7.auto-rows-fr) div.grid.grid-cols-7:has(+ .auto-rows-fr) {
+	background: var(--sk-surface);
+	border: 1px solid var(--sk-border);
+	border-bottom: 0;
+	border-radius: var(--sk-r-lg) var(--sk-r-lg) 0 0;
+}
+
+div.h-screen:has(.grid-cols-7.auto-rows-fr) div.grid.grid-cols-7:has(+ .auto-rows-fr) > div {
+	padding: 10px 12px;
+	font-size: 13px;
+	line-height: 18px;
+	font-weight: 600;
+	color: var(--sk-ink-muted);
+}
+
+div.h-screen:has(.grid-cols-7.auto-rows-fr) .grid-cols-7.auto-rows-fr {
+	border: 1px solid var(--sk-border);
+	border-radius: 0 0 var(--sk-r-lg) var(--sk-r-lg);
+	background: var(--sk-border);
+	gap: 1px;
+}
+
+div.h-screen:has(.grid-cols-7.auto-rows-fr) .grid-cols-7.auto-rows-fr > button {
+	padding: 8px 10px;
+	background: var(--sk-surface);
+}
+
+div.h-screen:has(.grid-cols-7.auto-rows-fr) .grid-cols-7.auto-rows-fr > button > div:first-child :is(span, div):not(:has(*)) {
+	font-size: 15px;
+	font-weight: 500;
+}
+
+/* Acciones y autor sin recortar (Open WebUI les pone max-w-28 / max-w-24 / max-w-44) */
+main div.space-y-1 > div.flex.h-8 > div:last-child button,
+main div.space-y-1 > div.flex.h-8 > div:last-child button span {
+	max-width: none;
+}
+
+[id^='model-item-'] > div.hidden,
+[id^='model-item-'] > div.hidden span,
+#notes-container div.group.flex.min-h-8.rounded-xl > div:last-child :is(div, span, button) {
+	max-width: none;
+	overflow: visible;
+}
+
+#notes-container div.group.flex.min-h-8.rounded-xl > div:last-child :is(div, span) {
+	font-size: 14px;
+	color: var(--sk-ink-muted);
+}
+
+/* Automatizaciones: margen de página como el mockup (20px arriba, 32px a los lados) */
+div.flex-col:has(#automations-import-input) > div.shrink-0 {
+	padding: 20px 32px 0;
+}
+
+div:has(> #automations-import-input) > div.h-full {
+	padding-inline: 32px;
+}
+
+/* ---------- Ajuste de escala (Espacio de Trabajo, Notas y composer) ----------
+   Un paso más compacto que los mockups a tamaño real: el buscador, los filtros, las filas y la
+   barra del composer de escritorio se sentían grandes. Mismos selectores, por eso estas reglas
+   (al final del archivo) reemplazan a las anteriores. */
+
+/* Buscador y filtros */
+main div.space-y-1 > div.flex.h-8 > div:has(> input[placeholder]) {
+	height: 38px;
+	padding: 0 12px;
+}
+
+main div.space-y-1 > div.flex.h-8 > div:has(> input[placeholder]) svg {
+	width: 18px;
+	height: 18px;
+}
+
+main div.space-y-1 > div.flex.h-8 input[placeholder] {
+	font-size: 14px;
+	line-height: 20px;
+}
+
+main div.space-y-1 > div.flex.h-8 > div:last-child button {
+	height: 34px;
+	padding: 0 10px 0 12px;
+	font-size: 14px;
+	line-height: 20px;
+}
+
+main div.space-y-1 > div.flex.h-8 > div:last-child button span {
+	font-size: 14px;
+	line-height: 20px;
+}
+
+main div.space-y-1 > div.flex.h-8:has(input[placeholder]) {
+	margin-top: 14px;
+}
+
+/* Espacio de Trabajo: pestañas, lista y tarjeta de la comunidad */
+div:has(> #workspace-container) > nav a:has(> span + span) {
+	height: 36px;
+	padding: 0 12px;
+	font-size: 14px;
+	line-height: 20px;
+}
+
+div:has(> #workspace-container) > nav a:has(> span + span) > span + span {
+	font-size: 12px;
+}
+
+#model-list {
+	margin-top: 14px;
+}
+
+#model-list > div:first-child {
+	height: 36px;
+	padding: 0 16px;
+}
+
+#model-list > div:first-child :is(button, div) {
+	font-size: 12.5px;
+}
+
+[id^='model-item-'] {
+	min-height: 56px;
+	padding: 10px 10px 10px 16px;
+	gap: 12px;
+}
+
+[id^='model-item-'] > div:first-child img {
+	width: 36px;
+	height: 36px;
+}
+
+[id^='model-item-'] a[href*='/edit'] {
+	font-size: 15px;
+	line-height: 22px;
+}
+
+[id^='model-item-'] > div:nth-child(2) div[class~='text-gray-500'][class~='text-[0.6875rem]'] {
+	font-size: 12px;
+	line-height: 17px;
+}
+
+[id^='model-item-'] > div:nth-child(2) span[class~='text-[0.6875rem]'] {
+	font-size: 12.5px;
+}
+
+[id^='model-item-'] div.min-w-0 > div.truncate[class~='text-gray-400'] {
+	font-size: 13px;
+	line-height: 18px;
+	margin-top: 2px;
+}
+
+[id^='model-item-'] > div.hidden,
+[id^='model-item-'] > div.hidden span {
+	font-size: 13px;
+}
+
+[id^='model-item-'] > div.hidden img {
+	width: 20px;
+	height: 20px;
+}
+
+[id^='model-item-'] button[role='switch'] {
+	width: 40px;
+	height: 24px;
+	min-height: 24px;
+}
+
+[id^='model-item-'] button[role='switch'] > span {
+	width: 18px;
+	height: 18px;
+}
+
+[id^='model-item-'] button[role='switch'] > span[data-state='checked'] {
+	left: 19px;
+}
+
+#workspace-container > div.mt-6 {
+	margin-top: 22px;
+}
+
+#workspace-container > div.mt-6 > div:first-child {
+	font-size: 11px;
+	margin-bottom: 8px;
+}
+
+#workspace-container > div.mt-6 > a {
+	padding: 12px 14px 12px 16px;
+}
+
+#workspace-container > div.mt-6 > a div.line-clamp-1:first-child {
+	font-size: 15px;
+	line-height: 22px;
+}
+
+#workspace-container > div.mt-6 > a div.line-clamp-1 + div.line-clamp-1 {
+	font-size: 13px;
+	line-height: 18px;
+}
+
+/* Notas: filas de 40px, título 14px, fecha y autor 12.5–13px */
+#notes-container div.flex.w-full.items-center.gap-2.px-2.pb-2 {
+	height: 32px;
+	margin-top: 14px;
+}
+
+#notes-container div.flex.w-full.items-center.gap-2.px-2.pb-2 :is(button, div) {
+	font-size: 12.5px;
+}
+
+#notes-container div.w-full.px-2.pb-1.text-xs {
+	padding: 12px 16px 4px;
+	font-size: 11px;
+}
+
+#notes-container div.group.flex.min-h-8.rounded-xl {
+	min-height: 40px;
+	padding: 0 8px 0 14px;
+}
+
+#notes-container div.group.flex.min-h-8.rounded-xl > div:first-child :is(a, div, span):not(:has(*)) {
+	font-size: 14px;
+	line-height: 20px;
+}
+
+#notes-container div.group.flex.min-h-8.rounded-xl > div:first-child :is(div, span)[class*='text-gray']:not(:has(*)) {
+	font-size: 12.5px;
+}
+
+#notes-container div.group.flex.min-h-8.rounded-xl > div:last-child :is(div, span) {
+	font-size: 13px;
+}
+
+#notes-container div.group.flex.min-h-8.rounded-xl > div:last-child img {
+	width: 20px;
+	height: 20px;
+}
+
+/* Composer de escritorio: barra un poco más compacta */
+@media (min-width: 768px) {
+	:is(#input-menu-button, #integration-menu-button, #voice-input-button) {
+		width: 36px;
+		height: 36px;
+	}
+
+	:is(#input-menu-button, #integration-menu-button, #voice-input-button) svg {
+		width: 18px;
+		height: 18px;
+	}
+
+	#message-input-container button:is(:has(path[d^='M21.75 6.75']), [aria-pressed='true']:has(path[d^='M12 21a9.004']), :has(path[d^='M12 4C6 4 6 8'])) {
+		height: 32px;
+		padding: 0 11px 0 9px;
+		gap: 5px;
+		font-size: 13px;
+	}
+
+	#message-input-container button:is(:has(path[d^='M21.75 6.75']), :has(path[d^='M12 21a9.004']), :has(path[d^='M12 4C6 4 6 8'])) svg {
+		width: 15px;
+		height: 15px;
+	}
+
+	#message-input-container button:is(:has(path[d^='M21.75 6.75']), :has(path[d^='M12 4C6 4 6 8'])) span {
+		font-size: 13px;
+	}
+
+	#model-selector-model-button > div {
+		height: 36px;
+		padding: 0 9px 0 12px;
+		font-size: 14px;
+	}
+
+	#message-input-container button.rounded-full:is([class*='bg-black'], [class*='bg-gray-900'], [class*='bg-white']):not(.hidden),
+	#send-message-button:not(.hidden) {
+		width: 40px;
+		height: 40px;
+		min-width: 40px;
+	}
+
+	#message-input-container button.rounded-full:is([class*='bg-black'], [class*='bg-gray-900'], [class*='bg-white']):not(.hidden) svg,
+	#send-message-button svg {
+		width: 18px;
+		height: 18px;
+	}
+}
+
+
+/* Selector de modelo en escritorio: compacto (las medidas grandes del mockup quedan solo para móvil) */
+@media (min-width: 768px) {
+	div:has(> input#model-search-input) {
+		min-height: 38px;
+		padding: 2px 6px 2px 10px;
+	}
+
+	input#model-search-input {
+		font-size: 14px;
+		line-height: 20px;
+	}
+
+	div:has(> input#model-search-input) svg {
+		width: 16px;
+		height: 16px;
+	}
+
+	#model-selector-list {
+		padding: 4px;
+	}
+
+	#model-selector-list [role='option'] {
+		min-height: 36px;
+		padding: 2px 6px 2px 10px;
+		border-radius: var(--sk-r-md);
+		font-size: 14px;
+		line-height: 20px;
+	}
+
+	#model-selector-list [role='option'] :is(div, span):not(:has(*)) {
+		font-size: 14px;
+	}
+
+	#model-selector-list [role='option'] img {
+		width: 22px;
+		height: 22px;
+	}
+
+	#model-selector-list [role='option'] div:has(> img) {
+		min-width: 22px;
+		min-height: 22px;
+	}
+
+	:has(#model-selector-list) button.text-\[0\.65rem\] {
+		font-size: 13px;
+		min-height: 32px;
+	}
+}
+
+/* El campo de búsqueda del selector no lleva anillo propio */
+input#model-search-input:focus,
+input#model-search-input:focus-visible {
+	outline: none;
+	box-shadow: none;
+}
+
+/* Menú de Integraciones en escritorio: mismo tamaño que el selector de modelo (filas de 36px, 14px) */
+@media (min-width: 768px) {
+	.app-dropdown-menu:has([role='menuitemcheckbox']) {
+		min-width: 260px;
+		max-width: 300px;
+		border-width: 2px;
+	}
+
+	.app-dropdown-menu:has([role='menuitemcheckbox']) :is([role='menuitem'], [role='menuitemcheckbox']) {
+		height: 36px;
+		padding: 0 6px 0 8px;
+		gap: 10px;
+		border-radius: var(--sk-r-md);
+		font-size: 14px;
+		line-height: 20px;
+	}
+
+	.app-dropdown-menu:has([role='menuitemcheckbox']) :is([role='menuitem'], [role='menuitemcheckbox']) .flex-1.gap-2 {
+		gap: 10px;
+	}
+
+	.app-dropdown-menu:has([role='menuitemcheckbox']) [role='menuitem'] > svg:first-child,
+	.app-dropdown-menu:has([role='menuitemcheckbox']) [role='menuitemcheckbox'] .shrink-0 > svg {
+		width: 26px;
+		height: 26px;
+		padding: 6px;
+		border-radius: 7px;
+	}
+
+	.app-dropdown-menu:has([role='menuitemcheckbox']) [role='menuitem'] .line-clamp-1 > span {
+		font-size: 12px;
+		line-height: 16px;
+		padding: 0 6px;
+		margin-left: 6px;
+	}
+
+	.app-dropdown-menu:has([role='menuitemcheckbox']) [role='menuitem'] .text-gray-500 svg {
+		width: 16px;
+		height: 16px;
+	}
+
+	.app-dropdown-menu:has([role='menuitemcheckbox']) button[role='switch'] {
+		width: 36px;
+		height: 20px;
+		min-height: 20px;
+	}
+
+	.app-dropdown-menu:has([role='menuitemcheckbox']) button[role='switch'] > span {
+		top: 2px;
+		width: 16px;
+		height: 16px;
+	}
+
+	.app-dropdown-menu:has([role='menuitemcheckbox']) button[role='switch'] > span[data-state='checked'] {
+		left: 18px;
+	}
+
+	.app-dropdown-menu:has([role='menuitemcheckbox']) button[role='switch'] > span[data-state='unchecked'] {
+		left: 2px;
+	}
+}
+
+/* Selector de modelo e Integraciones en escritorio: un paso más compactos y del mismo tamaño
+   (filas de 32px, texto 13px) */
+@media (min-width: 768px) {
+	div:has(> input#model-search-input) {
+		min-height: 34px;
+	}
+
+	input#model-search-input {
+		font-size: 13px;
+		line-height: 18px;
+	}
+
+	#model-selector-list [role='option'],
+	.app-dropdown-menu:has([role='menuitemcheckbox']) :is([role='menuitem'], [role='menuitemcheckbox']) {
+		min-height: 32px;
+		height: 32px;
+		font-size: 13px;
+		line-height: 18px;
+	}
+
+	#model-selector-list [role='option'] :is(div, span):not(:has(*)) {
+		font-size: 13px;
+	}
+
+	#model-selector-list [role='option'] img,
+	#model-selector-list [role='option'] div:has(> img) {
+		width: 20px;
+		height: 20px;
+		min-width: 20px;
+		min-height: 20px;
+	}
+
+	.app-dropdown-menu:has([role='menuitemcheckbox']) [role='menuitem'] > svg:first-child,
+	.app-dropdown-menu:has([role='menuitemcheckbox']) [role='menuitemcheckbox'] .shrink-0 > svg {
+		width: 24px;
+		height: 24px;
+		padding: 5px;
+	}
+
+	.app-dropdown-menu:has([role='menuitemcheckbox']) {
+		min-width: 240px;
+	}
+}
+
+/* Submenú Herramientas (Integraciones › Herramientas): igual que Integraciones.
+   Open WebUI envuelve cada herramienta en un div[role=presentation] de 27px que recortaba la fila. */
+.app-dropdown-menu:has([role='menuitemcheckbox']) div[role='presentation'] {
+	height: auto;
+	min-height: 32px;
+}
+
+/* buscador del submenú */
+.app-dropdown-menu:has([role='menuitemcheckbox']) div:has(> input) {
+	height: 32px;
+	margin: 2px 4px 4px;
+	padding: 0 8px;
+	gap: 8px;
+	border-bottom: 1px solid var(--sk-border);
+}
+
+.app-dropdown-menu:has([role='menuitemcheckbox']) div:has(> input) input {
+	font-size: 13px;
+	line-height: 18px;
+}
+
+.app-dropdown-menu:has([role='menuitemcheckbox']) div:has(> input) svg {
+	width: 16px;
+	height: 16px;
+	color: var(--sk-ink-muted);
+}
+
+/* herramientas en naranja (como el chip y la fila de Integraciones) */
+.app-dropdown-menu:has([role='menuitemcheckbox']):has(div > input) [role='menuitemcheckbox'] .shrink-0 > svg {
+	background-color: var(--sk-naranja-soft);
+	color: var(--sk-naranja);
+}
+
+/* contador "3" del encabezado como etiqueta naranja */
+.app-dropdown-menu:has([role='menuitemcheckbox']) [role='menuitem'] span.ml-0\.5 {
+	margin-left: 6px;
+	padding: 0 6px;
+	border-radius: var(--sk-r-sm);
+	font-size: 12px;
+	line-height: 16px;
+	font-weight: 600;
+	color: var(--sk-naranja);
+	background-color: var(--sk-naranja-soft);
+}
+
+/* Velo sobre la imagen de fondo del chat un poco más opaco para leer mejor el texto
+   (Open WebUI: blanco 100% abajo → 85% arriba; aquí 100% → 92%; en oscuro 90% → 95%) */
+div.bg-cover.bg-no-repeat.pointer-events-none + div.pointer-events-none.bg-linear-to-t {
+	background-image: linear-gradient(to top, rgba(255, 255, 255, 0.99) 0%, rgba(255, 255, 255, 0.985) 55%, rgba(255, 255, 255, 0.975) 82%, rgba(255, 255, 255, 0.94) 100%);
+	-webkit-backdrop-filter: saturate(180%) blur(16px);
+	backdrop-filter: saturate(180%) blur(16px);
+}
+
+html.dark div.bg-cover.bg-no-repeat.pointer-events-none + div.pointer-events-none.bg-linear-to-t {
+	background-image: linear-gradient(to top, color-mix(in srgb, var(--sk-bg) 99%, transparent) 0%, color-mix(in srgb, var(--sk-bg) 98.5%, transparent) 55%, color-mix(in srgb, var(--sk-bg) 97.5%, transparent) 82%, color-mix(in srgb, var(--sk-bg) 94%, transparent) 100%);
+}
+
+/* ---------- Conversación (mockup "Conversación · Burbuja neutra") ----------
+   Burbuja del usuario gris neutra con borde fino; el resto de la conversación queda como en
+   Open WebUI. Encabezado del chat translúcido con línea inferior. */
+#messages-container .user-message .rounded-3xl {
+	background-color: var(--sk-sidebar);
+	border: 1px solid var(--sk-border);
+	border-radius: 18px;
+	color: var(--sk-ink);
+}
+
+/* Encabezado del chat: vidrio esmerilado al estilo de apple.com (fondo translúcido, desenfoque y
+   saturación de lo que pasa por debajo) con una línea finísima; se adapta al tema claro u oscuro */
+nav.sticky:has(h1) {
+	background-color: rgba(255, 255, 255, 0.55);
+	-webkit-backdrop-filter: saturate(180%) blur(14px);
+	backdrop-filter: saturate(180%) blur(14px);
+	border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+html.dark nav.sticky:has(h1) {
+	background-color: rgba(22, 22, 23, 0.55);
+	border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+nav.sticky:has(h1)::after {
+	content: none;
+}
+
+@media (min-width: 768px) {
+	nav.sticky:has(h1) h1 {
+		font-size: 17px;
+		line-height: 24px;
+		font-weight: 600;
+	}
+}
+
+/* Contorno igual en los chips de herramientas, Web y Terminal (1px de su color) y en el selector de modelo */
+#message-input-container button[aria-pressed='true']:has(path[d^='M12 21a9.004']) {
+	border-color: currentColor;
+}
+
+#model-selector-model-button > div {
+	border-color: var(--sk-ink-subtle);
+}
+
+/* Open WebUI pone su propio degradado blanco dentro del encabezado al hacer scroll; tapaba el vidrio */
+nav.sticky:has(h1) div.bg-linear-to-b {
+	display: none;
+}
+
+/* + e Integraciones: mismo tamaño y mismo grosor de trazo, en escritorio y en móvil */
+:is(#input-menu-button, #integration-menu-button) svg {
+	width: 20px;
+	height: 20px;
+	stroke-width: 1.75;
+}
+
+@media (max-width: 767px) {
+	:is(#input-menu-button, #integration-menu-button) svg {
+		width: 24px;
+		height: 24px;
+		stroke-width: 1.75;
+	}
+}
+
+/* ---------- Menús de vidrio (como el encabezado) y siempre dentro de la ventana ----------
+   Todos los menús flotantes, el selector de modelo y los submenús; la barra lateral gris no. */
+.app-dropdown-menu,
+[role='menu']:not(:has(.app-dropdown-menu)):not(.app-dropdown-menu *),
+[data-melt-dropdown-menu],
+[data-menu-content]:not(:has(.app-dropdown-menu)),
+div:has(> div > [role='listbox']) {
+	background-color: rgba(255, 255, 255, 0.6) !important;
+	-webkit-backdrop-filter: saturate(180%) blur(20px);
+	backdrop-filter: saturate(180%) blur(20px);
+	max-width: calc(100vw - 16px);
+}
+
+html.dark :is(.app-dropdown-menu, [role='menu']:not(:has(.app-dropdown-menu)):not(.app-dropdown-menu *), [data-melt-dropdown-menu], [data-menu-content]:not(:has(.app-dropdown-menu)), div:has(> div > [role='listbox'])) {
+	background-color: rgba(28, 28, 30, 0.6) !important;
+}
+
+/* el contenedor de posición tampoco se pasa del ancho de la ventana */
+[role='menu']:has(.app-dropdown-menu) {
+	max-width: calc(100vw - 16px);
+}
+
+/* Botón de cerrar de las notificaciones: Open WebUI lo pone en la esquina y su ícono quedaba
+   aplastado (6×12px). Círculo de 22px dentro de la tarjeta, arriba a la derecha. */
+[data-sonner-toast] [data-close-button] {
+	left: auto;
+	right: 8px;
+	top: 8px;
+	width: 22px;
+	height: 22px;
+	display: grid;
+	place-items: center;
+	transform: none;
+	padding: 0;
+	border: 0;
+	border-radius: 9999px;
+	background: transparent !important;
+	color: currentColor !important;
+	opacity: 0.6;
+}
+
+[data-sonner-toast] [data-close-button]:hover {
+	opacity: 1;
+	background: rgba(0, 0, 0, 0.06) !important;
+}
+
+[data-sonner-toast] [data-close-button] svg {
+	width: 12px;
+	height: 12px;
+	min-width: 12px;
+}
+
+[data-sonner-toast]:has([data-close-button]) [data-content] {
+	padding-right: 18px;
+}
+
+/* Círculo de carga al abrir la página o un chat: de 20 a 44px */
+div.h-full.w-full.items-center.justify-center > div.m-auto > div.flex.justify-center > svg:has(.spinner_ajPY) {
+	width: 44px;
+	height: 44px;
+	color: var(--sk-ink-muted);
+}
+
+/* Mensajes de error dentro del chat (respuesta fallida): texto del tamaño de los mensajes */
+#messages-container div[class~='bg-red-600/10'],
+#messages-container div[class~='bg-red-600/10'] * {
+	font-size: 15px;
+	line-height: 22px;
+}
+
+#messages-container div[class~='bg-red-600/10'] svg {
+	width: 20px;
+	height: 20px;
+	flex: none;
+}
+
+/* Avisos de error en rojo de otras pantallas (text-xs / 0.65rem) */
+div[class~='border-red-200'][class~='text-xs'],
+div[class~='text-red-600'][class~='text-[0.65rem]'] {
+	font-size: 13.5px;
+	line-height: 20px;
+}
+
+/* Los menús muestran todas sus opciones (Open WebUI los corta a 288px con max-h-72 y hay que hacer
+   scroll); solo se limitan al alto de la ventana */
+.app-dropdown-menu.max-h-72,
+.app-dropdown-menu > .max-h-72 {
+	max-height: calc(100dvh - 140px);
+}
+
+/* Carga de la app (antes de la del chat): mismo círculo de 44px, para que se vea como uno solo */
+div.w-full.flex-1.h-full.items-center.justify-center > div.flex.justify-center > svg:has(.spinner_ajPY) {
+	width: 44px;
+	height: 44px;
+	color: var(--sk-ink-muted);
+}
+
+/* Móvil: el fondo del chat un poco más visible (~2.5% menos de blanco) */
+@media (max-width: 767px) {
+	div.bg-cover.bg-no-repeat.pointer-events-none + div.pointer-events-none.bg-linear-to-t {
+		background-image: linear-gradient(to top, rgba(255, 255, 255, 0.97) 0%, rgba(255, 255, 255, 0.96) 55%, rgba(255, 255, 255, 0.95) 82%, rgba(255, 255, 255, 0.915) 100%);
+	}
+
+	html.dark div.bg-cover.bg-no-repeat.pointer-events-none + div.pointer-events-none.bg-linear-to-t {
+		background-image: linear-gradient(to top, color-mix(in srgb, var(--sk-bg) 97%, transparent) 0%, color-mix(in srgb, var(--sk-bg) 96%, transparent) 55%, color-mix(in srgb, var(--sk-bg) 95%, transparent) 82%, color-mix(in srgb, var(--sk-bg) 91.5%, transparent) 100%);
+	}
+}
+
+/* Móvil: los botones de la derecha del encabezado (chat temporal, controles) juntos; cada uno conserva
+   su área táctil de 44px, solo se quita el hueco de 12px entre ellos */
+@media (max-width: 767px) {
+	nav.sticky div.flex-none.items-center.gap-3.self-center {
+		gap: 0;
+	}
+}
+
+/* ---------- Nivel de razonamiento (botón "Controles del modelo", solo en modelos que lo admiten) ----------
+   Chip amarillo, misma familia que herramientas (naranja), Web (verde) y Terminal (violeta). */
+#message-input-container button:has(path[d^='M10.5 6h9.75']) {
+	width: 32px;
+	height: 32px;
+	margin: 0 2px;
+	padding: 0;
+	display: grid;
+	place-items: center;
+	border: 1px solid currentColor;
+	border-radius: 9999px;
+	background: var(--sk-amarillo-soft);
+	color: var(--sk-amarillo);
+}
+
+#message-input-container button:has(path[d^='M10.5 6h9.75']):hover {
+	background: color-mix(in srgb, var(--sk-amarillo) 18%, var(--sk-amarillo-soft));
+	color: var(--sk-amarillo);
+}
+
+#message-input-container button:has(path[d^='M10.5 6h9.75']) svg {
+	width: 16px;
+	height: 16px;
+}
+
+/* ---------- Composer: mockup "J · Como H, voz junto al modelo" (móvil) ----------
+   En móvil la caja tiene tres filas: chips activos (Herramientas, Web, Terminal, Razonamiento) con
+   scroll horizontal, el texto, y + · Integraciones ··· modelo · micrófono · voz.
+   En escritorio los chips se quedan en la barra, como antes.
+   carbono.js mueve el botón de Razonamiento a la fila de chips (Open WebUI lo pone junto al modelo). */
+#message-input-container {
+	position: relative;
+	overflow: visible;
+}
+
+/* chips: sin cortar el texto */
+#message-input-container button:is(:has(path[d^='M21.75 6.75']), [aria-pressed='true']:has(path[d^='M12 21a9.004']), :has(path[d^='M12 4C6 4 6 8']):not(:disabled), :has(path[d^='M10.5 6h9.75'])) {
+	white-space: nowrap;
+}
+
+/* barra de la caja: + e Integraciones a la izquierda, modelo · micrófono · voz a la derecha */
+#message-input-container > div[dir='ltr'] {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+}
+
+#message-input-container > div[dir='ltr'] > div:last-child {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin-left: auto;
+	margin-right: 0;
+}
+
+/* Escritorio: los chips se quedan dentro de la caja (como antes), Razonamiento después de Terminal y con su nombre */
+@media (min-width: 768px) {
+	#message-input-container button:has(path[d^='M10.5 6h9.75']) {
+		width: auto;
+		height: 32px;
+		margin: 0;
+		padding: 0 11px 0 9px;
+		display: inline-flex;
+		align-items: center;
+		gap: 5px;
+		font-size: 13px;
+		line-height: 20px;
+		font-weight: 600;
+	}
+
+	#message-input-container button:has(path[d^='M10.5 6h9.75'])::after {
+		content: 'Razonamiento';
+	}
+
+	#message-input-container button:has(path[d^='M10.5 6h9.75']) svg {
+		width: 15px;
+		height: 15px;
+	}
+
+	#message-input-container > div[dir='ltr'] > div:nth-child(2) > div {
+		gap: 6px;
+	}
+}
+
+/* Móvil (J): rejilla de dos columnas; los grupos de Open WebUI se aplanan con display: contents */
+@media (max-width: 767px) {
+	#message-input-container {
+		display: grid;
+		grid-template-columns: auto minmax(0, 1fr);
+		column-gap: 0;
+		row-gap: 2px;
+		padding: 6px;
+		margin-bottom: 4px;
+		border-radius: 24px;
+	}
+
+	#message-input-container > * {
+		grid-column: 1 / -1;
+	}
+
+	#message-input-container > div[dir='ltr'] {
+		display: contents;
+	}
+
+	/* fila 1: chips */
+	#message-input-container > div[dir='ltr'] > div:nth-child(2) {
+		grid-row: 1;
+		grid-column: 1 / -1;
+		display: flex;
+		overflow-x: auto;
+		padding: 2px 2px 6px;
+		border-bottom: 1px solid var(--sk-border);
+		scrollbar-width: none;
+		-webkit-mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+		mask-image: linear-gradient(to right, #000 calc(100% - 32px), transparent);
+	}
+
+	#message-input-container > div[dir='ltr'] > div:nth-child(2)::-webkit-scrollbar {
+		display: none;
+	}
+
+	#message-input-container > div[dir='ltr'] > div:nth-child(2):not(:has(button)) {
+		display: none;
+	}
+
+	#message-input-container > div[dir='ltr'] > div:nth-child(2) > div {
+		margin: 0;
+		gap: 6px;
+	}
+
+	#message-input-container > div[dir='ltr'] > div:nth-child(2) > div > * {
+		transform: none;
+	}
+
+	/* fila 2: adjuntos; fila 3: texto */
+	#message-input-container > :not(.px-2, [dir='ltr']) {
+		grid-row: 2;
+	}
+
+	#message-input-container > div.px-2 {
+		grid-row: 3;
+		padding: 0;
+	}
+
+	#chat-input,
+	#chat-input-container,
+	#chat-input-container :is(p, [contenteditable]) {
+		font-size: 17px;
+		line-height: 24px;
+	}
+
+	#chat-input-container {
+		min-height: 44px;
+		padding: 10px 8px 10px 10px;
+	}
+
+	/* fila 4: + · Integraciones ··· modelo · micrófono · voz */
+	#message-input-container > div[dir='ltr'] > div:first-child,
+	#message-input-container > div[dir='ltr'] > div:last-child {
+		grid-row: 4;
+		display: flex;
+		align-items: center;
+		align-self: stretch;
+		margin: 0;
+		padding-top: 4px;
+		border-top: 1px solid var(--sk-border);
+	}
+
+	#message-input-container > div[dir='ltr'] > div:first-child {
+		grid-column: 1;
+		gap: 0;
+	}
+
+	#message-input-container > div[dir='ltr'] > div:last-child {
+		grid-column: 2;
+		justify-content: flex-end;
+		gap: 2px;
+		min-width: 0;
+	}
+
+	#message-input-container > div[dir='ltr'] > div:first-child > div:not(:has(button)) {
+		display: none;
+	}
+
+	#message-input-container > div[dir='ltr'] > div:last-child > div:first-child {
+		min-width: 0;
+		max-width: 164px;
+	}
+
+	:is(#input-menu-button, #integration-menu-button, #voice-input-button) {
+		width: 44px;
+		height: 44px;
+	}
+
+	:is(#input-menu-button, #integration-menu-button) svg {
+		width: 23px;
+		height: 23px;
+	}
+
+	#voice-input-button svg {
+		width: 21px;
+		height: 21px;
+	}
+
+	#model-selector-model-button > div {
+		height: 44px;
+		max-width: 164px;
+		padding: 0 8px 0 12px;
+		font-size: 16px;
+		line-height: 20px;
+	}
+
+	#model-selector-model-button > div svg {
+		width: 17px;
+		height: 17px;
+	}
+
+	/* chips de 44px, solo ícono (Herramientas muestra el número) */
+	#message-input-container button:is(:has(path[d^='M21.75 6.75']), [aria-pressed='true']:has(path[d^='M12 21a9.004']), :has(path[d^='M12 4C6 4 6 8']):not(:disabled), :has(path[d^='M10.5 6h9.75'])) {
+		height: 44px;
+		min-width: 44px;
+		margin: 0;
+		padding: 0 12px;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		gap: 5px;
+		font-size: 15px;
+		font-weight: 700;
+		flex: none;
+	}
+
+	#message-input-container button:is([aria-pressed='true']:has(path[d^='M12 21a9.004']), :has(path[d^='M12 4C6 4 6 8']), :has(path[d^='M10.5 6h9.75'])) {
+		width: 44px;
+		padding: 0;
+	}
+
+	#message-input-container button:is(:has(path[d^='M21.75 6.75']), :has(path[d^='M12 21a9.004']), :has(path[d^='M12 4C6 4 6 8']), :has(path[d^='M10.5 6h9.75'])) svg {
+		width: 20px;
+		height: 20px;
+	}
+
+	#message-input-container button:has(path[d^='M21.75 6.75']) span {
+		font-size: 15px;
+		font-weight: 700;
+	}
+
+	#message-input-container button:has(path[d^='M21.75 6.75']) span::after,
+	#message-input-container button[aria-pressed='true']:has(path[d^='M12 21a9.004'])::after {
+		content: none;
+	}
+
+	#message-input-container button:has(path[d^='M12 4C6 4 6 8']) span {
+		display: none;
+	}
+}
+
+/* ---------- Móvil · mockup "L · botón azul de opciones" ----------
+   Los chips ya no van en la caja: un botón (tres líneas, con el número de opciones activas en un globo
+   azul) junto a Integraciones abre la hoja de vidrio "Herramientas y opciones" (mismo vidrio que los demás menús: 60% y desenfoque de 20px). La hoja es la fila de
+   chips de Open WebUI con otro estilo: cada chip es una fila con su ícono, nombre, descripción e
+   interruptor, y tocarla es tocar el chip. carbono.js crea el botón y el velo. */
+.sk-opciones-boton,
+.sk-opciones-velo {
+	display: none;
+}
+
+@media (max-width: 767px) {
+	/* la caja: texto arriba, abajo + · Integraciones · opciones · modelo (ocupa lo que sobra) · micrófono · voz */
+	#message-input-container > div[dir='ltr'] > div:first-child,
+	#message-input-container > div[dir='ltr'] > div:last-child {
+		padding-top: 6px;
+	}
+
+	#message-input-container > div[dir='ltr'] > div:first-child {
+		gap: 2px;
+		padding-left: 0;
+	}
+
+	#message-input-container > div[dir='ltr'] > div:last-child {
+		gap: 4px;
+		padding-left: 4px;
+		padding-right: 0;
+	}
+
+	/* el modelo ocupa lo que sobra, pero alineado a la derecha, pegado al micrófono */
+	#message-input-container > div[dir='ltr'] > div:last-child > div:first-child {
+		flex: 1 1 auto;
+		max-width: none;
+		justify-content: flex-end;
+	}
+
+	#message-input-container > div[dir='ltr'] > div:last-child > div:first-child > div,
+	#model-selector-model-button > div {
+		max-width: 100%;
+	}
+
+	/* botón de opciones */
+	.sk-opciones-boton {
+		position: relative;
+		display: grid;
+		place-items: center;
+		flex: none;
+		width: 44px;
+		height: 44px;
+		padding: 0;
+		border: 0;
+		border-radius: 9999px;
+		background: transparent;
+		color: var(--sk-ink-muted);
+	}
+
+	.sk-opciones-boton svg {
+		width: 20px;
+		height: 20px;
+	}
+
+	.sk-opciones-boton[aria-expanded='true'] {
+		background: var(--sk-azul-soft);
+		color: var(--sk-azul);
+		box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--sk-azul) 35%, transparent);
+	}
+
+	.sk-opciones-boton:not([data-activas='0'])::after {
+		content: attr(data-activas);
+		position: absolute;
+		top: 0;
+		right: -2px;
+		min-width: 20px;
+		height: 20px;
+		padding: 0 5px;
+		box-sizing: border-box;
+		border: 2px solid var(--sk-surface);
+		border-radius: 9999px;
+		background: var(--sk-azul);
+		color: #ffffff;
+		font-size: 11px;
+		line-height: 16px;
+		font-weight: 700;
+		text-align: center;
+	}
+
+	/* velo detrás de la hoja (la caja queda encima) */
+	.sk-opciones-velo {
+		display: block;
+		position: fixed;
+		inset: 0;
+		z-index: 30;
+		background: rgba(229, 229, 234, 0.45);
+		-webkit-backdrop-filter: blur(10px) saturate(120%);
+		backdrop-filter: blur(10px) saturate(120%);
+	}
+
+	html.dark .sk-opciones-velo {
+		background: rgba(10, 10, 12, 0.45);
+	}
+
+	#message-input-container.sk-opciones-abiertas {
+		z-index: 31;
+	}
+
+	/* fila de chips: oculta; abierta es la hoja */
+	#message-input-container > div[dir='ltr'] > div:nth-child(2) {
+		display: none;
+	}
+
+	#message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) {
+		display: block;
+		position: absolute;
+		left: 0;
+		right: 0;
+		bottom: calc(100% + 12px);
+		z-index: 32;
+		max-height: min(520px, 60dvh);
+		overflow-y: auto;
+		padding: 8px;
+		border: 1px solid var(--sk-border);
+		border-radius: 26px;
+		background: rgba(255, 255, 255, 0.6);
+		-webkit-backdrop-filter: saturate(180%) blur(20px);
+		backdrop-filter: saturate(180%) blur(20px);
+		box-shadow: 0 12px 40px rgba(24, 24, 27, 0.14), 0 1px 2px rgba(24, 24, 27, 0.06);
+		-webkit-mask-image: none;
+		mask-image: none;
+	}
+
+	html.dark #message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) {
+		background: rgba(28, 28, 30, 0.6);
+	}
+
+	/* encabezado: "Herramientas y opciones" · "N activas" */
+	#message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2)::before {
+		content: 'Herramientas y opciones';
+		display: block;
+		padding: 6px 90px 8px 14px;
+		font-size: 17px;
+		line-height: 24px;
+		font-weight: 600;
+		color: var(--sk-ink);
+	}
+
+	#message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2)::after {
+		content: attr(data-activas) ' activas';
+		position: absolute;
+		top: 16px;
+		right: 14px;
+		padding: 2px 8px;
+		border-radius: 6px;
+		background: var(--sk-sidebar);
+		font-size: 13px;
+		line-height: 18px;
+		font-weight: 600;
+		color: var(--sk-ink-muted);
+	}
+
+	#message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) > div {
+		display: flex;
+		flex-direction: column;
+		gap: 0;
+		margin: 0;
+	}
+
+	#message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) > div > * {
+		display: block;
+		width: 100%;
+	}
+
+	/* cada chip es una fila: ícono en mosaico · nombre y descripción · interruptor */
+	#message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button {
+		display: grid !important;
+		grid-template-columns: 38px minmax(0, 1fr);
+		grid-template-rows: auto auto;
+		column-gap: 14px;
+		place-items: center start;
+		align-content: center;
+		width: 100% !important;
+		height: auto !important;
+		min-height: 56px;
+		padding: 0 76px 0 14px !important;
+		border: 0 !important;
+		border-radius: 14px;
+		box-shadow: none !important;
+		background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='28'%3E%3Crect width='48' height='28' rx='14' fill='%2318181b'/%3E%3Ccircle cx='34' cy='14' r='11' fill='white'/%3E%3C/svg%3E") no-repeat right 14px center / 48px 28px !important;
+		color: var(--sk-ink) !important;
+		text-align: left;
+		transform: none;
+	}
+
+	html.dark #message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button {
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='28'%3E%3Crect width='48' height='28' rx='14' fill='%23f4f4f5'/%3E%3Ccircle cx='34' cy='14' r='11' fill='white'/%3E%3C/svg%3E") !important;
+	}
+
+	#message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button:active {
+		background-color: rgba(120, 120, 128, 0.12) !important;
+	}
+
+	#message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button > :not(svg) {
+		display: none !important;
+	}
+
+	#message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button svg {
+		grid-row: 1 / 3;
+		width: 38px !important;
+		height: 38px !important;
+		padding: 9.5px;
+		box-sizing: border-box;
+		border-radius: 12px;
+	}
+
+	#message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button::before {
+		grid-column: 2;
+		font-size: 16px;
+		line-height: 22px;
+		font-weight: 600;
+		color: var(--sk-ink);
+	}
+
+	#message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button::after {
+		grid-column: 2;
+		font-size: 13.5px;
+		line-height: 18px;
+		font-weight: 400;
+		color: var(--sk-ink-muted);
+	}
+
+	#message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button:has(path[d^='M21.75 6.75'])::before {
+		content: 'Herramientas';
+	}
+
+	#message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button:has(path[d^='M21.75 6.75'])::after {
+		content: 'Elige qué herramientas usar';
+	}
+
+	#message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button:has(path[d^='M21.75 6.75']) svg {
+		background: var(--sk-naranja-soft);
+		color: var(--sk-naranja);
+	}
+
+	#message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button:has(path[d^='M12 21a9.004'])::before {
+		content: 'Búsqueda web';
+	}
+
+	#message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button:has(path[d^='M12 21a9.004'])::after {
+		content: 'Busca en internet al responder';
+	}
+
+	#message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button:has(path[d^='M12 21a9.004']) svg {
+		background: var(--sk-verde-soft);
+		color: var(--sk-verde);
+	}
+
+	#message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button:has(path[d^='M12 4C6 4 6 8'])::before {
+		content: 'Open Terminal';
+	}
+
+	#message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button:has(path[d^='M12 4C6 4 6 8'])::after {
+		content: 'Ejecuta comandos en tu PC';
+	}
+
+	#message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button:has(path[d^='M12 4C6 4 6 8']) svg {
+		background: var(--sk-violeta-soft);
+		color: var(--sk-violeta);
+	}
+
+	#message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button:has(path[d^='M10.5 6h9.75'])::before {
+		content: 'Razonamiento';
+	}
+
+	#message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button:has(path[d^='M10.5 6h9.75'])::after {
+		content: 'Piensa más antes de responder';
+	}
+
+	#message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button:has(path[d^='M10.5 6h9.75']) svg {
+		background: var(--sk-amarillo-soft);
+		color: var(--sk-amarillo);
+	}
+}
