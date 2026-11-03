@@ -1,5 +1,5 @@
 /*
- * Carbono 0.82 — tema para Open WebUI (probado con 0.12.5).
+ * Carbono 0.83 — tema para Open WebUI (probado con 0.12.5).
  * https://github.com/YukiChristian/Sakura-OI-Web-Carbono
  *
  * El lanzador lo sirve en /static/custom.css mientras exista carbono/ACTIVO (ver README).
@@ -2892,14 +2892,14 @@ div.w-full.flex-1.h-full.items-center.justify-center > div.flex.justify-center >
 	color: var(--sk-ink-muted);
 }
 
-/* Móvil: el fondo del chat un poco más visible (~2.5% menos de blanco) */
+/* Móvil: el fondo del chat un poco más visible (~3.5% menos de blanco) */
 @media (max-width: 767px) {
 	div.bg-cover.bg-no-repeat.pointer-events-none + div.pointer-events-none.bg-linear-to-t {
-		background-image: linear-gradient(to top, rgba(255, 255, 255, 0.97) 0%, rgba(255, 255, 255, 0.96) 55%, rgba(255, 255, 255, 0.95) 82%, rgba(255, 255, 255, 0.915) 100%);
+		background-image: linear-gradient(to top, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0.95) 55%, rgba(255, 255, 255, 0.94) 82%, rgba(255, 255, 255, 0.905) 100%);
 	}
 
 	html.dark div.bg-cover.bg-no-repeat.pointer-events-none + div.pointer-events-none.bg-linear-to-t {
-		background-image: linear-gradient(to top, color-mix(in srgb, var(--sk-bg) 97%, transparent) 0%, color-mix(in srgb, var(--sk-bg) 96%, transparent) 55%, color-mix(in srgb, var(--sk-bg) 95%, transparent) 82%, color-mix(in srgb, var(--sk-bg) 91.5%, transparent) 100%);
+		background-image: linear-gradient(to top, color-mix(in srgb, var(--sk-bg) 96%, transparent) 0%, color-mix(in srgb, var(--sk-bg) 95%, transparent) 55%, color-mix(in srgb, var(--sk-bg) 94%, transparent) 82%, color-mix(in srgb, var(--sk-bg) 90.5%, transparent) 100%);
 	}
 }
 

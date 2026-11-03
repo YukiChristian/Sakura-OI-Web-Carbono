@@ -1,10 +1,12 @@
 # Carbono para Open WebUI
 
-**Versión 0.82** · probado con Open WebUI **0.12.5**
+**Versión 0.83** · probado con Open WebUI **0.12.5**
 
 Carbono es el tema recomendado para [Sakura OI Web](https://github.com/YukiChristian/Sakura-OI-Web). Deja la interfaz de Open WebUI neutra (superficies en tonos carbón y zinc, acción principal en negro), con más jerarquía en el texto, tipografía Atkinson Hyperlegible, menús de vidrio esmerilado y un composer pensado para el teléfono.
 
 No modifica Open WebUI: son dos archivos (`carbono.css` y `carbono.js`) que tu lanzador sirve en lugar de los vacíos que Open WebUI ya carga en cada página (`/static/custom.css` y `/static/loader.js`). Se activa y se quita con un comando y sobrevive a `pip install -U open-webui`.
+
+La guía de estilo (principios, colores, tipografía y componentes) está en [docs/GUIA.md](docs/GUIA.md).
 
 ## Capturas
 
@@ -38,6 +40,11 @@ No modifica Open WebUI: son dos archivos (`carbono.css` y `carbono.js`) que tu l
 - **Rendimiento:** los selectores evitan buscar por el atributo `class` dentro de `:has()`, que obliga al navegador a recalcular toda la página en cada hover.
 
 ## Cambios
+
+### 0.83
+
+- Teléfono: el velo blanco sobre el fondo del chat es 1 % más transparente, para que se note un poco más el fondo de cada modelo.
+- Nueva guía de estilo en [docs/GUIA.md](docs/GUIA.md). Toda la documentación del tema vive ahora en este repositorio.
 
 ### 0.82
 
@@ -75,7 +82,7 @@ No modifica Open WebUI: son dos archivos (`carbono.css` y `carbono.js`) que tu l
          └─ Quitar-Tema.cmd
    ```
 
-2. Agrega a tu lanzador este bloque, justo después de `import open_webui.main` y antes de `uvicorn.run(...)`. El lanzador de [Sakura OI Web](https://github.com/YukiChristian/Sakura-OI-Web) ya lo incluye. `script_dir` es la carpeta del lanzador (`Path(__file__).resolve().parent`).
+2. Agrega a tu lanzador este bloque, justo después de `import open_webui.main` y antes de `uvicorn.run(...)`. `script_dir` es la carpeta del lanzador (`Path(__file__).resolve().parent`).
 
    ```python
    # Tema Carbono: mientras exista temas/carbono/ACTIVO, /static/custom.css y /static/loader.js
