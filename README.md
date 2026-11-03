@@ -1,6 +1,6 @@
 # Carbono para Open WebUI
 
-**Versión 0.80** · probado con Open WebUI **0.12.5**
+**Versión 0.81** · probado con Open WebUI **0.12.5**
 
 Carbono es el tema recomendado para [Sakura OI Web](https://github.com/YukiChristian/Sakura-OI-Web). Deja la interfaz de Open WebUI neutra (superficies en tonos carbón y zinc, acción principal en negro), con más jerarquía en el texto, tipografía Atkinson Hyperlegible, menús de vidrio esmerilado y un composer pensado para el teléfono.
 
@@ -32,9 +32,26 @@ No modifica Open WebUI: son dos archivos (`carbono.css` y `carbono.js`) que tu l
 - **Composer en escritorio:** chips de color con su nombre (Herramientas en naranja, Web en verde, Open Terminal en violeta, Razonamiento en amarillo) y, a la derecha, modelo, micrófono y voz.
 - **Composer en el teléfono:** texto arriba; abajo `+`, Integraciones, un botón de opciones con el número de opciones activas, el modelo, el micrófono y la voz. El botón de opciones abre la hoja de vidrio **Herramientas y opciones**, donde cada opción activa tiene su ícono, su descripción y su interruptor.
 - **Menús:** vidrio esmerilado (blanco al 60 % con desenfoque) en todos los menús flotantes y en el selector de modelo; nunca se salen de la ventana y muestran todas sus opciones.
+- **Administración y Zona de Pruebas:** pestañas en control segmentado, tabla de usuarios en tarjeta con el rol en píldora, buscador y botones de 46 px, instrucciones del sistema en tarjeta, un recuadro punteado que explica qué hacer cuando no hay mensajes y botón **Ejecutar** en negro.
 - **Ajustes, Notas, Espacio de Trabajo, Calendario y Automatizaciones:** jerarquía título › sección › ajuste › descripción y botón **Crear** en negro.
 - **Notificaciones, inicio de sesión y modo voz:** colores de estado del sistema, campos de 44 px y botones de voz de 64 px con su etiqueta.
 - **Rendimiento:** los selectores evitan buscar por el atributo `class` dentro de `:has()`, que obliga al navegador a recalcular toda la página en cada hover.
+
+## Cambios
+
+### 0.81
+
+- Barra lateral y menús 2 px más grandes (15 px en escritorio, 18 px en el teléfono); el menú de usuario mide lo mismo que la barra.
+- Administración y Zona de Pruebas rediseñadas.
+- Caja de escribir más baja (menos margen arriba y abajo del texto).
+- La hoja **Herramientas y opciones** del teléfono ya no oscurece ni desenfoca el resto de la pantalla.
+- Mientras el tema está activo se desactiva el modo de alto contraste de Open WebUI, que oscurecía los grises y chocaba con la paleta; al quitar el tema vuelve a funcionar.
+- Corregido: la X para quitar un archivo adjunto se veía como un círculo negro grande que tapaba el nombre.
+- Corregido: el botón **Enviar** al editar un mensaje se veía negro sin texto.
+
+### 0.80
+
+- Primera versión publicada: tipografía Atkinson Hyperlegible, menús de vidrio esmerilado, composer de escritorio con chips de color y composer del teléfono con la hoja **Herramientas y opciones**.
 
 ## Instalar
 
@@ -119,6 +136,6 @@ Los colores están como variables al inicio de `carbono.css` (`--sk-bg`, `--sk-i
 ## Limitaciones
 
 - Algunos detalles dependen de cómo Open WebUI arma su HTML (por ejemplo, cada chip se reconoce por el dibujo de su ícono). Si cambian en una versión futura, esos detalles vuelven al estilo original.
-- `carbono.js` mueve el botón de Razonamiento junto a los demás chips y crea el botón de opciones del teléfono.
+- `carbono.js` mueve el botón de Razonamiento junto a los demás chips, crea el botón de opciones del teléfono y desactiva el modo de alto contraste de Open WebUI mientras el tema está activo.
 - En el teléfono, la hoja **Herramientas y opciones** muestra las opciones activas; para activar otra, usa el botón de Integraciones.
 - El bloque del lanzador está pensado para un solo worker de uvicorn, que es el valor por defecto.

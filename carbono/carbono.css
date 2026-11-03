@@ -1,5 +1,5 @@
 /*
- * Carbono 0.80 — tema para Open WebUI (probado con 0.12.5).
+ * Carbono 0.81 — tema para Open WebUI (probado con 0.12.5).
  * https://github.com/YukiChristian/Sakura-OI-Web-Carbono
  *
  * El lanzador lo sirve en /static/custom.css mientras exista carbono/ACTIVO (ver README).
@@ -138,8 +138,8 @@ a:not([class]) {
 }
 
 #sidebar-webui-name {
-	font-size: 18px;
-	line-height: 26px;
+	font-size: 20px;
+	line-height: 28px;
 	font-weight: 600;
 	letter-spacing: -0.01em;
 }
@@ -151,8 +151,8 @@ a:not([class]) {
 
 #sidebar-chat-item {
 	border-radius: var(--sk-r-md);
-	font-size: 13px;
-	line-height: 19px;
+	font-size: 15px;
+	line-height: 22px;
 	color: var(--sk-ink);
 }
 
@@ -160,8 +160,8 @@ a:not([class]) {
    se iguala al de los chats para que todas las filas midan lo mismo */
 :is(#sidebar, [role='navigation']) [class~='text-[0.8125rem]'],
 #sidebar-chat-item :is(a, div, span, input):not(.text-xs, [class~='text-[0.6875rem]'], [class~='text-[0.625rem]'], [class~='text-[0.75rem]']) {
-	font-size: 13px;
-	line-height: 19px;
+	font-size: 15px;
+	line-height: 22px;
 }
 
 /* Etiquetas de sección del sidebar en overline (como el sistema de diseño): mismo tamaño
@@ -173,8 +173,8 @@ a:not([class]) {
 [role='navigation'] [class~='text-[0.6875rem]']:has(+ [role='list']),
 :is(#sidebar, [role='navigation']) h3:not(#sidebar-chat-item *),
 :is(#sidebar, [role='navigation']) :is(button, div):is(.text-xs, [class~='text-[0.6875rem]'], [class~='text-[0.75rem]']) > span:not(:has(*)):not(#sidebar-chat-item *, [role='menu'] *, [role='menuitem'] *) {
-	font-size: 9.5px;
-	line-height: 14px;
+	font-size: 11.5px;
+	line-height: 16px;
 	font-weight: 600;
 	letter-spacing: 0.06em;
 	text-transform: uppercase;
@@ -183,8 +183,8 @@ a:not([class]) {
 
 /* Marcas de tiempo de los chats ("hace 3 h") en caption: 12.5px, ink-subtle */
 #sidebar-chat-item :is(.text-xs, [class~='text-[0.6875rem]'], [class~='text-[0.625rem]'], [class~='text-[0.75rem]']) {
-	font-size: 11.5px;
-	line-height: 16px;
+	font-size: 13.5px;
+	line-height: 18px;
 	color: var(--sk-ink-subtle);
 }
 
@@ -333,15 +333,15 @@ nav.sticky:has(h1) h1 {
 		height: 22px;
 	}
 
-	/* Sidebar: más ancha (316px), filas de 44px y texto 16px.
+	/* Sidebar: más ancha (316px), filas de 44px y texto 18px.
 	   Open WebUI fija --sidebar-width en <html> por estilo en línea; !important le gana. */
 	html {
 		--sidebar-width: min(316px, 86vw) !important;
 	}
 
 	.sidebar :is(a, button):not([role='menuitem']) {
-		font-size: 16px;
-		line-height: 26px;
+		font-size: 18px;
+		line-height: 28px;
 	}
 
 	.sidebar :is(a, button):not([role='menuitem']) svg {
@@ -352,15 +352,15 @@ nav.sticky:has(h1) h1 {
 	#sidebar-chat-item,
 	#sidebar-chat-item :is(a, div, span, input):not(.text-xs, [class~='text-[0.6875rem]'], [class~='text-[0.625rem]'], [class~='text-[0.75rem]']),
 	:is(#sidebar, [role='navigation']) [class~='text-[0.8125rem]'] {
-		font-size: 16px;
-		line-height: 24px;
+		font-size: 18px;
+		line-height: 26px;
 	}
 
 	/* Menús (usuario, chat…) al mismo tamaño que la barra lateral, con filas táctiles de 44px */
 	[role='menuitem'][role='menuitem'] {
 		min-height: 44px;
-		font-size: 16px;
-		line-height: 24px;
+		font-size: 18px;
+		line-height: 26px;
 	}
 
 	#sidebar-chat-item {
@@ -371,17 +371,17 @@ nav.sticky:has(h1) h1 {
 	[id='sidebar-folder-button'] > h3 > button,
 	:is(#sidebar, [role='navigation']) h3:not(#sidebar-chat-item *),
 	:is(#sidebar, [role='navigation']) :is(button, div):is(.text-xs, [class~='text-[0.6875rem]'], [class~='text-[0.75rem]']) > span:not(:has(*)):not(#sidebar-chat-item *, [role='menu'] *, [role='menuitem'] *) {
-		font-size: 11.5px;
-		line-height: 16px;
+		font-size: 13.5px;
+		line-height: 18px;
 	}
 
 	#sidebar-chat-item :is(.text-xs, [class~='text-[0.6875rem]'], [class~='text-[0.625rem]'], [class~='text-[0.75rem]']) {
-		font-size: 14.5px;
+		font-size: 16.5px;
 	}
 
 	#sidebar-webui-name {
-		font-size: 20px;
-		line-height: 28px;
+		font-size: 22px;
+		line-height: 30px;
 	}
 }
 
@@ -1302,13 +1302,13 @@ html.dark [data-sonner-toaster][data-sonner-toaster][data-theme] {
 
 /* Opciones de menú (menú de usuario, de chat…): las de Open WebUI miden 27px y 13px de letra */
 [role='menuitem'] {
-	min-height: 34px;
+	min-height: 38px;
 	height: auto;
 	padding-inline: 10px;
 	gap: 10px;
 	border-radius: var(--sk-r-md);
-	font-size: 13px;
-	line-height: 19px;
+	font-size: 15px;
+	line-height: 22px;
 	color: var(--sk-ink);
 }
 
@@ -1622,7 +1622,7 @@ html.dark #model-selector-model-button > div {
 }
 
 /* Voz y enviar: círculo negro de 44px con sombra */
-#message-input-container button.rounded-full:is([class*='bg-black'], [class*='bg-gray-900'], [class*='bg-white']):not(.hidden),
+#message-input-container > div[dir='ltr'] button.rounded-full:is([class*='bg-black'], [class*='bg-gray-900'], [class*='bg-white']):not(.hidden),
 #send-message-button:not(.hidden) {
 	width: 44px;
 	height: 44px;
@@ -1636,7 +1636,7 @@ html.dark #model-selector-model-button > div {
 	box-shadow: 0 2px 6px rgba(24, 24, 27, 0.25);
 }
 
-#message-input-container button.rounded-full:is([class*='bg-black'], [class*='bg-gray-900'], [class*='bg-white']):not(.hidden) svg,
+#message-input-container > div[dir='ltr'] button.rounded-full:is([class*='bg-black'], [class*='bg-gray-900'], [class*='bg-white']):not(.hidden) svg,
 #send-message-button svg {
 	width: 20px;
 	height: 20px;
@@ -2480,14 +2480,14 @@ div:has(> #workspace-container) > nav a:has(> span + span) > span + span {
 		font-size: 14px;
 	}
 
-	#message-input-container button.rounded-full:is([class*='bg-black'], [class*='bg-gray-900'], [class*='bg-white']):not(.hidden),
+	#message-input-container > div[dir='ltr'] button.rounded-full:is([class*='bg-black'], [class*='bg-gray-900'], [class*='bg-white']):not(.hidden),
 	#send-message-button:not(.hidden) {
 		width: 40px;
 		height: 40px;
 		min-width: 40px;
 	}
 
-	#message-input-container button.rounded-full:is([class*='bg-black'], [class*='bg-gray-900'], [class*='bg-white']):not(.hidden) svg,
+	#message-input-container > div[dir='ltr'] button.rounded-full:is([class*='bg-black'], [class*='bg-gray-900'], [class*='bg-white']):not(.hidden) svg,
 	#send-message-button svg {
 		width: 18px;
 		height: 18px;
@@ -3237,19 +3237,13 @@ div.w-full.flex-1.h-full.items-center.justify-center > div.flex.justify-center >
 		text-align: center;
 	}
 
-	/* velo detrás de la hoja (la caja queda encima) */
+	/* capa invisible detrás de la hoja: solo sirve para cerrarla al tocar fuera (sin velo ni desenfoque) */
 	.sk-opciones-velo {
 		display: block;
 		position: fixed;
 		inset: 0;
 		z-index: 30;
-		background: rgba(229, 229, 234, 0.45);
-		-webkit-backdrop-filter: blur(10px) saturate(120%);
-		backdrop-filter: blur(10px) saturate(120%);
-	}
-
-	html.dark .sk-opciones-velo {
-		background: rgba(10, 10, 12, 0.45);
+		background: transparent;
 	}
 
 	#message-input-container.sk-opciones-abiertas {
@@ -3431,4 +3425,561 @@ div.w-full.flex-1.h-full.items-center.justify-center > div.flex.justify-center >
 		background: var(--sk-amarillo-soft);
 		color: var(--sk-amarillo);
 	}
+}
+
+/* Editar mensaje: el botón "Enviar" se veía negro sin texto (otra regla le ponía color gris a su text-xs) */
+#confirm-edit-message-button {
+	height: 32px;
+	padding: 0 14px;
+	border-radius: var(--sk-r-md);
+	background-color: var(--sk-primary);
+	color: var(--sk-on-primary);
+	font-size: 14px;
+	line-height: 20px;
+	font-weight: 600;
+}
+
+#confirm-edit-message-button:hover {
+	background-color: color-mix(in srgb, var(--sk-primary) 88%, var(--sk-bg));
+}
+
+/* Caja de escribir más baja: menos margen arriba y abajo del texto */
+#message-input-container {
+	padding-top: 8px;
+	padding-bottom: 8px;
+}
+
+#chat-input-container {
+	min-height: 28px;
+	padding-top: 2px;
+	padding-bottom: 2px;
+}
+
+@media (min-width: 768px) {
+	#message-input-container > div[dir='ltr'] {
+		margin-top: 2px;
+	}
+}
+
+@media (max-width: 767px) {
+	#message-input-container {
+		padding-top: 4px;
+		padding-bottom: 6px;
+	}
+
+	#chat-input-container {
+		min-height: 36px;
+		padding-top: 6px;
+		padding-bottom: 6px;
+	}
+}
+
+/* ---------- Administración y Zona de Pruebas (mockups "Escritorio · Administración" y "Escritorio · Zona de Pruebas") ---------- */
+
+/* Pestañas de arriba (Usuarios, Evaluaciones… / Chat, Cumplimientos…): control segmentado gris, la activa en blanco */
+nav div:is(:has(> a[href='/admin/evaluations']), :has(> a[href='/playground/completions'])) {
+	display: inline-flex;
+	gap: 2px;
+	width: fit-content;
+	padding: 4px;
+	border-radius: 14px;
+	background: var(--sk-hover);
+}
+
+nav div:is(:has(> a[href='/admin/evaluations']), :has(> a[href='/playground/completions'])) > a {
+	display: inline-flex;
+	align-items: center;
+	height: 38px;
+	padding: 0 16px;
+	border-radius: 10px;
+	font-size: 15px;
+	line-height: 22px;
+	font-weight: 500;
+	color: var(--sk-ink-muted);
+}
+
+nav div:is(:has(> a[href='/admin/evaluations']), :has(> a[href='/playground/completions'])) > a:hover {
+	color: var(--sk-ink);
+}
+
+nav div:is(:has(> a[href='/admin/evaluations']), :has(> a[href='/playground/completions'])) > a:not([class~='text-gray-300']) {
+	background: var(--sk-surface);
+	color: var(--sk-ink);
+	font-weight: 600;
+	box-shadow: 0 1px 2px rgba(24, 24, 27, 0.08), 0 1px 1px rgba(24, 24, 27, 0.04);
+}
+
+nav:has(div:is(:has(> a[href='/admin/evaluations']), :has(> a[href='/playground/completions']))) {
+	padding: 14px 24px 8px;
+}
+
+/* Administración › Usuarios: Vista General / Grupos */
+@media (min-width: 1024px) {
+	#users-tabs-container {
+		width: 220px;
+		flex: none;
+		gap: 4px;
+		margin-right: 28px;
+		padding: 0;
+	}
+}
+
+#users-tabs-container > a {
+	justify-content: space-between;
+	height: 44px;
+	padding: 0 12px 0 14px;
+	border-radius: 12px;
+	font-size: 15px;
+	line-height: 22px;
+	font-weight: 500;
+	color: var(--sk-ink-muted);
+}
+
+#users-tabs-container > a:hover {
+	background: var(--sk-hover);
+	color: var(--sk-ink);
+}
+
+#users-tabs-container > a:not([class~='text-gray-300']) {
+	background: var(--sk-surface);
+	color: var(--sk-ink);
+	font-weight: 600;
+	box-shadow: 0 0 0 1px var(--sk-border), 0 1px 2px rgba(24, 24, 27, 0.05);
+}
+
+#users-tabs-container > a > div.opacity-60 {
+	min-width: 24px;
+	height: 22px;
+	padding: 0 7px;
+	box-sizing: border-box;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	border-radius: 9999px;
+	background: var(--sk-selected);
+	color: var(--sk-ink-muted);
+	font-size: 12.5px;
+	font-weight: 700;
+	opacity: 1;
+}
+
+#users-tabs-container > a:not([class~='text-gray-300']) > div.opacity-60 {
+	background: var(--sk-primary);
+	color: var(--sk-on-primary);
+}
+
+/* buscador y "Añadir Usuario" de 46px; el botón en negro con + */
+#users-tabs-container + div div.sticky > div.flex.h-8 {
+	height: 46px;
+	gap: 12px;
+	margin-bottom: 16px;
+}
+
+#users-tabs-container + div div.sticky > div.flex.h-8 > div:has(> input) {
+	height: 46px;
+	padding: 0 16px;
+	border: 1px solid var(--sk-border-strong);
+	border-radius: 12px;
+	background: var(--sk-surface);
+}
+
+#users-tabs-container + div div.sticky > div.flex.h-8 > div:has(> input) svg {
+	width: 20px;
+	height: 20px;
+	color: var(--sk-ink-muted);
+}
+
+#users-tabs-container + div div.sticky > div.flex.h-8 input {
+	font-size: 16px;
+	line-height: 24px;
+}
+
+#users-tabs-container + div div.sticky > div.flex.h-8 > button {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	height: 46px;
+	padding: 0 18px 0 14px;
+	border-radius: 12px;
+	--tw-ring-color: transparent;
+	background: var(--sk-primary);
+	color: var(--sk-on-primary);
+	font-size: 15px;
+	line-height: 22px;
+	font-weight: 600;
+	box-shadow: 0 1px 2px rgba(24, 24, 27, 0.2);
+}
+
+#users-tabs-container + div div.sticky > div.flex.h-8 > button::before {
+	content: '';
+	width: 19px;
+	height: 19px;
+	background: currentColor;
+	-webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v14M5 12h14'/%3E%3C/svg%3E") center / contain no-repeat;
+	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v14M5 12h14'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+/* tabla en tarjeta: encabezados en mayúsculas pequeñas y filas de 68px */
+#users-tabs-container + div div:has(> table) {
+	border: 1px solid var(--sk-border);
+	border-radius: 16px;
+	background: var(--sk-surface);
+	box-shadow: 0 1px 2px rgba(24, 24, 27, 0.04);
+}
+
+#users-tabs-container + div table th {
+	padding: 0;
+	border-bottom: 1px solid var(--sk-border);
+	background: var(--sk-bg);
+	font-size: 12px;
+	line-height: 16px;
+	font-weight: 600;
+	letter-spacing: 0.05em;
+	text-transform: uppercase;
+	color: var(--sk-ink-subtle);
+}
+
+#users-tabs-container + div table th > button {
+	padding: 12px 20px;
+}
+
+#users-tabs-container + div table thead tr {
+	border: 0;
+}
+
+#users-tabs-container + div table tbody tr td {
+	padding: 16px 20px;
+	border-bottom: 1px solid var(--sk-border);
+	font-size: 15px;
+	line-height: 22px;
+	color: var(--sk-ink-muted);
+}
+
+#users-tabs-container + div table tbody tr:last-child td {
+	border-bottom: 0;
+}
+
+#users-tabs-container + div table tbody tr:hover td {
+	background: var(--sk-bg);
+}
+
+#users-tabs-container + div table tbody td:first-child {
+	color: var(--sk-ink);
+	font-weight: 600;
+}
+
+#users-tabs-container + div table tbody td:first-child > div {
+	position: relative;
+	gap: 12px;
+}
+
+#users-tabs-container + div table tbody td:first-child img {
+	width: 36px;
+	height: 36px;
+}
+
+/* punto de "en línea" sobre el avatar */
+#users-tabs-container + div table tbody td:first-child > div > div:has(> span.relative) {
+	position: absolute;
+	left: 26px;
+	top: 25px;
+}
+
+#users-tabs-container + div table tbody td:first-child span.relative.flex {
+	width: 11px;
+	height: 11px;
+	border: 2px solid var(--sk-surface);
+	border-radius: 9999px;
+	box-sizing: border-box;
+	background: var(--sk-success);
+}
+
+#users-tabs-container + div table tbody td:first-child span.relative.flex > span {
+	display: none;
+}
+
+/* rol: píldora (Administrador en azul con escudo) */
+button[aria-label='Cambiar Rol del Usuario'] {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	height: 30px;
+	padding: 0 12px;
+	border: 1px solid var(--sk-border);
+	border-radius: 9999px;
+	background: var(--sk-sidebar);
+	color: var(--sk-ink-muted);
+	font-size: 13.5px;
+	line-height: 18px;
+	font-weight: 600;
+}
+
+button[aria-label='Cambiar Rol del Usuario'][class~='text-[#4f6f93]'] {
+	border-color: color-mix(in srgb, var(--sk-azul) 30%, transparent);
+	background: var(--sk-azul-soft);
+	color: var(--sk-azul);
+}
+
+button[aria-label='Cambiar Rol del Usuario'][class~='text-[#4f6f93]']::before {
+	content: '';
+	width: 14px;
+	height: 14px;
+	background: currentColor;
+	-webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6z'/%3E%3C/svg%3E") center / contain no-repeat;
+	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3l7 3v5c0 4.5-3 8.5-7 10-4-1.5-7-5.5-7-10V6z'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+#users-tabs-container + div table tbody td:last-child button {
+	width: 38px;
+	height: 38px;
+	display: inline-grid;
+	place-items: center;
+	border-radius: 10px;
+	color: var(--sk-ink-muted);
+}
+
+#users-tabs-container + div table tbody td:last-child button:hover {
+	background: var(--sk-hover);
+	color: var(--sk-ink);
+}
+
+/* "Pulsa en el botón rol…": aviso azul claro */
+#users-tabs-container + div div:has(> table) ~ div.text-right {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-top: 16px;
+	padding: 12px 16px;
+	border-radius: 12px;
+	background: var(--sk-azul-soft);
+	color: color-mix(in srgb, var(--sk-azul) 75%, var(--sk-ink));
+	font-size: 14px;
+	line-height: 20px;
+	font-weight: 500;
+	text-align: left;
+}
+
+/* Zona de Pruebas: instrucciones del sistema en tarjeta con ícono violeta */
+div.flex.flex-col.h-full:has(> #messages-container):has(#playground-controls-toggle) {
+	gap: 16px;
+	padding: 4px 24px 0;
+}
+
+div.flex.flex-col.h-full:has(> #messages-container):has(#playground-controls-toggle) > div:first-child {
+	padding: 10px 10px 10px 16px;
+	border: 1px solid var(--sk-border);
+	border-radius: 16px;
+	background: var(--sk-surface);
+	box-shadow: 0 1px 2px rgba(24, 24, 27, 0.04);
+}
+
+div.flex.flex-col.h-full:has(> #messages-container):has(#playground-controls-toggle) > div:first-child > div > div {
+	padding: 0;
+	border: 0;
+	font-size: 16px;
+	line-height: 24px;
+	font-weight: 600;
+	color: var(--sk-ink);
+}
+
+div.flex.flex-col.h-full:has(> #messages-container):has(#playground-controls-toggle) > div:first-child > div > div > div {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+div.flex.flex-col.h-full:has(> #messages-container):has(#playground-controls-toggle) > div:first-child > div > div > div::before {
+	content: '';
+	flex: none;
+	width: 36px;
+	height: 36px;
+	border-radius: 10px;
+	background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%236f42c8' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 4h14v16H5zM9 9h6M9 13h6M9 17h3'/%3E%3C/svg%3E") center / 18px no-repeat, var(--sk-violeta-soft);
+}
+
+div.flex.flex-col.h-full:has(> #messages-container):has(#playground-controls-toggle) > div:first-child button[aria-label='Instrucciones del sistema'] {
+	width: 36px;
+	height: 36px;
+	display: grid;
+	place-items: center;
+	border-radius: 10px;
+	color: var(--sk-ink-muted);
+}
+
+div.flex.flex-col.h-full:has(> #messages-container):has(#playground-controls-toggle) > div:first-child > span button {
+	width: 40px;
+	height: 40px;
+	display: grid;
+	place-items: center;
+	border-radius: 10px;
+	color: var(--sk-ink-muted);
+}
+
+div.flex.flex-col.h-full:has(> #messages-container):has(#playground-controls-toggle) > div:first-child button:hover {
+	background: var(--sk-hover);
+	color: var(--sk-ink);
+}
+
+/* área vacía: recuadro punteado con indicación */
+div.flex.flex-col.h-full:has(> #messages-container):has(#playground-controls-toggle) #messages-container div.flex-1.p-1:has(> div.py-3:empty) {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 10px;
+	width: 100%;
+	height: 100%;
+	box-sizing: border-box;
+	border: 1.5px dashed var(--sk-border-strong);
+	border-radius: 16px;
+}
+
+div.flex.flex-col.h-full:has(> #messages-container):has(#playground-controls-toggle) #messages-container div.flex-1.p-1:has(> div.py-3:empty)::before {
+	content: '';
+	width: 48px;
+	height: 48px;
+	border-radius: 14px;
+	background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2352525b' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 12a8 8 0 1 1 3.3 6.5L4 20l1.2-3.4A8 8 0 0 1 4 12z'/%3E%3C/svg%3E") center / 24px no-repeat, var(--sk-sidebar);
+}
+
+div.flex.flex-col.h-full:has(> #messages-container):has(#playground-controls-toggle) #messages-container div.flex-1.p-1:has(> div.py-3:empty)::after {
+	content: 'Escribe un mensaje abajo y pulsa Ejecutar para probar el modelo.';
+	max-width: 360px;
+	text-align: center;
+	font-size: 15px;
+	line-height: 22px;
+	color: var(--sk-ink-muted);
+}
+
+div.flex.flex-col.h-full:has(> #messages-container):has(#playground-controls-toggle) #messages-container div.flex-1.p-1 > div.py-3:empty {
+	display: none;
+}
+
+/* composer en tarjeta con sombra */
+div.flex.flex-col.h-full:has(> #messages-container):has(#playground-controls-toggle) div.pb-3 > div {
+	padding: 14px 14px 12px;
+	border: 1px solid var(--sk-border);
+	border-radius: 22px;
+	background: var(--sk-surface);
+	box-shadow: 0 8px 32px rgba(24, 24, 27, 0.08), 0 1px 3px rgba(24, 24, 27, 0.05);
+}
+
+div.flex.flex-col.h-full:has(> #messages-container):has(#playground-controls-toggle) div.pb-3 textarea {
+	min-height: 56px;
+	padding: 4px 6px;
+	font-size: 16px;
+	line-height: 24px;
+	color: var(--sk-ink);
+}
+
+div.flex.flex-col.h-full:has(> #messages-container):has(#playground-controls-toggle) div.pb-3 > div > div:last-child {
+	margin-top: 10px;
+	gap: 8px;
+}
+
+/* "Usuario": píldora con ícono de persona */
+div.flex.flex-col.h-full:has(> #messages-container):has(#playground-controls-toggle) div.pb-3 button:has(> span.sr-only) {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	height: 38px;
+	padding: 0 14px 0 10px;
+	border: 1px solid var(--sk-border);
+	border-radius: 9999px;
+	background: var(--sk-sidebar);
+	color: var(--sk-ink);
+	font-size: 14px;
+	line-height: 20px;
+	font-weight: 600;
+}
+
+div.flex.flex-col.h-full:has(> #messages-container):has(#playground-controls-toggle) div.pb-3 button:has(> span.sr-only)::before {
+	content: '';
+	width: 16px;
+	height: 16px;
+	background: currentColor;
+	-webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4 21a8 8 0 0 1 16 0'/%3E%3C/svg%3E") center / contain no-repeat;
+	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.75' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='12' cy='8' r='4'/%3E%3Cpath d='M4 21a8 8 0 0 1 16 0'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+/* modelo en píldora */
+div.flex.flex-col.h-full:has(> #messages-container):has(#playground-controls-toggle) div.pb-3 select {
+	width: 240px;
+	height: 42px;
+	margin: 0;
+	padding: 0 12px 0 14px;
+	border: 1px solid var(--sk-border-strong);
+	border-radius: 9999px;
+	background-color: var(--sk-sidebar);
+	color: var(--sk-ink);
+	font-size: 15px;
+	line-height: 22px;
+	font-weight: 600;
+}
+
+#playground-controls-toggle {
+	width: 42px;
+	height: 42px;
+	display: grid;
+	place-items: center;
+	border-radius: 9999px;
+	color: var(--sk-ink-muted);
+}
+
+#playground-controls-toggle svg {
+	width: 20px;
+	height: 20px;
+}
+
+/* Añadir (secundario) y Ejecutar (negro con play) */
+div.flex.flex-col.h-full:has(> #messages-container):has(#playground-controls-toggle) div.pb-3 div.flex.gap-2.shrink-0 > button {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	height: 42px;
+	padding: 0 16px 0 12px;
+	border-radius: 9999px;
+	font-size: 15px;
+	line-height: 22px;
+	font-weight: 600;
+}
+
+div.flex.flex-col.h-full:has(> #messages-container):has(#playground-controls-toggle) div.pb-3 div.flex.gap-2.shrink-0 > button[class~='bg-gray-100'] {
+	border: 1px solid var(--sk-border);
+	background: var(--sk-surface);
+	color: var(--sk-ink-subtle);
+}
+
+div.flex.flex-col.h-full:has(> #messages-container):has(#playground-controls-toggle) div.pb-3 div.flex.gap-2.shrink-0 > button[class~='bg-gray-100']::before {
+	content: '';
+	width: 17px;
+	height: 17px;
+	background: currentColor;
+	-webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v14M5 12h14'/%3E%3C/svg%3E") center / contain no-repeat;
+	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 5v14M5 12h14'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+div.flex.flex-col.h-full:has(> #messages-container):has(#playground-controls-toggle) div.pb-3 div.flex.gap-2.shrink-0 > button[class~='bg-gray-900'] {
+	padding: 0 20px 0 16px;
+	gap: 8px;
+	background: var(--sk-primary);
+	color: var(--sk-on-primary);
+	box-shadow: 0 2px 6px rgba(24, 24, 27, 0.25);
+}
+
+div.flex.flex-col.h-full:has(> #messages-container):has(#playground-controls-toggle) div.pb-3 div.flex.gap-2.shrink-0 > button[class~='bg-gray-900']::before {
+	content: '';
+	width: 14px;
+	height: 14px;
+	background: currentColor;
+	-webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black' stroke='none' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 4.5v15l12-7.5z'/%3E%3C/svg%3E") center / contain no-repeat;
+	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='black' stroke='none' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M7 4.5v15l12-7.5z'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+#users-tabs-container + div table th > button {
+	text-transform: uppercase;
+}
+
+#users-tabs-container + div table tbody td:first-child {
+	max-width: none;
 }

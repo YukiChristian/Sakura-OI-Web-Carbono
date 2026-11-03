@@ -1,5 +1,5 @@
 /*
- * Carbono 0.80 — comportamiento del tema. El lanzador lo sirve en /static/loader.js
+ * Carbono 0.81 — comportamiento del tema. El lanzador lo sirve en /static/loader.js
  * (que Open WebUI carga en cada página) mientras exista carbono/ACTIVO.
  *
  * Barras de desplazamiento que solo aparecen mientras haces scroll: carbono.css las deja
@@ -119,4 +119,18 @@
 		pendiente = true;
 		requestAnimationFrame(actualizar);
 	}).observe(document.documentElement, { childList: true, subtree: true });
+})();
+
+/*
+ * Modo de alto contraste de Open WebUI (Ajustes › Interfaz): oscurece los grises, subraya el chat
+ * abierto y dibuja un contorno dentro del cuadro de texto, y choca con la paleta del tema. Mientras el
+ * tema está activo se le quita la clase high-contrast a <html>; al quitar el tema vuelve a funcionar.
+ */
+(() => {
+	const html = document.documentElement;
+	const quitar = () => {
+		if (html.classList.contains('high-contrast')) html.classList.remove('high-contrast');
+	};
+	quitar();
+	new MutationObserver(quitar).observe(html, { attributes: true, attributeFilter: ['class'] });
 })();
