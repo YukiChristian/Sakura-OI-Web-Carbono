@@ -1,5 +1,5 @@
 /*
- * Carbono 0.81 — tema para Open WebUI (probado con 0.12.5).
+ * Carbono 0.82 — tema para Open WebUI (probado con 0.12.5).
  * https://github.com/YukiChristian/Sakura-OI-Web-Carbono
  *
  * El lanzador lo sirve en /static/custom.css mientras exista carbono/ACTIVO (ver README).
@@ -952,6 +952,22 @@ button[role='switch'][aria-checked='true'] {
 [id^='tab-'] [class~='group/setting-row'] button:not([role='switch']):hover {
 	background: var(--sk-hover);
 	color: var(--sk-ink);
+}
+
+/* Botones de solo ícono (engrane de cada servidor de herramientas, size-6/size-7…): sin relleno, si no el
+   ícono se encoge a unos puntitos */
+[id^='tab-'] [class~='group/setting-row'] button:not([role='switch'])[class*='size-'] {
+	width: 28px;
+	height: 28px;
+	padding: 0;
+	display: grid;
+	place-items: center;
+}
+
+[id^='tab-'] [class~='group/setting-row'] button:not([role='switch'])[class*='size-'] svg {
+	width: 16px;
+	height: 16px;
+	flex: none;
 }
 
 /* Botón Guardar (pie del panel) */
@@ -3982,4 +3998,9 @@ div.flex.flex-col.h-full:has(> #messages-container):has(#playground-controls-tog
 
 #users-tabs-container + div table tbody td:first-child {
 	max-width: none;
+}
+
+/* Ajustes: el buscador del menú izquierdo quedaba pegado a la primera opción */
+#settings-tabs-container div:has(> input#search-input-settings-modal) {
+	margin-bottom: 10px;
 }
