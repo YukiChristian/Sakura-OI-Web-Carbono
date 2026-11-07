@@ -1,5 +1,5 @@
 /*
- * Carbono 0.83 — tema para Open WebUI (probado con 0.12.5).
+ * Carbono 0.84 — tema para Open WebUI (probado con 0.13.0).
  * https://github.com/YukiChristian/Sakura-OI-Web-Carbono
  *
  * El lanzador lo sirve en /static/custom.css mientras exista carbono/ACTIVO (ver README).
@@ -209,6 +209,10 @@ a:not([class]) {
 	border: 1px solid var(--sk-border);
 	border-radius: var(--sk-r-xl);
 	box-shadow: var(--sk-shadow-lg);
+	/* 0.13.0 le pone backdrop-blur; con fondo sólido no aporta y deja sin vidrio a los menús que viven dentro
+	   (la hoja Herramientas y opciones solo desenfocaba el composer, no el chat de atrás) */
+	-webkit-backdrop-filter: none;
+	backdrop-filter: none;
 }
 
 #message-input-container:focus-within {
@@ -1477,6 +1481,11 @@ html.dark [data-sonner-toaster][data-sonner-toaster][data-theme] {
 	scrollbar-color: var(--sk-border-strong) transparent;
 }
 
+/* Administración › Modelos (más de 100 filas): la barra se ve siempre para saber cuánto falta */
+[role='dialog'] #model-list {
+	scrollbar-color: var(--sk-border-strong) transparent;
+}
+
 /* ---------- Nombre del modelo en cada respuesta: un paso por encima del texto del mensaje ---------- */
 #response-message-model-name {
 	font-size: 17px;
@@ -1775,12 +1784,29 @@ main div.space-y-1 > div.flex.h-8 > div:last-child button svg {
 	color: var(--sk-ink-muted);
 }
 
-/* ----- Espacio de Trabajo: pestañas con contador ----- */
+/* ----- Espacio de Trabajo: pestañas en control segmentado (como Administración), con contador ----- */
+/* la fila de pestañas + Crear es w-full y no dejaba sitio al botón de la barra lateral: "Crear" se salía
+   por la derecha en ventanas angostas; así se encoge y las pestañas se desplazan */
+div:has(> #workspace-container) > nav div:has(> div > a[href='/workspace/models']) {
+	flex: 1 1 0%;
+	width: auto;
+	min-width: 0;
+}
+
+div:has(> #workspace-container) > nav div:has(> a[href='/workspace/models']) {
+	display: inline-flex;
+	gap: 2px;
+	width: fit-content;
+	padding: 4px;
+	border-radius: 14px;
+	background: var(--sk-hover);
+}
+
 div:has(> #workspace-container) > nav a:has(> span + span) {
-	height: 40px;
-	padding: 0 14px;
+	height: 38px;
+	padding: 0 16px;
 	gap: 8px;
-	border-radius: var(--sk-r-md);
+	border-radius: 10px;
 	font-size: 15px;
 	line-height: 22px;
 	font-weight: 500;
@@ -1788,14 +1814,14 @@ div:has(> #workspace-container) > nav a:has(> span + span) {
 }
 
 div:has(> #workspace-container) > nav a:has(> span + span):hover {
-	background: var(--sk-hover);
 	color: var(--sk-ink);
 }
 
 div:has(> #workspace-container) > nav a:has(> span + span)[class~='text-gray-900'] {
-	background: var(--sk-selected);
+	background: var(--sk-surface);
 	color: var(--sk-ink);
 	font-weight: 600;
+	box-shadow: 0 1px 2px rgba(24, 24, 27, 0.08), 0 1px 1px rgba(24, 24, 27, 0.04);
 }
 
 div:has(> #workspace-container) > nav a:has(> span + span) > span + span {
@@ -1810,8 +1836,8 @@ div:has(> #workspace-container) > nav a:has(> span + span) > span + span {
 }
 
 div:has(> #workspace-container) > nav a:has(> span + span)[class~='text-gray-900'] > span + span {
-	background: var(--sk-primary);
-	color: var(--sk-on-primary);
+	background: var(--sk-hover);
+	color: var(--sk-ink);
 }
 
 div:has(> #workspace-container) > nav {
@@ -1823,8 +1849,9 @@ div:has(> #workspace-container) > nav {
 	padding-inline: 28px;
 }
 
-/* Lista de modelos dentro de una tarjeta */
-#model-list {
+/* Lista de modelos dentro de una tarjeta (Espacio de Trabajo). Desde 0.13.0 Administración › Modelos
+   también usa #model-list, por eso las reglas de la fila de encabezado van con #workspace-container */
+#workspace-container #model-list {
 	margin-top: 18px;
 	background: var(--sk-surface);
 	border: 1px solid var(--sk-border);
@@ -1832,7 +1859,7 @@ div:has(> #workspace-container) > nav {
 	overflow: hidden;
 }
 
-#model-list > div:first-child {
+#workspace-container #model-list > div:first-child {
 	height: 40px;
 	padding: 0 20px;
 	border-bottom: 1px solid var(--sk-border);
@@ -1843,13 +1870,13 @@ div:has(> #workspace-container) > nav {
 	color: var(--sk-ink-muted);
 }
 
-#model-list > div:first-child :is(button, div) {
+#workspace-container #model-list > div:first-child :is(button, div) {
 	font-size: 13px;
 	font-weight: 600;
 	color: var(--sk-ink-muted);
 }
 
-#model-list > div.grid {
+#workspace-container #model-list > div.grid {
 	gap: 0;
 }
 
@@ -1861,7 +1888,7 @@ div:has(> #workspace-container) > nav {
 	border-top: 1px solid var(--sk-border);
 }
 
-[id^='model-item-']:first-child {
+#workspace-container [id^='model-item-']:first-child {
 	border-top: 0;
 }
 
@@ -2332,16 +2359,16 @@ div:has(> #workspace-container) > nav a:has(> span + span) > span + span {
 	font-size: 12px;
 }
 
-#model-list {
+#workspace-container #model-list {
 	margin-top: 14px;
 }
 
-#model-list > div:first-child {
+#workspace-container #model-list > div:first-child {
 	height: 36px;
 	padding: 0 16px;
 }
 
-#model-list > div:first-child :is(button, div) {
+#workspace-container #model-list > div:first-child :is(button, div) {
 	font-size: 12.5px;
 }
 
@@ -2911,9 +2938,9 @@ div.w-full.flex-1.h-full.items-center.justify-center > div.flex.justify-center >
 	}
 }
 
-/* ---------- Nivel de razonamiento (botón "Controles del modelo", solo en modelos que lo admiten) ----------
+/* ---------- Nivel de razonamiento (botón "Controles del modelo"; carbono.js le pone .sk-razonamiento solo en modelos con nivel de razonamiento) ----------
    Chip amarillo, misma familia que herramientas (naranja), Web (verde) y Terminal (violeta). */
-#message-input-container button:has(path[d^='M10.5 6h9.75']) {
+#message-input-container button.sk-razonamiento {
 	width: 32px;
 	height: 32px;
 	margin: 0 2px;
@@ -2926,12 +2953,12 @@ div.w-full.flex-1.h-full.items-center.justify-center > div.flex.justify-center >
 	color: var(--sk-amarillo);
 }
 
-#message-input-container button:has(path[d^='M10.5 6h9.75']):hover {
+#message-input-container button.sk-razonamiento:hover {
 	background: color-mix(in srgb, var(--sk-amarillo) 18%, var(--sk-amarillo-soft));
 	color: var(--sk-amarillo);
 }
 
-#message-input-container button:has(path[d^='M10.5 6h9.75']) svg {
+#message-input-container button.sk-razonamiento svg {
 	width: 16px;
 	height: 16px;
 }
@@ -2947,7 +2974,7 @@ div.w-full.flex-1.h-full.items-center.justify-center > div.flex.justify-center >
 }
 
 /* chips: sin cortar el texto */
-#message-input-container button:is(:has(path[d^='M21.75 6.75']), [aria-pressed='true']:has(path[d^='M12 21a9.004']), :has(path[d^='M12 4C6 4 6 8']):not(:disabled), :has(path[d^='M10.5 6h9.75'])) {
+#message-input-container button:is(:has(path[d^='M21.75 6.75']), [aria-pressed='true']:has(path[d^='M12 21a9.004']), :has(path[d^='M12 4C6 4 6 8']):not(:disabled), .sk-razonamiento) {
 	white-space: nowrap;
 }
 
@@ -2968,7 +2995,7 @@ div.w-full.flex-1.h-full.items-center.justify-center > div.flex.justify-center >
 
 /* Escritorio: los chips se quedan dentro de la caja (como antes), Razonamiento después de Terminal y con su nombre */
 @media (min-width: 768px) {
-	#message-input-container button:has(path[d^='M10.5 6h9.75']) {
+	#message-input-container button.sk-razonamiento {
 		width: auto;
 		height: 32px;
 		margin: 0;
@@ -2981,11 +3008,11 @@ div.w-full.flex-1.h-full.items-center.justify-center > div.flex.justify-center >
 		font-weight: 600;
 	}
 
-	#message-input-container button:has(path[d^='M10.5 6h9.75'])::after {
+	#message-input-container button.sk-razonamiento::after {
 		content: 'Razonamiento';
 	}
 
-	#message-input-container button:has(path[d^='M10.5 6h9.75']) svg {
+	#message-input-container button.sk-razonamiento svg {
 		width: 15px;
 		height: 15px;
 	}
@@ -2993,10 +3020,39 @@ div.w-full.flex-1.h-full.items-center.justify-center > div.flex.justify-center >
 	#message-input-container > div[dir='ltr'] > div:nth-child(2) > div {
 		gap: 6px;
 	}
+
+	/* la caja es un contenedor: con la barra lateral abierta o la ventana angosta los chips se comprimen */
+	#message-input-container {
+		container: sk-composer / inline-size;
+	}
+}
+
+/* Caja angosta en escritorio: chips solo con ícono (Herramientas conserva su número) para que todo quepa */
+@container sk-composer (max-width: 800px) {
+	#message-input-container button:has(path[d^='M21.75 6.75']) span::after,
+	#message-input-container button[aria-pressed='true']:has(path[d^='M12 21a9.004'])::after,
+	#message-input-container button.sk-razonamiento::after {
+		content: none;
+	}
+
+	#message-input-container button:has(path[d^='M12 4C6 4 6 8']) span {
+		display: none;
+	}
+
+	#message-input-container button:is(:has(path[d^='M21.75 6.75']), [aria-pressed='true']:has(path[d^='M12 21a9.004']), :has(path[d^='M12 4C6 4 6 8']), .sk-razonamiento) {
+		gap: 4px;
+		padding-inline: 9px;
+	}
 }
 
 /* Móvil (J): rejilla de dos columnas; los grupos de Open WebUI se aplanan con display: contents */
 @media (max-width: 767px) {
+	/* "Controles del modelo" sin nivel de razonamiento: en el teléfono no cabe junto al modelo (lo dejaba en "S…");
+	   sigue disponible en escritorio */
+	#message-input-container > div[dir='ltr'] > div:last-child > span > div:has(> button:not(.sk-razonamiento) path[d^='M10.5 6h9.75']) {
+		display: none;
+	}
+
 	#message-input-container {
 		display: grid;
 		grid-template-columns: auto minmax(0, 1fr);
@@ -3129,7 +3185,7 @@ div.w-full.flex-1.h-full.items-center.justify-center > div.flex.justify-center >
 	}
 
 	/* chips de 44px, solo ícono (Herramientas muestra el número) */
-	#message-input-container button:is(:has(path[d^='M21.75 6.75']), [aria-pressed='true']:has(path[d^='M12 21a9.004']), :has(path[d^='M12 4C6 4 6 8']):not(:disabled), :has(path[d^='M10.5 6h9.75'])) {
+	#message-input-container button:is(:has(path[d^='M21.75 6.75']), [aria-pressed='true']:has(path[d^='M12 21a9.004']), :has(path[d^='M12 4C6 4 6 8']):not(:disabled), .sk-razonamiento) {
 		height: 44px;
 		min-width: 44px;
 		margin: 0;
@@ -3143,12 +3199,12 @@ div.w-full.flex-1.h-full.items-center.justify-center > div.flex.justify-center >
 		flex: none;
 	}
 
-	#message-input-container button:is([aria-pressed='true']:has(path[d^='M12 21a9.004']), :has(path[d^='M12 4C6 4 6 8']), :has(path[d^='M10.5 6h9.75'])) {
+	#message-input-container button:is([aria-pressed='true']:has(path[d^='M12 21a9.004']), :has(path[d^='M12 4C6 4 6 8']), .sk-razonamiento) {
 		width: 44px;
 		padding: 0;
 	}
 
-	#message-input-container button:is(:has(path[d^='M21.75 6.75']), :has(path[d^='M12 21a9.004']), :has(path[d^='M12 4C6 4 6 8']), :has(path[d^='M10.5 6h9.75'])) svg {
+	#message-input-container button:is(:has(path[d^='M21.75 6.75']), :has(path[d^='M12 21a9.004']), :has(path[d^='M12 4C6 4 6 8']), .sk-razonamiento) svg {
 		width: 20px;
 		height: 20px;
 	}
@@ -3176,6 +3232,11 @@ div.w-full.flex-1.h-full.items-center.justify-center > div.flex.justify-center >
 .sk-opciones-boton,
 .sk-opciones-velo {
 	display: none;
+}
+
+/* filas de opciones apagadas (carbono.js): solo existen dentro de la hoja del teléfono */
+#message-input-container .sk-fantasma {
+	display: none !important;
 }
 
 @media (max-width: 767px) {
@@ -3234,23 +3295,23 @@ div.w-full.flex-1.h-full.items-center.justify-center > div.flex.justify-center >
 		box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--sk-azul) 35%, transparent);
 	}
 
-	.sk-opciones-boton:not([data-activas='0'])::after {
-		content: attr(data-activas);
+	/* óvalo discreto con degradado de gris a azul: cuántas opciones hay · cuántas están activas */
+	.sk-opciones-boton:not([data-total='0'])::after {
+		content: attr(data-total) ' · ' attr(data-activas);
 		position: absolute;
 		top: 0;
-		right: -2px;
-		min-width: 20px;
-		height: 20px;
-		padding: 0 5px;
+		right: -8px;
+		height: 17px;
+		padding: 0 6px;
 		box-sizing: border-box;
-		border: 2px solid var(--sk-surface);
+		border: 1.5px solid var(--sk-surface);
 		border-radius: 9999px;
-		background: var(--sk-azul);
-		color: #ffffff;
-		font-size: 11px;
-		line-height: 16px;
+		background: linear-gradient(90deg, var(--sk-selected) 15%, color-mix(in srgb, var(--sk-azul) 70%, var(--sk-surface)));
+		color: var(--sk-ink);
+		font-size: 9.5px;
+		line-height: 14px;
 		font-weight: 700;
-		text-align: center;
+		white-space: nowrap;
 	}
 
 	/* capa invisible detrás de la hoja: solo sirve para cerrarla al tocar fuera (sin velo ni desenfoque) */
@@ -3307,7 +3368,7 @@ div.w-full.flex-1.h-full.items-center.justify-center > div.flex.justify-center >
 	}
 
 	#message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2)::after {
-		content: attr(data-activas) ' activas';
+		content: attr(data-activas);
 		position: absolute;
 		top: 16px;
 		right: 14px;
@@ -3353,8 +3414,18 @@ div.w-full.flex-1.h-full.items-center.justify-center > div.flex.justify-center >
 		transform: none;
 	}
 
+	/* Oscuro: pista clara y perilla oscura (primary / on-primary); con perilla blanca el interruptor no se distinguía */
 	html.dark #message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button {
-		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='28'%3E%3Crect width='48' height='28' rx='14' fill='%23f4f4f5'/%3E%3Ccircle cx='34' cy='14' r='11' fill='white'/%3E%3C/svg%3E") !important;
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='28'%3E%3Crect width='48' height='28' rx='14' fill='%23ececee'/%3E%3Ccircle cx='34' cy='14' r='11' fill='%2318181b'/%3E%3C/svg%3E") !important;
+	}
+
+	/* Opción apagada (carbono.js le pone .sk-inactiva): interruptor apagado, con la perilla a la izquierda */
+	#message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button.sk-inactiva {
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='28'%3E%3Crect width='48' height='28' rx='14' fill='%23e4e4e7'/%3E%3Ccircle cx='14' cy='14' r='11' fill='white'/%3E%3C/svg%3E") !important;
+	}
+
+	html.dark #message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button.sk-inactiva {
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='48' height='28'%3E%3Crect width='48' height='28' rx='14' fill='%233f3f46'/%3E%3Ccircle cx='14' cy='14' r='11' fill='%23a1a1aa'/%3E%3C/svg%3E") !important;
 	}
 
 	#message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button:active {
@@ -3429,21 +3500,23 @@ div.w-full.flex-1.h-full.items-center.justify-center > div.flex.justify-center >
 		color: var(--sk-violeta);
 	}
 
-	#message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button:has(path[d^='M10.5 6h9.75'])::before {
+	#message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button.sk-razonamiento::before {
 		content: 'Razonamiento';
 	}
 
-	#message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button:has(path[d^='M10.5 6h9.75'])::after {
+	#message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button.sk-razonamiento::after {
 		content: 'Piensa más antes de responder';
 	}
 
-	#message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button:has(path[d^='M10.5 6h9.75']) svg {
+	#message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button.sk-razonamiento svg {
 		background: var(--sk-amarillo-soft);
 		color: var(--sk-amarillo);
 	}
 }
 
-/* Editar mensaje: el botón "Enviar" se veía negro sin texto (otra regla le ponía color gris a su text-xs) */
+/* Editar mensaje: el botón "Enviar" se veía negro sin texto (otra regla le ponía color gris a su text-xs).
+   Desde 0.13.0 el editor vive dentro del globo (.user-message .rounded-3xl *), por eso se prefija con #messages-container. */
+#messages-container #confirm-edit-message-button,
 #confirm-edit-message-button {
 	height: 32px;
 	padding: 0 14px;
@@ -3455,6 +3528,7 @@ div.w-full.flex-1.h-full.items-center.justify-center > div.flex.justify-center >
 	font-weight: 600;
 }
 
+#messages-container #confirm-edit-message-button:hover,
 #confirm-edit-message-button:hover {
 	background-color: color-mix(in srgb, var(--sk-primary) 88%, var(--sk-bg));
 }

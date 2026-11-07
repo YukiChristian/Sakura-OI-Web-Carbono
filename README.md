@@ -1,6 +1,6 @@
 # Carbono para Open WebUI
 
-**Versión 0.83** · probado con Open WebUI **0.13.0** (y 0.12.5)
+**Versión 0.84** · probado con Open WebUI **0.13.0**
 
 Carbono es el tema recomendado para [Sakura OI Web](https://github.com/YukiChristian/Sakura-OI-Web). Deja la interfaz de Open WebUI neutra (superficies en tonos carbón y zinc, acción principal en negro), con más jerarquía en el texto, tipografía Atkinson Hyperlegible, menús de vidrio esmerilado y un composer pensado para el teléfono.
 
@@ -31,8 +31,8 @@ La guía de estilo (principios, colores, tipografía y componentes) está en [do
 - **Tipografía:** Atkinson Hyperlegible Next para la interfaz y Atkinson Hyperlegible Mono para código (Google Fonts).
 - **Barra lateral:** filas del mismo tamaño, chat activo con fondo gris y barra de 3 px, etiquetas de sección en mayúsculas.
 - **Chat:** globo de tus mensajes en gris neutro, fondo de cada modelo con un velo blanco degradado y desenfocado para que el texto se lea primero, y barra de título de vidrio esmerilado.
-- **Composer en escritorio:** chips de color con su nombre (Herramientas en naranja, Web en verde, Open Terminal en violeta, Razonamiento en amarillo) y, a la derecha, modelo, micrófono y voz.
-- **Composer en el teléfono:** texto arriba; abajo `+`, Integraciones, un botón de opciones con el número de opciones activas, el modelo, el micrófono y la voz. El botón de opciones abre la hoja de vidrio **Herramientas y opciones**, donde cada opción activa tiene su ícono, su descripción y su interruptor.
+- **Composer en escritorio:** chips de color con su nombre (Herramientas en naranja, Web en verde, Open Terminal en violeta, Razonamiento en amarillo) y, a la derecha, modelo, micrófono y voz. Si la caja es angosta (barra lateral abierta o ventana chica), los chips se quedan solo con su ícono.
+- **Composer en el teléfono:** texto arriba; abajo `+`, Integraciones, un botón de opciones con un óvalo discreto (de gris a azul) que dice cuántas opciones hay y cuántas están activas, el modelo, el micrófono y la voz. El botón abre la hoja de vidrio **Herramientas y opciones**, donde cada opción tiene su ícono, su descripción y su interruptor encendido o apagado.
 - **Menús:** vidrio esmerilado (blanco al 60 % con desenfoque) en todos los menús flotantes y en el selector de modelo; nunca se salen de la ventana y muestran todas sus opciones.
 - **Administración y Zona de Pruebas:** pestañas en control segmentado, tabla de usuarios en tarjeta con el rol en píldora, buscador y botones de 46 px, instrucciones del sistema en tarjeta, un recuadro punteado que explica qué hacer cuando no hay mensajes y botón **Ejecutar** en negro.
 - **Ajustes, Notas, Espacio de Trabajo, Calendario y Automatizaciones:** jerarquía título › sección › ajuste › descripción y botón **Crear** en negro.
@@ -40,6 +40,19 @@ La guía de estilo (principios, colores, tipografía y componentes) está en [do
 - **Rendimiento:** los selectores evitan buscar por el atributo `class` dentro de `:has()`, que obliga al navegador a recalcular toda la página en cada hover.
 
 ## Cambios
+
+### 0.84
+
+Ajustes para Open WebUI 0.13.0:
+
+- El chip **Razonamiento** solo aparece con los modelos que tienen nivel de razonamiento (`model_controls`). En 0.13.0 ese botón es «Controles del modelo» y se muestra a los administradores con cualquier modelo; con los demás modelos se queda junto al modelo como ícono normal (en el teléfono se oculta para que quepa el nombre del modelo).
+- Corregido: la hoja **Herramientas y opciones** volvía a desenfocar solo la caja de escribir y no el chat de atrás (0.13.0 le pone su propio desenfoque a la caja).
+- Corregido: el botón **Enviar** al editar un mensaje se veía negro sin texto (el editor ahora vive dentro del globo del mensaje).
+- Corregido: en Administración › Modelos la primera fila salía más chica y la lista no se podía desplazar (comparte `#model-list` con el Espacio de Trabajo); ahora se desplaza y la barra se ve siempre.
+- Espacio de Trabajo: pestañas en control segmentado, como Administración, y el botón **Crear** ya no se sale por la derecha en ventanas angostas.
+- Composer en escritorio: los chips se comprimen a solo ícono cuando no caben.
+- Teléfono: el contador del botón de opciones es un óvalo con el total y las activas; la hoja muestra cada opción encendida o apagada, y Búsqueda web y Herramientas siguen en la hoja al apagarlas (tocarlas las vuelve a encender desde Integraciones).
+- Modo oscuro: los interruptores de la hoja se distinguen (pista clara y perilla oscura).
 
 ### 0.83
 
@@ -148,6 +161,7 @@ Los colores están como variables al inicio de `carbono.css` (`--sk-bg`, `--sk-i
 ## Limitaciones
 
 - Algunos detalles dependen de cómo Open WebUI arma su HTML (por ejemplo, cada chip se reconoce por el dibujo de su ícono). Si cambian en una versión futura, esos detalles vuelven al estilo original.
-- `carbono.js` mueve el botón de Razonamiento junto a los demás chips, crea el botón de opciones del teléfono y desactiva el modo de alto contraste de Open WebUI mientras el tema está activo.
+- `carbono.js` mueve el botón de Razonamiento junto a los demás chips (solo en modelos con nivel de razonamiento), crea el botón de opciones del teléfono y desactiva el modo de alto contraste de Open WebUI mientras el tema está activo. Para saber qué modelos razonan lee `/api/models` y los ajustes del usuario con su propia sesión.
+- Volver a encender Búsqueda web desde la hoja del teléfono busca la opción «Búsqueda Web» en el menú de Integraciones, así que funciona con Open WebUI en español.
 - En el teléfono, la hoja **Herramientas y opciones** muestra las opciones activas; para activar otra, usa el botón de Integraciones.
 - El bloque del lanzador está pensado para un solo worker de uvicorn, que es el valor por defecto.
