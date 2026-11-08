@@ -51,7 +51,8 @@ Estados: `success` `#14706a`, `danger` `#c0392b`.
 ## Componentes
 
 - **Chips del composer:** píldoras con borde de 1 px del mismo color que el texto. En escritorio llevan nombre (Herramientas, Web, Open Terminal, Razonamiento); en el teléfono van dentro de la hoja **Herramientas y opciones**, una fila por opción con mosaico de color, descripción e interruptor encendido o apagado. Si la caja de escritorio es angosta, los chips quedan solo con ícono.
-- **Contador del botón de opciones:** óvalo pequeño con degradado de `selected` a `azul`, con el total y las activas («4 · 3»).
+- **Insignias de opciones:** círculo de color con el ícono en blanco — Herramientas `#d9733a`, Web `#2b8a5a`, Open Terminal `#7048e8`, Razonamiento `#d6336c` — dentro de chips neutros (`sidebar` con filo `#d4d4d8`).
+- **Botón de opciones del teléfono:** las insignias de las opciones activas encimadas y un contador oscuro («4/4»).
 - **Control segmentado:** pestañas de Administración y Zona de Pruebas sobre un fondo `hover`, con la activa en `surface` y seminegrita.
 - **Tarjetas:** `surface`, borde `border`, esquinas de 16 px y sombra mínima.
 - **Notificaciones:** colores de estado del sistema, esquinas de 16 px y botón de cerrar dentro de la tarjeta.

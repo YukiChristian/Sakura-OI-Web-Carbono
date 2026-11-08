@@ -1,5 +1,5 @@
 /*
- * Carbono 0.84 — tema para Open WebUI (probado con 0.13.0).
+ * Carbono 0.85 — tema para Open WebUI (probado con 0.13.0).
  * https://github.com/YukiChristian/Sakura-OI-Web-Carbono
  *
  * El lanzador lo sirve en /static/custom.css mientras exista carbono/ACTIVO (ver README).
@@ -33,6 +33,8 @@
 	--sk-azul-soft: #e6eefb;
 	--sk-naranja: #a84f0c;
 	--sk-naranja-soft: #fcecdf;
+	--sk-rojo: #b3261e;
+	--sk-rojo-soft: #fce8e6;
 	--sk-amarillo: #8f5a00;
 	--sk-amarillo-soft: #fbefd9;
 	--sk-verde: #2b7a3b;
@@ -89,6 +91,8 @@ html.dark {
 	--sk-azul-soft: #1b2840;
 	--sk-naranja: #f5a25d;
 	--sk-naranja-soft: #3a2716;
+	--sk-rojo: #ff8a80;
+	--sk-rojo-soft: #3b1d1b;
 	--sk-amarillo: #f2c94c;
 	--sk-amarillo-soft: #332a10;
 	--sk-verde: #72cf88;
@@ -138,7 +142,7 @@ a:not([class]) {
 }
 
 #sidebar-webui-name {
-	font-size: 20px;
+	font-size: 19px;
 	line-height: 28px;
 	font-weight: 600;
 	letter-spacing: -0.01em;
@@ -384,7 +388,7 @@ nav.sticky:has(h1) h1 {
 	}
 
 	#sidebar-webui-name {
-		font-size: 22px;
+		font-size: 21px;
 		line-height: 30px;
 	}
 }
@@ -1412,10 +1416,10 @@ html.dark [data-sonner-toaster][data-sonner-toaster][data-theme] {
 	flex: none;
 }
 
-/* Herramientas (llave) en naranja, Búsqueda Web (globo) en azul */
+/* Herramientas (llave) en rojo, Búsqueda Web (globo) en azul */
 .app-dropdown-menu:has([role='menuitemcheckbox']) [role='menuitem'] > svg:first-child:has(path[d^='M21.75 6.75']) {
-	background-color: var(--sk-naranja-soft);
-	color: var(--sk-naranja);
+	background-color: var(--sk-rojo-soft);
+	color: var(--sk-rojo);
 }
 
 .app-dropdown-menu:has([role='menuitemcheckbox']) [role='menuitemcheckbox'] .shrink-0 > svg:has(path[d^='M12 21a9.004']) {
@@ -1431,8 +1435,8 @@ html.dark [data-sonner-toaster][data-sonner-toaster][data-theme] {
 	font-size: 13px;
 	line-height: 18px;
 	font-weight: 600;
-	color: var(--sk-naranja);
-	background-color: var(--sk-naranja-soft);
+	color: var(--sk-rojo);
+	background-color: var(--sk-rojo-soft);
 }
 
 .app-dropdown-menu:has([role='menuitemcheckbox']) [role='menuitem'] .text-gray-500 svg {
@@ -1582,9 +1586,9 @@ html.dark [data-sonner-toaster][data-sonner-toaster][data-theme] {
 }
 
 #message-input-container button:has(path[d^='M21.75 6.75']) {
-	background: var(--sk-naranja-soft);
-	border-color: color-mix(in srgb, var(--sk-naranja) 30%, transparent);
-	color: var(--sk-naranja);
+	background: var(--sk-rojo-soft);
+	border-color: color-mix(in srgb, var(--sk-rojo) 30%, transparent);
+	color: var(--sk-rojo);
 }
 
 #message-input-container button:has(path[d^='M21.75 6.75']) span {
@@ -2727,10 +2731,10 @@ input#model-search-input:focus-visible {
 	color: var(--sk-ink-muted);
 }
 
-/* herramientas en naranja (como el chip y la fila de Integraciones) */
+/* herramientas en rojo (como el chip y la fila de Integraciones) */
 .app-dropdown-menu:has([role='menuitemcheckbox']):has(div > input) [role='menuitemcheckbox'] .shrink-0 > svg {
-	background-color: var(--sk-naranja-soft);
-	color: var(--sk-naranja);
+	background-color: var(--sk-rojo-soft);
+	color: var(--sk-rojo);
 }
 
 /* contador "3" del encabezado como etiqueta naranja */
@@ -2741,8 +2745,8 @@ input#model-search-input:focus-visible {
 	font-size: 12px;
 	line-height: 16px;
 	font-weight: 600;
-	color: var(--sk-naranja);
-	background-color: var(--sk-naranja-soft);
+	color: var(--sk-rojo);
+	background-color: var(--sk-rojo-soft);
 }
 
 /* Velo sobre la imagen de fondo del chat un poco más opaco para leer mejor el texto
@@ -2779,6 +2783,15 @@ nav.sticky:has(h1) {
 html.dark nav.sticky:has(h1) {
 	background-color: rgba(22, 22, 23, 0.55);
 	border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+/* escritorio: misma altura que la barra de pestañas del panel lateral (46 px) para que se vean parejas */
+@media (min-width: 768px) {
+	nav.sticky:has(h1) {
+		min-height: 46px;
+		padding-bottom: 0;
+		justify-content: center;
+	}
 }
 
 nav.sticky:has(h1)::after {
@@ -3295,23 +3308,49 @@ div.w-full.flex-1.h-full.items-center.justify-center > div.flex.justify-center >
 		box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--sk-azul) 35%, transparent);
 	}
 
-	/* óvalo discreto con degradado de gris a azul: cuántas opciones hay · cuántas están activas */
-	.sk-opciones-boton:not([data-total='0'])::after {
-		content: attr(data-total) ' · ' attr(data-activas);
+	/* contador (carbono.js), mockup F "globito jerarquizado": globito de 22 px en la esquina, activas en
+	   13 px negrita y total en 10.5 px más tenue ("3/4"). Claro: azul con texto blanco. Oscuro: tonal
+	   (fondo azul oscuro, número azul muy claro, ~9:1) con un filo azul interno */
+	.sk-contador:not(:empty) {
 		position: absolute;
-		top: 0;
-		right: -8px;
-		height: 17px;
-		padding: 0 6px;
+		top: -8px;
+		right: -12px;
+		display: inline-flex;
+		align-items: baseline;
+		height: 22px;
+		padding: 0 7px;
 		box-sizing: border-box;
-		border: 1.5px solid var(--sk-surface);
+		border: 2px solid var(--sk-surface);
 		border-radius: 9999px;
-		background: linear-gradient(90deg, var(--sk-selected) 15%, color-mix(in srgb, var(--sk-azul) 70%, var(--sk-surface)));
-		color: var(--sk-ink);
-		font-size: 9.5px;
-		line-height: 14px;
-		font-weight: 700;
-		white-space: nowrap;
+		background: var(--sk-azul);
+		color: #ffffff;
+		pointer-events: none;
+	}
+
+	html.dark .sk-contador:not(:empty) {
+		background: #22355a;
+		color: #c8dbff;
+		box-shadow: inset 0 0 0 1px #34507f;
+	}
+
+	/* botón presionado en oscuro, como el mockup: azul tenue oscuro con filo */
+	html.dark .sk-opciones-boton[aria-expanded='true'] {
+		background: #1b2840;
+		color: #8ab4ff;
+		box-shadow: inset 0 0 0 1.5px #2c4370;
+	}
+
+	.sk-contador b {
+		font-size: 13px;
+		line-height: 18px;
+		font-weight: 800;
+	}
+
+	.sk-contador span {
+		font-size: 10.5px;
+		line-height: 18px;
+		font-weight: 600;
+		opacity: 0.78;
 	}
 
 	/* capa invisible detrás de la hoja: solo sirve para cerrarla al tocar fuera (sin velo ni desenfoque) */
@@ -3470,8 +3509,8 @@ div.w-full.flex-1.h-full.items-center.justify-center > div.flex.justify-center >
 	}
 
 	#message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button:has(path[d^='M21.75 6.75']) svg {
-		background: var(--sk-naranja-soft);
-		color: var(--sk-naranja);
+		background: var(--sk-rojo-soft);
+		color: var(--sk-rojo);
 	}
 
 	#message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button:has(path[d^='M12 21a9.004'])::before {
@@ -4077,4 +4116,809 @@ div.flex.flex-col.h-full:has(> #messages-container):has(#playground-controls-tog
 /* Ajustes: el buscador del menú izquierdo quedaba pegado a la primera opción */
 #settings-tabs-container div:has(> input#search-input-settings-modal) {
 	margin-bottom: 10px;
+}
+
+/* ---------- Barra lateral contraída: botón "Chats" y panel de vidrio con el historial (carbono.js) ----------
+   Lienzo "Escritorio · Barra lateral contraída con chats". El panel sigue la línea de los menús flotantes:
+   blanco al 60 % (negro en oscuro) con desenfoque de 20 px. */
+.sk-chats-envoltura {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 2px;
+	margin-top: 2px;
+}
+
+.sk-chats-division {
+	width: 20px;
+	height: 1px;
+	margin: 4px 0;
+	background: var(--sk-border);
+}
+
+.sk-chats-boton {
+	display: grid;
+	place-items: center;
+	width: 30px;
+	height: 30px;
+	padding: 0;
+	border: 0;
+	border-radius: 8px;
+	background: transparent;
+	color: var(--sk-ink-muted);
+	cursor: pointer;
+}
+
+.sk-chats-boton svg {
+	width: 18px;
+	height: 18px;
+}
+
+.sk-chats-boton:hover {
+	background: var(--sk-hover);
+	color: var(--sk-ink);
+}
+
+.sk-chats-boton[aria-expanded='true'] {
+	background: var(--sk-azul-soft);
+	color: var(--sk-azul);
+	box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--sk-azul) 35%, transparent);
+}
+
+.sk-chats-leyenda {
+	font-size: 10.5px;
+	line-height: 12px;
+	font-weight: 600;
+	color: var(--sk-ink-muted);
+}
+
+.sk-chats-boton[aria-expanded='true'] + .sk-chats-leyenda {
+	color: var(--sk-azul);
+}
+
+/* oscuro, como el lienzo: azul tenue oscuro con filo */
+html.dark .sk-chats-boton[aria-expanded='true'] {
+	background: #1b2840;
+	color: #8ab4ff;
+	box-shadow: inset 0 0 0 1.5px #2c4370;
+}
+
+html.dark .sk-chats-boton[aria-expanded='true'] + .sk-chats-leyenda {
+	color: #8ab4ff;
+}
+
+/* avatares de los modelos fijados: nuevo chat con ese modelo */
+.sk-rail-modelo {
+	display: grid;
+	place-items: center;
+	width: 30px;
+	height: 30px;
+	border-radius: 8px;
+}
+
+.sk-rail-modelo:hover {
+	background: var(--sk-hover);
+}
+
+.sk-rail-modelo img {
+	width: 22px;
+	height: 22px;
+	border-radius: 9999px;
+	object-fit: cover;
+}
+
+/* capa invisible: cerrar al hacer clic fuera, sin oscurecer */
+.sk-chats-velo {
+	position: fixed;
+	inset: 0;
+	z-index: 59;
+}
+
+.sk-chats-panel {
+	position: fixed;
+	top: 10px;
+	bottom: 10px;
+	z-index: 60;
+	display: flex;
+	flex-direction: column;
+	width: 340px;
+	max-width: calc(100vw - 70px);
+	border: 1px solid var(--sk-border);
+	border-radius: 20px;
+	background: rgba(255, 255, 255, 0.6);
+	-webkit-backdrop-filter: saturate(180%) blur(20px);
+	backdrop-filter: saturate(180%) blur(20px);
+	box-shadow: 0 16px 48px rgba(24, 24, 27, 0.16), 0 2px 6px rgba(24, 24, 27, 0.06);
+	color: var(--sk-ink);
+	overflow: hidden;
+}
+
+html.dark .sk-chats-panel {
+	background: rgba(28, 28, 30, 0.6);
+	box-shadow: 0 16px 48px rgba(0, 0, 0, 0.5), 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+.sk-chats-cabecera {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 12px 8px 6px 18px;
+}
+
+.sk-chats-nombre {
+	font-size: 18px;
+	line-height: 26px;
+	font-weight: 700;
+}
+
+.sk-chats-acciones {
+	display: flex;
+	gap: 2px;
+}
+
+.sk-chats-accion {
+	display: grid;
+	place-items: center;
+	width: 36px;
+	height: 36px;
+	padding: 0;
+	border: 0;
+	border-radius: 10px;
+	background: transparent;
+	color: var(--sk-ink-muted);
+	cursor: pointer;
+}
+
+.sk-chats-accion:hover {
+	background: rgba(120, 120, 128, 0.14);
+	color: var(--sk-ink);
+}
+
+.sk-chats-buscar {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	height: 40px;
+	margin: 4px 12px 10px;
+	padding: 0 12px;
+	border-radius: 10px;
+	background: rgba(120, 120, 128, 0.12);
+	color: var(--sk-ink-muted);
+}
+
+.sk-chats-buscar input {
+	flex: 1;
+	min-width: 0;
+	border: 0;
+	outline: none;
+	background: transparent;
+	color: var(--sk-ink);
+	font-size: 15px;
+	line-height: 22px;
+}
+
+.sk-chats-lista {
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	padding: 0 8px 16px;
+	overflow-y: auto;
+	-webkit-mask-image: linear-gradient(#000 92%, transparent);
+	mask-image: linear-gradient(#000 92%, transparent);
+}
+
+.sk-chats-etiqueta {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	height: 30px;
+	padding: 0 12px;
+	font-size: 12px;
+	line-height: 16px;
+	font-weight: 600;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--sk-ink-subtle);
+}
+
+.sk-chats-fila,
+.sk-chats-carpeta {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	width: 100%;
+	height: 38px;
+	padding: 0 12px;
+	border: 0;
+	border-radius: 10px;
+	background: transparent;
+	color: var(--sk-ink);
+	font-size: 15px;
+	line-height: 22px;
+	text-align: left;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.sk-chats-fila {
+	justify-content: space-between;
+}
+
+.sk-chats-fila:hover,
+.sk-chats-carpeta:hover {
+	background: rgba(120, 120, 128, 0.12);
+	color: var(--sk-ink);
+}
+
+.sk-chats-fila.sk-chats-actual {
+	background: rgba(120, 120, 128, 0.18);
+	font-weight: 600;
+}
+
+.sk-chats-titulo {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.sk-chats-hace {
+	flex: none;
+	font-size: 12.5px;
+	color: var(--sk-ink-subtle);
+	white-space: nowrap;
+}
+
+.sk-chats-carpeta svg {
+	flex: none;
+	color: var(--sk-ink-muted);
+	transition: transform 0.15s;
+}
+
+.sk-chats-carpeta[aria-expanded='true'] svg:first-child {
+	transform: rotate(90deg);
+}
+
+.sk-chats-dentro {
+	padding-left: 18px;
+}
+
+.sk-chats-etiqueta-accion {
+	justify-content: space-between;
+	padding-right: 4px;
+}
+
+.sk-chats-mini {
+	width: 28px;
+	height: 28px;
+	border-radius: 8px;
+}
+
+.sk-chats-nueva {
+	cursor: text;
+	background: rgba(120, 120, 128, 0.12);
+}
+
+.sk-chats-nueva input {
+	flex: 1;
+	min-width: 0;
+	border: 0;
+	outline: none;
+	background: transparent;
+	color: var(--sk-ink);
+	font-size: 15px;
+	line-height: 22px;
+}
+
+.sk-chats-vacio {
+	margin: 0;
+	padding: 8px 12px;
+	font-size: 14px;
+	color: var(--sk-ink-subtle);
+}
+
+/* ---------- Panel lateral de pestañas (0.13.0: Archivos, Terminal, Navegador, Desktop) ----------
+   Lienzo "Escritorio · Panel de herramientas · íconos gris oscuro", más compacto: barra del color del
+   panel, pestañas inactivas grises con filo, la activa blanca con línea oscura abajo, íconos gris oscuro. */
+#controls-container > div:has(> div > .panel-tab-strip) {
+	align-items: center;
+	gap: 6px;
+	min-height: 46px;
+	padding: 0 8px;
+	/* sólida, sin backdrop-filter: el menú "+" vive dentro de esta barra y un desenfoque aquí dejaba
+	   sin vidrio a ese menú (solo desenfocaba la barra) */
+	background-color: var(--sk-surface);
+	border-bottom: 1px solid rgba(0, 0, 0, 0.08);
+}
+
+html.dark #controls-container > div:has(> div > .panel-tab-strip) {
+	border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+#controls-container .panel-tab-strip {
+	gap: 4px;
+	padding: 2px;
+}
+
+#controls-container .panel-tab {
+	gap: 6px;
+	height: 32px;
+	padding: 0 4px 0 10px;
+	border-radius: 9px;
+	background: color-mix(in srgb, var(--sk-sidebar) 55%, transparent);
+	box-shadow: inset 0 0 0 1px var(--sk-border);
+	color: var(--sk-ink-muted);
+	font-size: 13.5px;
+	line-height: 18px;
+	font-weight: 500;
+}
+
+/* pestañas sin X (la del chat, "Nuevo Chat"): mismo aire a la derecha que a la izquierda */
+#controls-container .panel-tab:not(:has(button[aria-label^='Cerrar'])) {
+	padding-right: 12px;
+}
+
+#controls-container .panel-tab:hover {
+	background: color-mix(in srgb, var(--sk-hover) 75%, transparent);
+	color: var(--sk-ink);
+}
+
+#controls-container .panel-tab:has([role='tab'][aria-selected='true']) {
+	background: color-mix(in srgb, var(--sk-surface) 78%, transparent);
+	color: var(--sk-ink);
+	font-weight: 600;
+	box-shadow:
+		inset 0 -2px 0 var(--sk-ink),
+		0 0 0 1px color-mix(in srgb, var(--sk-border-strong) 45%, var(--sk-border)),
+		0 1px 4px rgba(24, 24, 27, 0.08);
+}
+
+html.dark #controls-container .panel-tab:has([role='tab'][aria-selected='true']) {
+	background: color-mix(in srgb, var(--sk-hover) 78%, transparent);
+	box-shadow:
+		inset 0 -2px 0 var(--sk-ink),
+		0 0 0 1px var(--sk-border),
+		0 1px 4px rgba(0, 0, 0, 0.4);
+}
+
+#controls-container .panel-tab [role='tab'] {
+	gap: 6px;
+}
+
+/* ícono en mosaico de 24 px, gris oscuro; el mosaico se rellena en la pestaña activa */
+#controls-container .panel-tab [role='tab'] > svg {
+	width: 20px;
+	height: 20px;
+	padding: 3.5px;
+	box-sizing: border-box;
+	border-radius: 6px;
+	color: var(--sk-ink);
+	stroke-width: 2;
+	flex: none;
+}
+
+#controls-container .panel-tab:has([role='tab'][aria-selected='true']) [role='tab'] > svg {
+	background: var(--sk-selected);
+}
+
+#controls-container .panel-tab [role='tab'] > span {
+	max-width: 160px;
+}
+
+/* cerrar pestaña: 24 px, más tenue en las inactivas */
+#controls-container .panel-tab button[aria-label^='Cerrar'] {
+	width: 20px;
+	height: 20px;
+	border-radius: 5px;
+	color: var(--sk-ink-subtle);
+	opacity: 0.55;
+}
+
+#controls-container .panel-tab:has([role='tab'][aria-selected='true']) button[aria-label^='Cerrar'] {
+	opacity: 1;
+}
+
+#controls-container .panel-tab button[aria-label^='Cerrar']:hover {
+	background: var(--sk-selected);
+	color: var(--sk-ink);
+	opacity: 1;
+}
+
+/* nueva pestaña, ancho completo y ocultar: botones redondos de 34 px */
+#controls-container > div:has(> div > .panel-tab-strip) :is(button[aria-label='New tab'], #chat-tabs-layout-toggle, button[aria-label='Hide tabs']) {
+	width: 30px;
+	height: 30px;
+	border-radius: 9999px;
+	color: color-mix(in srgb, var(--sk-ink) 85%, var(--sk-surface));
+}
+
+#controls-container > div:has(> div > .panel-tab-strip) :is(button[aria-label='New tab'], #chat-tabs-layout-toggle, button[aria-label='Hide tabs']):hover {
+	background: rgba(120, 120, 128, 0.14);
+	color: var(--sk-ink);
+}
+
+#controls-container > div:has(> div > .panel-tab-strip) button[aria-label='New tab'][aria-expanded='true'] {
+	background: var(--sk-azul-soft);
+	color: var(--sk-azul);
+}
+
+/* barra de Git al pie */
+#controls-container > div:last-child > div {
+	height: 36px;
+	padding: 0 8px 0 14px;
+	gap: 6px;
+	border-top: 1px solid var(--sk-border);
+	background: var(--sk-bg);
+	color: color-mix(in srgb, var(--sk-ink) 75%, var(--sk-surface));
+	font-size: 13px;
+	line-height: 18px;
+}
+
+/* íconos del pie con el mismo gris oscuro, tamaño visible (~12 px) y trazo (~1.45 px) que los de arriba */
+#controls-container > div:last-child > div > svg {
+	width: 18px;
+	height: 18px;
+	stroke-width: 1.93;
+	color: color-mix(in srgb, var(--sk-ink) 85%, var(--sk-surface));
+}
+
+#controls-container > div:last-child > div > button {
+	width: 30px;
+	height: 30px;
+	border-radius: 9999px;
+	color: color-mix(in srgb, var(--sk-ink) 85%, var(--sk-surface));
+}
+
+#controls-container > div:last-child > div > button:hover {
+	background: rgba(120, 120, 128, 0.14);
+	color: var(--sk-ink);
+}
+
+#controls-container > div:last-child > div > button svg {
+	width: 15px;
+	height: 15px;
+	stroke-width: 2.3;
+}
+
+/* Ventana "Herramientas Disponibles" (al tocar el chip de Herramientas): mismo vidrio que los menús */
+[role='dialog'][aria-label='Herramientas Disponibles'] > div {
+	background-color: rgba(255, 255, 255, 0.6) !important;
+	-webkit-backdrop-filter: saturate(180%) blur(20px);
+	backdrop-filter: saturate(180%) blur(20px);
+	border: 1px solid var(--sk-border);
+}
+
+html.dark [role='dialog'][aria-label='Herramientas Disponibles'] > div {
+	background-color: rgba(28, 28, 30, 0.6) !important;
+}
+
+/* División entre la conversación y el panel lateral: solo una línea fina en el borde del panel, de arriba
+   abajo (una sombra hacia el chat quedaba tapada por la barra de título) */
+div:has(> div > #controls-container) {
+	border-left: 1px solid var(--sk-border);
+}
+
+/* Íconos de la barra de título del chat (chat temporal, panel): mismo gris oscuro y trazo que los del
+   panel lateral (escritorio;
+   en el teléfono siguen los de 44 px) */
+@media (min-width: 768px) {
+	nav.sticky:has(h1) :is(#temporary-chat-button, button[aria-label='Tabs']) {
+		width: 30px;
+		height: 30px;
+		border-radius: 9999px;
+		color: color-mix(in srgb, var(--sk-ink) 85%, var(--sk-surface));
+	}
+
+	nav.sticky:has(h1) :is(#temporary-chat-button, button[aria-label='Tabs']):hover {
+		background: rgba(120, 120, 128, 0.14);
+		color: var(--sk-ink);
+	}
+
+
+}
+
+/* Íconos de la barra de título y de la barra de pestañas: los de Open WebUI traen márgenes distintos en
+   su dibujo (el + o la X se veían mucho más chicos que el panel). Cada uno se escala para que el dibujo
+   visible mida lo mismo (~13 px; las X ~11 px) y el trazo quede de ~1.45 px en todos */
+@media (min-width: 768px) {
+	nav.sticky:has(h1) #temporary-chat-button svg {
+		width: 16px;
+		height: 16px;
+		stroke-width: 2.2;
+	}
+
+	nav.sticky:has(h1) button[aria-label='Tabs'] svg,
+	#controls-container #chat-tabs-layout-toggle svg {
+		width: 19.5px;
+		height: 19.5px;
+		stroke-width: 1.8;
+	}
+
+	#controls-container button[aria-label='New tab'] svg {
+		width: 24px;
+		height: 24px;
+		stroke-width: 1.45;
+	}
+
+	#controls-container button[aria-label='Hide tabs'] svg {
+		width: 26px;
+		height: 26px;
+		stroke-width: 1.34;
+	}
+
+	#controls-container .panel-tab button[aria-label^='Cerrar'] svg {
+		width: 18px;
+		height: 18px;
+		stroke-width: 1.9;
+	}
+}
+
+/* ---------- Composer elegido (lienzo "Composer elegido · escritorio, comprimido y móvil") ----------
+   Chips neutros (gris claro con filo) y una insignia redonda de color con el ícono en blanco:
+   Herramientas naranja, Web verde, Open Terminal violeta y Razonamiento rosa. Línea divisoria entre
+   + / Integraciones y los chips; el chip del modelo lleva el avatar. En el teléfono, el botón de
+   opciones muestra las insignias encimadas y el contador oscuro "4/4". */
+:root {
+	--sk-ins-herramientas: #d9733a;
+	--sk-ins-web: #2b8a5a;
+	--sk-ins-terminal: #7048e8;
+	--sk-ins-razonamiento: #d6336c;
+	--sk-chip-fondo: var(--sk-sidebar);
+	--sk-chip-filo: #d4d4d8;
+}
+
+html.dark {
+	--sk-chip-filo: #3a3a3d;
+}
+
+#message-input-container button:has(path[d^='M21.75 6.75']) {
+	--sk-insignia: var(--sk-ins-herramientas);
+}
+
+#message-input-container button:has(path[d^='M12 21a9.004']) {
+	--sk-insignia: var(--sk-ins-web);
+}
+
+#message-input-container button:has(path[d^='M12 4C6 4 6 8']) {
+	--sk-insignia: var(--sk-ins-terminal);
+}
+
+#message-input-container button.sk-razonamiento {
+	--sk-insignia: var(--sk-ins-razonamiento);
+}
+
+@media (min-width: 768px) {
+	/* línea divisoria entre + / Integraciones y los chips */
+	#message-input-container > div[dir='ltr'] > div:nth-child(2)::before {
+		content: '';
+		flex: none;
+		align-self: center;
+		width: 1px;
+		height: 22px;
+		margin: 0 6px 0 2px;
+		background: var(--sk-border);
+	}
+
+	#message-input-container button:is(:has(path[d^='M21.75 6.75']), [aria-pressed='true']:has(path[d^='M12 21a9.004']), :has(path[d^='M12 4C6 4 6 8']), .sk-razonamiento) {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		height: 36px;
+		width: auto;
+		margin: 0;
+		padding: 0 14px 0 4px;
+		border: 0;
+		border-radius: 9999px;
+		background: var(--sk-chip-fondo);
+		box-shadow: inset 0 0 0 1px var(--sk-chip-filo);
+		color: var(--sk-ink);
+		font-size: 14px;
+		line-height: 20px;
+		font-weight: 600;
+		transform: none;
+	}
+
+	#message-input-container button:is(:has(path[d^='M21.75 6.75']), [aria-pressed='true']:has(path[d^='M12 21a9.004']), :has(path[d^='M12 4C6 4 6 8']), .sk-razonamiento):hover {
+		background: var(--sk-hover);
+		color: var(--sk-ink);
+	}
+
+	#message-input-container button:is(:has(path[d^='M21.75 6.75']), [aria-pressed='true']:has(path[d^='M12 21a9.004']), :has(path[d^='M12 4C6 4 6 8']), .sk-razonamiento) span {
+		color: inherit;
+		font-size: 14px;
+		font-weight: 600;
+	}
+
+	/* la insignia: el ícono de Open WebUI dentro de un círculo de color de 28 px */
+	#message-input-container button:is(:has(path[d^='M21.75 6.75']), [aria-pressed='true']:has(path[d^='M12 21a9.004']), :has(path[d^='M12 4C6 4 6 8']), .sk-razonamiento) svg {
+		flex: none;
+		width: 28px;
+		height: 28px;
+		padding: 6.5px;
+		box-sizing: border-box;
+		border-radius: 9999px;
+		background: var(--sk-insignia);
+		color: #ffffff;
+		stroke-width: 2;
+	}
+
+	/* chip del modelo: avatar, nombre y flecha en la misma píldora neutra */
+	#model-selector-model-button > div {
+		height: 36px;
+		gap: 8px;
+		padding: 0 10px 0 4px;
+		border: 0;
+		border-radius: 9999px;
+		background: var(--sk-chip-fondo);
+		box-shadow: inset 0 0 0 1px var(--sk-chip-filo);
+		color: var(--sk-ink);
+		font-size: 14px;
+		font-weight: 600;
+	}
+
+	#model-selector-model-button > div:hover {
+		background: var(--sk-hover);
+	}
+}
+
+.sk-modelo-avatar {
+	flex: none;
+	width: 28px;
+	height: 28px;
+	border-radius: 9999px;
+	object-fit: cover;
+}
+
+/* caja angosta: solo la insignia (Herramientas conserva su número) */
+@container sk-composer (max-width: 800px) {
+	#message-input-container button:is(:has(path[d^='M21.75 6.75']), [aria-pressed='true']:has(path[d^='M12 21a9.004']), :has(path[d^='M12 4C6 4 6 8']), .sk-razonamiento) {
+		gap: 4px;
+		padding: 0 4px;
+	}
+
+	#message-input-container button:has(path[d^='M21.75 6.75']) {
+		padding-right: 10px;
+	}
+}
+
+@media (max-width: 767px) {
+	/* botón de opciones: píldora neutra con las insignias de las opciones activas, encimadas */
+	.sk-opciones-boton {
+		width: auto;
+		min-width: 44px;
+		height: 40px;
+		padding: 0 10px;
+		background: var(--sk-chip-fondo);
+		box-shadow: inset 0 0 0 1px var(--sk-chip-filo);
+	}
+
+	.sk-opciones-boton[aria-expanded='true'] {
+		background: var(--sk-azul-soft);
+		box-shadow: inset 0 0 0 1.5px var(--sk-azul);
+	}
+
+	.sk-opciones-boton:has(.sk-insignias i) svg {
+		display: none;
+	}
+
+	.sk-opciones-boton:has(.sk-insignias i) svg ~ * {
+		display: revert;
+	}
+
+	.sk-insignias {
+		display: inline-flex;
+		align-items: center;
+	}
+
+	.sk-insignias i {
+		position: relative;
+		width: 18px;
+		height: 18px;
+		margin-left: -7px;
+		border-radius: 9999px;
+		box-shadow: 0 0 0 2px var(--sk-chip-fondo);
+	}
+
+	.sk-insignias i:first-child {
+		margin-left: 0;
+	}
+
+	.sk-opciones-boton[aria-expanded='true'] .sk-insignias i {
+		box-shadow: 0 0 0 2px var(--sk-azul-soft);
+	}
+
+	.sk-insignia-herramientas { background: var(--sk-ins-herramientas); z-index: 4; }
+	.sk-insignia-web { background: var(--sk-ins-web); z-index: 3; }
+	.sk-insignia-terminal { background: var(--sk-ins-terminal); z-index: 2; }
+	.sk-insignia-razonamiento { background: var(--sk-ins-razonamiento); z-index: 1; }
+
+	/* contador oscuro "4/4" */
+	.sk-opciones-boton .sk-contador:not(:empty),
+	html.dark .sk-opciones-boton .sk-contador:not(:empty) {
+		top: -9px;
+		right: -8px;
+		height: 18px;
+		padding: 0 6px;
+		border: 0;
+		background: var(--sk-primary);
+		color: var(--sk-on-primary);
+		box-shadow: 0 0 0 2px var(--sk-surface);
+	}
+
+	.sk-opciones-boton .sk-contador b,
+	.sk-opciones-boton .sk-contador span {
+		font-size: 11.5px;
+		line-height: 18px;
+		font-weight: 700;
+	}
+
+	.sk-opciones-boton .sk-contador span {
+		opacity: 0.7;
+	}
+
+	/* chip del modelo en el teléfono: avatar de 30 px y nombre a 16 px */
+	#model-selector-model-button > div {
+		height: 40px;
+		gap: 6px;
+		padding: 0 8px 0 5px;
+		border: 0;
+		border-radius: 9999px;
+		background: var(--sk-chip-fondo);
+		box-shadow: inset 0 0 0 1px var(--sk-chip-filo);
+		font-size: 16px;
+		font-weight: 600;
+	}
+
+	#model-selector-model-button .sk-modelo-avatar {
+		width: 30px;
+		height: 30px;
+	}
+
+	/* hoja de opciones: cada fila con su insignia redonda de color e ícono blanco */
+	#message-input-container.sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button:is(:has(path[d^='M21.75 6.75']), :has(path[d^='M12 21a9.004']), :has(path[d^='M12 4C6 4 6 8']), .sk-razonamiento, .sk-fantasma) svg {
+		border-radius: 9999px;
+		background: var(--sk-insignia);
+		color: #ffffff;
+	}
+
+	#message-input-container .sk-fantasma[data-tipo='herramientas'] {
+		--sk-insignia: var(--sk-ins-herramientas);
+	}
+
+	#message-input-container .sk-fantasma[data-tipo='web'] {
+		--sk-insignia: var(--sk-ins-web);
+	}
+}
+
+/* teléfonos angostos (menos de 420 px): no cabía el nombre del modelo junto al avatar; se encimen más
+   las insignias, se ajusta el relleno y se oculta la flecha del modelo (el chip sigue abriendo el menú) */
+@media (max-width: 420px) {
+	.sk-opciones-boton {
+		padding: 0 6px;
+	}
+
+	.sk-insignias i {
+		margin-left: -9px;
+	}
+
+	#model-selector-model-button > div {
+		gap: 4px;
+		padding: 0 6px 0 4px;
+		font-size: 15px;
+	}
+
+	#message-input-container > div[dir='ltr'] > div:last-child {
+		gap: 2px;
+	}
+
+	#model-selector-model-button .sk-modelo-avatar {
+		width: 26px;
+		height: 26px;
+	}
+
+	#model-selector-model-button > div > svg {
+		display: none;
+	}
 }

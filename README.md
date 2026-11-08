@@ -1,6 +1,6 @@
 # Carbono para Open WebUI
 
-**Versión 0.84** · probado con Open WebUI **0.13.0**
+**Versión 0.85** · probado con Open WebUI **0.13.0**
 
 Carbono es el tema recomendado para [Sakura OI Web](https://github.com/YukiChristian/Sakura-OI-Web). Deja la interfaz de Open WebUI neutra (superficies en tonos carbón y zinc, acción principal en negro), con más jerarquía en el texto, tipografía Atkinson Hyperlegible, menús de vidrio esmerilado y un composer pensado para el teléfono.
 
@@ -15,6 +15,10 @@ La guía de estilo (principios, colores, tipografía y componentes) está en [do
 | Inicio | Conversación |
 | --- | --- |
 | ![Pantalla de inicio en escritorio](docs/capturas/escritorio-inicio.jpg) | ![Conversación en escritorio](docs/capturas/escritorio-conversacion.jpg) |
+
+| Barra contraída con chats | Panel lateral de pestañas |
+| --- | --- |
+| ![Panel de chats desde la barra contraída](docs/capturas/escritorio-chats.jpg) | ![Panel lateral con la pestaña Archivos](docs/capturas/escritorio-panel.jpg) |
 
 | Integraciones | Selector de modelo |
 | --- | --- |
@@ -31,8 +35,8 @@ La guía de estilo (principios, colores, tipografía y componentes) está en [do
 - **Tipografía:** Atkinson Hyperlegible Next para la interfaz y Atkinson Hyperlegible Mono para código (Google Fonts).
 - **Barra lateral:** filas del mismo tamaño, chat activo con fondo gris y barra de 3 px, etiquetas de sección en mayúsculas.
 - **Chat:** globo de tus mensajes en gris neutro, fondo de cada modelo con un velo blanco degradado y desenfocado para que el texto se lea primero, y barra de título de vidrio esmerilado.
-- **Composer en escritorio:** chips de color con su nombre (Herramientas en naranja, Web en verde, Open Terminal en violeta, Razonamiento en amarillo) y, a la derecha, modelo, micrófono y voz. Si la caja es angosta (barra lateral abierta o ventana chica), los chips se quedan solo con su ícono.
-- **Composer en el teléfono:** texto arriba; abajo `+`, Integraciones, un botón de opciones con un óvalo discreto (de gris a azul) que dice cuántas opciones hay y cuántas están activas, el modelo, el micrófono y la voz. El botón abre la hoja de vidrio **Herramientas y opciones**, donde cada opción tiene su ícono, su descripción y su interruptor encendido o apagado.
+- **Composer en escritorio:** chips neutros con una insignia redonda de color (Herramientas naranja, Web verde, Open Terminal violeta, Razonamiento rosa), una línea que los separa de `+` e Integraciones y, a la derecha, el modelo con su avatar, el micrófono y la voz. Si la caja es angosta, los chips se quedan solo con su insignia.
+- **Composer en el teléfono:** texto arriba; abajo `+`, Integraciones, un botón de opciones con las insignias de color de las opciones activas encimadas y un contador «4/4», el modelo con su avatar, el micrófono y la voz. El botón abre la hoja de vidrio **Herramientas y opciones**, donde cada opción tiene su ícono, su descripción y su interruptor encendido o apagado.
 - **Menús:** vidrio esmerilado (blanco al 60 % con desenfoque) en todos los menús flotantes y en el selector de modelo; nunca se salen de la ventana y muestran todas sus opciones.
 - **Administración y Zona de Pruebas:** pestañas en control segmentado, tabla de usuarios en tarjeta con el rol en píldora, buscador y botones de 46 px, instrucciones del sistema en tarjeta, un recuadro punteado que explica qué hacer cuando no hay mensajes y botón **Ejecutar** en negro.
 - **Ajustes, Notas, Espacio de Trabajo, Calendario y Automatizaciones:** jerarquía título › sección › ajuste › descripción y botón **Crear** en negro.
@@ -40,6 +44,15 @@ La guía de estilo (principios, colores, tipografía y componentes) está en [do
 - **Rendimiento:** los selectores evitan buscar por el atributo `class` dentro de `:has()`, que obliga al navegador a recalcular toda la página en cada hover.
 
 ## Cambios
+
+### 0.85
+
+- Composer rediseñado («Composer elegido»): chips neutros con insignia redonda de color e ícono blanco, línea divisoria y el avatar del modelo en su chip; en el teléfono, el botón de opciones muestra las insignias encimadas y un contador «4/4», y la hoja usa las mismas insignias.
+- Barra lateral contraída: botón **Chats** que abre un panel de vidrio con carpetas (y crear carpeta), fijados e historial por fecha con buscador, y avatares de los modelos fijados para empezar un chat nuevo.
+- Panel lateral de pestañas de 0.13.0 (Archivos, Terminal, Navegador, Desktop): pestañas compactas con la activa marcada, íconos gris oscuro del mismo tamaño, barra de la misma altura que la de título, línea fina de separación con el chat y menú «+» de vidrio.
+- Ventana **Herramientas Disponibles** de vidrio, como los menús.
+- Íconos de la barra de título más oscuros y parejos.
+- El chip Razonamiento sigue apareciendo solo en modelos con nivel de razonamiento.
 
 ### 0.84
 
