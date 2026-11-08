@@ -1,10 +1,19 @@
 /*
- * Carbono 0.85 — comportamiento del tema. El lanzador lo sirve en /static/loader.js
+ * Carbono 0.86 — comportamiento del tema. El lanzador lo sirve en /static/loader.js
  * (que Open WebUI carga en cada página) mientras exista carbono/ACTIVO.
  *
  * Barras de desplazamiento que solo aparecen mientras haces scroll: carbono.css las deja
  * transparentes y aquí se marca con .sk-scrolling el elemento que se está desplazando.
  */
+/* Open WebUI 0.13.2 abre chats en pestañas ("chat lateral") con su propia caja de mensaje y repite ids
+   como #model-selector-model-button; la pestaña oculta sigue en la página. skVisible() devuelve el elemento
+   que se ve (o el primero si ninguno se ve) para que cada módulo trabaje sobre la caja activa. */
+function skVisible(selector) {
+	const todos = document.querySelectorAll(selector);
+	for (const el of todos) if (el.getClientRects().length) return el;
+	return todos[0] ?? null;
+}
+
 (() => {
 	const VISIBLE_MS = 900;
 	const timers = new WeakMap();
@@ -33,9 +42,9 @@
  * los demás modelos se queda junto al modelo como ícono normal.
  */
 (() => {
-	const CHIPS = "#message-input-container > div[dir='ltr'] > div:nth-child(2) > div";
-	const DERECHA = "#message-input-container > div[dir='ltr'] > div:last-child";
-	const BOTON = "#message-input-container button:has(path[d^='M10.5 6h9.75'])";
+	const CHIPS = ":is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) > div[dir='ltr'] > div:nth-child(2) > div";
+	const DERECHA = ":is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) > div[dir='ltr'] > div:last-child";
+	const BOTON = ":is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) button:has(path[d^='M10.5 6h9.75'])";
 	const MODELO = '#model-selector-model-button';
 	let conRazonamiento = null; // nombre del modelo -> { id, predeterminado } si tiene nivel de razonamiento
 	let elecciones = {}; // id del modelo -> { razonamiento: nivel } elegido por el usuario (Ajustes)
@@ -68,7 +77,7 @@
 
 	// Composer elegido: el chip del modelo lleva el avatar del modelo a la izquierda del nombre
 	const avatarModelo = () => {
-		const chip = document.querySelector(`${MODELO} > div`);
+		const chip = skVisible(`${MODELO} > div`);
 		const id = idPorNombre.get(chip?.textContent.trim());
 		if (!chip || !id) return;
 		let img = chip.querySelector(':scope > img.sk-modelo-avatar');
@@ -88,17 +97,17 @@
 		if (conRazonamiento) avatarModelo();
 		if (!conRazonamiento) {
 			// La lista se pide al primer composer con sesión iniciada (no en la pantalla de acceso)
-			if (localStorage.token && !cargando && document.querySelector(BOTON)) {
+			if (localStorage.token && !cargando && skVisible(BOTON)) {
 				cargando = true;
 				cargar();
 			}
 			return;
 		}
-		const boton = document.querySelector(BOTON);
-		const chips = document.querySelector(CHIPS);
+		const boton = skVisible(BOTON);
+		const chips = skVisible(CHIPS);
 		const envoltura = boton?.closest(`${DERECHA} > span, ${CHIPS} > span`);
 		if (!envoltura || !chips) return;
-		const modelo = conRazonamiento.get(document.querySelector(MODELO)?.textContent.trim());
+		const modelo = conRazonamiento.get(skVisible(MODELO)?.textContent.trim());
 		const razona = Boolean(modelo);
 		const nivel = modelo && (elecciones[modelo.id]?.razonamiento ?? modelo.predeterminado);
 		boton.classList.toggle('sk-razonamiento', razona);
@@ -145,23 +154,23 @@
  * en esa hoja); tocar una fila es tocar el chip real. En escritorio el botón está oculto.
  */
 (() => {
-	const COMPOSER = '#message-input-container';
-	const CHIPS = "#message-input-container > div[dir='ltr'] > div:nth-child(2)";
-	const IZQUIERDA = "#message-input-container > div[dir='ltr'] > div:first-child";
+	const COMPOSER = ":is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper'])";
+	const CHIPS = ":is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) > div[dir='ltr'] > div:nth-child(2)";
+	const IZQUIERDA = ":is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) > div[dir='ltr'] > div:first-child";
 	const ICONO =
 		'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 6h16M4 12h16M4 18h10"/></svg>';
 	let pendiente = false;
 
 	const cerrar = () => {
-		const composer = document.querySelector(COMPOSER);
+		const composer = skVisible(COMPOSER);
 		composer?.classList.remove('sk-opciones-abiertas');
-		document.querySelector('.sk-opciones-boton')?.setAttribute('aria-expanded', 'false');
+		skVisible('.sk-opciones-boton')?.setAttribute('aria-expanded', 'false');
 		document.querySelector('.sk-opciones-velo')?.remove();
 	};
 
 	const abrir = (composer) => {
 		composer.classList.add('sk-opciones-abiertas');
-		document.querySelector('.sk-opciones-boton')?.setAttribute('aria-expanded', 'true');
+		skVisible('.sk-opciones-boton')?.setAttribute('aria-expanded', 'true');
 		if (!document.querySelector('.sk-opciones-velo')) {
 			const velo = document.createElement('div');
 			velo.className = 'sk-opciones-velo';
@@ -172,8 +181,8 @@
 
 	const actualizar = () => {
 		pendiente = false;
-		const composer = document.querySelector(COMPOSER);
-		const izquierda = document.querySelector(IZQUIERDA);
+		const composer = skVisible(COMPOSER);
+		const izquierda = skVisible(IZQUIERDA);
 		if (!composer || !izquierda) return;
 
 		let boton = izquierda.querySelector('.sk-opciones-boton');
@@ -184,17 +193,18 @@
 			boton.setAttribute('aria-expanded', 'false');
 			boton.innerHTML = ICONO;
 			boton.addEventListener('click', () => {
-				const c = document.querySelector(COMPOSER);
+				const c = skVisible(COMPOSER);
 				if (c.classList.contains('sk-opciones-abiertas')) cerrar();
 				else abrir(c);
 			});
 			izquierda.appendChild(boton);
 		}
 
-		const chips = document.querySelector(CHIPS);
+		const chips = skVisible(CHIPS);
 		const contenedor = chips?.querySelector(':scope > div');
 		if (contenedor) sincronizarApagadas(contenedor);
-		const opciones = chips ? [...chips.querySelectorAll('button')] : [];
+		// Workspace no es un interruptor: no cuenta en el contador (en el teléfono va dentro del menú +)
+		const opciones = chips ? [...chips.querySelectorAll("button:not([aria-label='Choose working directory'])")] : [];
 		let activas = 0;
 		for (const opcion of opciones) {
 			const activa = estaActiva(opcion);
@@ -237,7 +247,7 @@
 	/*
 	 * Open WebUI quita el chip de Web al apagarla (y el de Herramientas si no hay ninguna elegida), así que
 	 * desaparecían de la hoja. Se recuerda su ícono y, mientras falten, la hoja muestra una fila apagada
-	 * (.sk-fantasma) que los vuelve a encender desde el menú de Integraciones.
+	 * (.sk-fantasma) que los vuelve a encender desde el menú de Integraciones (o el "+" desde 0.13.1).
 	 */
 	const APAGABLES = [
 		{ clave: 'herramientas', icono: 'M21.75 6.75', nombre: 'Herramientas', menu: 'Herramientas', cerrarMenu: false },
@@ -251,7 +261,8 @@
 	}
 
 	const encender = async (apagable) => {
-		const integraciones = document.querySelector('#integration-menu-button');
+		// desde 0.13.1 Integraciones vive dentro del menú "+" (#input-menu-button)
+		const integraciones = document.querySelector('#integration-menu-button') ?? skVisible('#input-menu-button');
 		integraciones?.click();
 		for (let intento = 0; intento < 30; intento++) {
 			await new Promise((r) => setTimeout(r, 50));
@@ -649,4 +660,164 @@
 		pendiente = true;
 		requestAnimationFrame(asegurarBoton);
 	}).observe(document.documentElement, { childList: true, subtree: true });
+})();
+
+/* Textos del selector de carpeta y del menú "+" (lienzos "Composer · Dirección de trabajo" y "Menú +"):
+   Open WebUI 0.13.2 los deja en inglés o muy cortos. Solo se cambia el texto, sin tocar la estructura. */
+(() => {
+	const TEXTOS = {
+		'No folder': 'Sin carpeta',
+		'Open folder': 'Abrir carpeta…',
+		'Add Context': 'Añadir contexto',
+		'Subir Archivos': 'Subir archivos',
+		Captura: 'Captura de pantalla',
+		'Búsqueda Web': 'Búsqueda web',
+		'Permisos de Herramientas': 'Permisos de Open Terminal'
+	};
+	const SUBTITULOS = {
+		'Sin carpeta': 'El chat no usa ninguna carpeta',
+		'Añadir contexto': 'Notas, chats o conocimiento'
+	};
+	let pendiente = false;
+
+	const traducir = () => {
+		pendiente = false;
+		document.querySelectorAll('.app-dropdown-menu').forEach((menu) => {
+			const esCarpeta = menu.querySelector("input[placeholder='Buscar carpetas']");
+			const esMas = menu.querySelector("path[d^='M21.4383 11.6622']");
+			const esHerramientas = menu.querySelector("input[placeholder='Buscar herramientas']");
+			if (!esCarpeta && !esMas && !esHerramientas) return;
+			menu.classList.toggle('sk-menu-herramientas', !!esHerramientas);
+			menu.classList.toggle('sk-menu-carpeta', !!esCarpeta);
+			menu.classList.toggle('sk-menu-mas', !!esMas);
+			// el menú "+" quedó más alto que lo que Open WebUI calculó: se ancla desde abajo, justo arriba de la
+			// caja del mensaje (la CSS usa --sk-mas-abajo con !important porque Open WebUI reescribe su posición)
+			const caja = skVisible(":is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper'])");
+			if ((esMas || esCarpeta || esHerramientas) && caja) {
+				const abajo = Math.max(12, window.innerHeight - caja.getBoundingClientRect().top + 8);
+				document.documentElement.style.setProperty('--sk-mas-abajo', `${abajo}px`);
+			}
+			menu.querySelectorAll('button span, button div').forEach((el) => {
+				if (el.children.length || el.closest('.sk-menu-workspace')) return;
+				const texto = el.textContent.trim();
+				const nuevo = TEXTOS[texto];
+				if (nuevo) el.textContent = nuevo;
+				const ambitos = texto.match(/^Ámbitos seleccionados: (\d+)$/);
+				if (ambitos) el.textContent = `${ambitos[1]} ${ambitos[1] === '1' ? 'seleccionada' : 'seleccionadas'}`;
+				const sub = SUBTITULOS[el.textContent.trim()];
+				if (sub && !el.dataset.skSub) {
+					el.dataset.skSub = sub;
+					el.classList.add('sk-con-subtitulo');
+				}
+			});
+		});
+	};
+
+	new MutationObserver(() => {
+		if (pendiente) return;
+		pendiente = true;
+		requestAnimationFrame(traducir);
+	}).observe(document.documentElement, { childList: true, subtree: true });
+})();
+
+/* Al achicar la ventana de escritorio a teléfono con la vista dividida abierta, Open WebUI pasa el otro
+   lado a un cajón "Pestañas" encima del chat. Aquí se cierra solo ese cajón automático (con su propio
+   botón "Ocultar pestañas"), para que quede el chat; abrirlo a mano en el teléfono sigue funcionando. */
+(() => {
+	const telefono = window.matchMedia('(max-width: 767px)');
+	telefono.addEventListener('change', (e) => {
+		if (!e.matches) return;
+		const hasta = Date.now() + 2000;
+		const cerrar = () => {
+			const boton = document.querySelector(
+				".modal[role='dialog'][aria-label='Pestañas'] button[aria-label='Ocultar pestañas'], .modal[role='dialog'][aria-label='Tabs'] button[aria-label='Hide tabs']"
+			);
+			if (boton) boton.click();
+			else if (Date.now() < hasta) setTimeout(cerrar, 100);
+		};
+		setTimeout(cerrar, 50);
+	});
+})();
+
+/* Menú + en el teléfono: fila "Workspace" (insignia turquesa, nombre de la carpeta o "Sin carpeta" y flecha)
+   en el grupo Herramientas. Abre el mismo selector de carpeta de Open WebUI. */
+(() => {
+	const telefono = window.matchMedia('(max-width: 767px)');
+	const CARPETA = ":is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) button[aria-label='Choose working directory']";
+	const SVG_CARPETA =
+		'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>';
+	const SVG_FLECHA =
+		'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg>';
+	let pendiente = false;
+
+	const asegurar = () => {
+		pendiente = false;
+		const menu = document.querySelector('.app-dropdown-menu.sk-menu-mas');
+		if (!menu) return;
+		const carpeta = skVisible(CARPETA);
+		let fila = menu.querySelector('.sk-menu-workspace');
+		if (!telefono.matches || !carpeta) {
+			fila?.remove();
+			return;
+		}
+		const nombre = carpeta.querySelector('span')?.textContent.trim() || '';
+		if (!fila) {
+			const herramientas = menu.querySelector("button:has(path[d^='M21.75 6.75'])");
+			const grupo = herramientas?.parentElement;
+			if (!grupo) return;
+			fila = document.createElement('button');
+			fila.type = 'button';
+			fila.setAttribute('role', 'menuitem');
+			fila.className = 'sk-menu-workspace';
+			fila.innerHTML = `${SVG_CARPETA}<div class="justify-between"><div>Workspace</div><div><div class="sk-workspace-sub"></div>${SVG_FLECHA}</div></div>`;
+			fila.addEventListener('click', (e) => {
+				e.stopPropagation();
+				document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+				setTimeout(() => skVisible(CARPETA)?.click(), 120);
+			});
+			grupo.appendChild(fila);
+		}
+		const sub = fila.querySelector('.sk-workspace-sub');
+		const texto = nombre || 'Sin carpeta';
+		if (sub && sub.textContent !== texto) sub.textContent = texto;
+		const etiqueta = `Workspace: ${texto}`;
+		if (fila.getAttribute('aria-label') !== etiqueta) fila.setAttribute('aria-label', etiqueta);
+	};
+
+	new MutationObserver(() => {
+		if (pendiente) return;
+		pendiente = true;
+		requestAnimationFrame(asegurar);
+	}).observe(document.documentElement, { childList: true, subtree: true });
+})();
+
+/* Archivos que el lanzador sirve parchados (p. ej. el chat lateral con Open Terminal y Workspace): el navegador
+   pudo guardar la versión original. Se refrescan una vez en su caché y, si ya estaban cargados en esta página,
+   se recarga una sola vez para usar la versión nueva. */
+(async () => {
+	try {
+		const r = await fetch('/static/carbono-parches.json', { cache: 'no-store' });
+		if (!r.ok) return;
+		const { recargar = [] } = await r.json();
+		let hechos = [];
+		try {
+			hechos = JSON.parse(localStorage.getItem('sk-parches') || '[]');
+		} catch {
+			// sin localStorage: se intenta en cada carga, sin recargar la página
+		}
+		const pendientes = recargar.filter((ruta) => !hechos.includes(ruta));
+		if (!pendientes.length) return;
+		await Promise.all(pendientes.map((ruta) => fetch(ruta, { cache: 'reload' })));
+		try {
+			localStorage.setItem('sk-parches', JSON.stringify([...hechos, ...pendientes]));
+		} catch {
+			return;
+		}
+		const yaCargado = pendientes.some((ruta) =>
+			performance.getEntriesByType('resource').some((e) => e.name.endsWith(ruta))
+		);
+		if (yaCargado) location.reload();
+	} catch {
+		// sin el lanzador del tema (o sin red): nada que refrescar
+	}
 })();

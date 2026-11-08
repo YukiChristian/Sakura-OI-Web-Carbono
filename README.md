@@ -1,6 +1,6 @@
 # Carbono para Open WebUI
 
-**Versión 0.85** · probado con Open WebUI **0.13.0**
+**Versión 0.86** · probado con Open WebUI **0.13.2**
 
 Carbono es el tema recomendado para [Sakura OI Web](https://github.com/YukiChristian/Sakura-OI-Web). Deja la interfaz de Open WebUI neutra (superficies en tonos carbón y zinc, acción principal en negro), con más jerarquía en el texto, tipografía Atkinson Hyperlegible, menús de vidrio esmerilado y un composer pensado para el teléfono.
 
@@ -44,6 +44,19 @@ La guía de estilo (principios, colores, tipografía y componentes) está en [do
 - **Rendimiento:** los selectores evitan buscar por el atributo `class` dentro de `:has()`, que obliga al navegador a recalcular toda la página en cada hover.
 
 ## Cambios
+
+### 0.86
+
+Ajustes para Open WebUI 0.13.2:
+
+- **Pestañas como barra de título:** 0.13.2 pone las pestañas del chat arriba y deja vacío el encabezado viejo; ahora hay una sola barra de vidrio de 52 px. Las pestañas son planas: la activa va en negrita con su ícono y un subrayado de 3 px en el color de su tipo (chat azul, terminal durazno, archivo/editor magenta, navegador verde, archivos turquesa, escritorio rojo, nota de voz amarillo). El «+» y los botones de la derecha miden 34 px.
+- **Vista dividida:** cada lado guarda lugar solo para sus botones, la división es una línea sutil y el contenido ya no queda debajo de la barra. Al achicar la ventana a tamaño teléfono se cierra el cajón de pestañas que abría Open WebUI y queda el chat.
+- **Workspace** (carpeta de trabajo de 0.13.2): chip con insignia turquesa y el nombre de la carpeta (o «Workspace»); selector rediseñado con encabezado, buscador y filas de 48 px. En el teléfono vive dentro del menú «+», en el grupo Herramientas.
+- **Menú «+» rediseñado:** grupos Adjuntar, Herramientas y Permisos con su rótulo, filas de 48 px con ícono redondo y descripción, interruptor de Búsqueda web más grande, y anclado justo arriba de la caja de mensaje.
+- **Colores de los chips:** Open Terminal durazno, Workspace turquesa, Herramientas violeta índigo (también en su lista), Razonamiento rosa y Web verde.
+- **Navegador de archivos:** en el teléfono, barra y filas de 56 px con botones de 44 px; en escritorio, una versión compacta.
+- **Chats en pestaña** («Nuevo Chat» del menú de pestañas): su caja de mensaje usa el mismo diseño que la del chat principal. Opcionalmente el lanzador puede mostrar ahí Open Terminal y Workspace (ver «Instalar»).
+- Corregido: doble línea junto al «+», íconos de la barra de título del teléfono con el mismo trazo que en escritorio, contador «4/4» centrado y la división vieja del panel que tapaba parte del otro lado.
 
 ### 0.85
 
@@ -138,6 +151,34 @@ Ajustes para Open WebUI 0.13.0:
    ```
 
 3. Reinicia Open WebUI **una sola vez** para que cargue el bloque.
+
+Opcional (Open WebUI 0.13.2): los chats que se abren como pestaña («Nuevo Chat» del menú de pestañas) llegan sin Open Terminal ni Workspace porque Open WebUI los oculta en ese componente, aunque al enviar ya usa la terminal elegida. Para mostrarlos, agrega esto antes del `@open_webui.main.app.middleware` (con `import json` arriba):
+
+```python
+# Chats en pestaña con Open Terminal y Workspace: se sirve ese archivo con el interruptor encendido.
+# Si una versión nueva cambia el código, no se encuentra la marca y no se toca nada.
+chat_lateral_marca = b"embedded:!0,callEnabled:!1,terminalSelectionEnabled:!1"
+chat_lateral_ruta, chat_lateral_cuerpo = None, b""
+_chunks = Path(open_webui.__file__).resolve().parent / "frontend" / "_app" / "immutable" / "chunks"
+for _js in _chunks.glob("*.js") if _chunks.is_dir() else []:
+    _datos = _js.read_bytes()
+    if chat_lateral_marca in _datos:
+        chat_lateral_ruta = f"/_app/immutable/chunks/{_js.name}"
+        chat_lateral_cuerpo = _datos.replace(chat_lateral_marca, chat_lateral_marca[:-1] + b"0")
+        break
+```
+
+y esto al inicio de `tema_carbono`, después de `activo = ...`:
+
+```python
+    if activo and chat_lateral_ruta and request.url.path == chat_lateral_ruta:
+        return Response(chat_lateral_cuerpo, media_type="text/javascript", headers={"Cache-Control": "no-cache"})
+    if request.url.path == "/static/carbono-parches.json":
+        rutas = [chat_lateral_ruta] if activo and chat_lateral_ruta else []
+        return Response(json.dumps({"recargar": rutas}), media_type="application/json", headers={"Cache-Control": "no-cache"})
+```
+
+`carbono.js` consulta `/static/carbono-parches.json` para refrescar una vez ese archivo en la caché del navegador (puede recargar la página una sola vez).
 
 Opcional: define la variable de entorno `WEBUI_THEME_NAME` (por ejemplo, `Sakura OI Web`) para cambiar el nombre que se ve en la barra lateral, el inicio de sesión y la pestaña mientras el tema está activo. Revisa la [licencia de Open WebUI](https://docs.openwebui.com/license) antes de cambiar su marca.
 
