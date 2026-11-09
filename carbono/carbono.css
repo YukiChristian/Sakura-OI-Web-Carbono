@@ -1,5 +1,5 @@
 /*
- * Carbono 0.86 — tema para Open WebUI (probado con 0.13.2).
+ * Carbono 0.87 — tema para Open WebUI (probado con 0.13.2).
  * https://github.com/YukiChristian/Sakura-OI-Web-Carbono
  *
  * El lanzador lo sirve en /static/custom.css mientras exista carbono/ACTIVO (ver README).
@@ -5730,7 +5730,7 @@ button[aria-label='Split screen']:hover {
 }
 
 /* menú "+": anclado desde abajo, arriba de la caja del mensaje (carbono.js calcula --sk-mas-abajo) */
-[role='menu']:is(:has(> div > .sk-menu-mas), :has(> div > .sk-menu-carpeta), :has(> div > .sk-menu-herramientas)) {
+[role='menu']:is(:has(> div > .sk-menu-mas), :has(> div > .sk-menu-carpeta), :has(> div > .sk-menu-herramientas), :has(> div > .sk-menu-razonamiento)) {
 	top: auto !important;
 	bottom: var(--sk-mas-abajo, 90px) !important;
 }
@@ -6020,5 +6020,1247 @@ html.dark .app-dropdown-menu:has([role='menuitemcheckbox']) [role='menuitem'] .l
 		line-height: 18px;
 		font-weight: 600;
 		opacity: 0.78;
+	}
+}
+
+/* Teléfono: íconos de la barra de título del mismo tamaño y trazo que en escritorio (chat temporal 16 px,
+   panel y barra lateral 19.5 px); los botones siguen de 44 px para el dedo */
+@media (max-width: 767px) {
+	nav.sticky:has(h1) #temporary-chat-button svg {
+		width: 16px;
+		height: 16px;
+		stroke-width: 2.2;
+	}
+
+	nav.sticky:has(h1) :is(button[aria-label='Pestañas'], button[aria-label='Tabs'], button[aria-label='Abrir Barra Lateral']) svg {
+		width: 19.5px;
+		height: 19.5px;
+		stroke-width: 1.8;
+	}
+}
+
+/* Menú + y selector de Workspace más compactos: filas de 40 px (44 px en el teléfono, para el dedo),
+   íconos de 28 px, texto de 14 px y descripción de 12.5 px, rótulos y separaciones más juntos */
+.sk-menu-mas.sk-menu-mas,
+.app-dropdown-menu.sk-menu-carpeta {
+	padding: 6px !important;
+	border-radius: 16px !important;
+}
+
+.sk-menu-mas.sk-menu-mas :is([role='menuitem'], [role='menuitemcheckbox']),
+.app-dropdown-menu.sk-menu-carpeta > button {
+	min-height: 40px;
+	gap: 10px !important;
+	padding: 4px 8px !important;
+	border-radius: 10px !important;
+	font-size: 14px !important;
+	line-height: 19px;
+}
+
+.sk-menu-mas.sk-menu-mas [role='menuitemcheckbox'] .flex-1.gap-2 {
+	gap: 10px;
+}
+
+.sk-menu-mas.sk-menu-mas [role='menuitem'] > svg:first-child,
+.sk-menu-mas.sk-menu-mas [role='menuitemcheckbox'] .shrink-0 > svg,
+.app-dropdown-menu.sk-menu-carpeta > button > svg:first-child {
+	width: 28px !important;
+	height: 28px !important;
+	padding: 6.5px;
+}
+
+.sk-menu-mas.sk-menu-mas [role='menuitem'] > div.justify-between > :last-child > :first-child,
+.sk-con-subtitulo::after {
+	font-size: 12.5px;
+	line-height: 16px;
+}
+
+.sk-menu-mas.sk-menu-mas::before,
+.sk-menu-mas.sk-menu-mas div.h-px::after {
+	padding: 8px 8px 2px;
+	font-size: 11px;
+	line-height: 14px;
+}
+
+.sk-menu-mas.sk-menu-mas div.h-px {
+	margin: 4px 4px 0 !important;
+}
+
+.sk-menu-mas.sk-menu-mas button[role='switch'] {
+	width: 40px !important;
+	height: 24px !important;
+	min-height: 24px;
+}
+
+.sk-menu-mas.sk-menu-mas button[role='switch'] > span {
+	width: 18px !important;
+	height: 18px !important;
+}
+
+.sk-menu-mas.sk-menu-mas button[role='switch'] > span[data-state='checked'] {
+	transform: translateX(19px) !important;
+}
+
+.app-dropdown-menu.sk-menu-carpeta::before {
+	padding: 6px 8px 0;
+	font-size: 15px;
+	line-height: 20px;
+}
+
+.app-dropdown-menu.sk-menu-carpeta > div:has(> input) {
+	height: 38px;
+	margin: 26px 4px 4px !important;
+	border-radius: 10px;
+}
+
+.app-dropdown-menu.sk-menu-carpeta > div:has(> input)::before {
+	top: -25px;
+	font-size: 12.5px;
+	line-height: 17px;
+}
+
+@media (max-width: 767px) {
+	.sk-menu-mas.sk-menu-mas :is([role='menuitem'], [role='menuitemcheckbox']),
+	.app-dropdown-menu.sk-menu-carpeta > button {
+		min-height: 44px;
+	}
+
+	.app-dropdown-menu.sk-menu-mas.sk-menu-mas,
+	.app-dropdown-menu.sk-menu-carpeta.sk-menu-carpeta {
+		width: min(330px, calc(100vw - 24px));
+	}
+}
+
+/* Selector de Workspace con las mismas medidas compactas que el menú + (las reglas originales del selector
+   usan :has(input…) y pesaban más) */
+.app-dropdown-menu.sk-menu-carpeta:has(input[placeholder='Buscar carpetas']) {
+	padding: 6px !important;
+	border-radius: 16px !important;
+}
+
+.app-dropdown-menu.sk-menu-carpeta:has(input[placeholder='Buscar carpetas']) > button {
+	min-height: 40px;
+	gap: 10px !important;
+	padding: 4px 8px !important;
+	border-radius: 10px !important;
+	font-size: 14px !important;
+	line-height: 19px;
+}
+
+.app-dropdown-menu.sk-menu-carpeta:has(input[placeholder='Buscar carpetas']) > button > svg:first-child {
+	width: 28px !important;
+	height: 28px !important;
+	padding: 6.5px;
+}
+
+.app-dropdown-menu.sk-menu-carpeta:has(input[placeholder='Buscar carpetas']) > button > svg:last-child:not(:first-child) {
+	width: 16px !important;
+	height: 16px !important;
+}
+
+.app-dropdown-menu.sk-menu-carpeta:has(input[placeholder='Buscar carpetas'])::before {
+	padding: 6px 8px 0;
+	font-size: 15px;
+	line-height: 20px;
+}
+
+.app-dropdown-menu.sk-menu-carpeta:has(input[placeholder='Buscar carpetas']) > div:has(> input) {
+	height: 36px;
+	margin: 24px 2px 4px !important;
+	padding: 0 10px;
+	border-radius: 10px;
+}
+
+.app-dropdown-menu.sk-menu-carpeta:has(input[placeholder='Buscar carpetas']) > div:has(> input)::before {
+	left: 6px;
+	top: -23px;
+	font-size: 12.5px;
+	line-height: 17px;
+}
+
+.app-dropdown-menu.sk-menu-carpeta:has(input[placeholder='Buscar carpetas']) > div:has(> input) input {
+	font-size: 14px;
+}
+
+.app-dropdown-menu.sk-menu-carpeta:has(input[placeholder='Buscar carpetas']) > hr {
+	margin: 4px 4px !important;
+}
+
+.app-dropdown-menu.sk-menu-carpeta.sk-menu-carpeta:has(input[placeholder='Buscar carpetas']) {
+	width: 330px;
+}
+
+@media (max-width: 767px) {
+	.app-dropdown-menu.sk-menu-carpeta:has(input[placeholder='Buscar carpetas']) > button {
+		min-height: 44px;
+	}
+
+	.app-dropdown-menu.sk-menu-carpeta.sk-menu-carpeta:has(input[placeholder='Buscar carpetas']) {
+		width: min(330px, calc(100vw - 24px));
+	}
+}
+
+/* ---------- Menú de Razonamiento ----------
+   Mismo vidrio y medidas que el menú +: encabezado en negrita con el nivel en una pastilla rosa, control
+   segmentado de cinco niveles (la opción elegida en blanco con el texto rosa), "Predeterminado" y "Controles"
+   como filas limpias, sin subrayados punteados. */
+.app-dropdown-menu.sk-menu-razonamiento.sk-menu-razonamiento {
+	width: min(360px, calc(100vw - 24px));
+	max-width: none;
+	padding: 6px !important;
+	border-radius: 16px !important;
+}
+
+.sk-menu-razonamiento > div.space-y-2 {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+	padding: 8px 6px 6px !important;
+}
+
+.sk-menu-razonamiento > div.space-y-2 > * {
+	margin: 0 !important;
+}
+
+/* encabezado: título y nivel actual */
+.sk-menu-razonamiento > div.space-y-2 > div:first-child {
+	gap: 8px;
+}
+
+.sk-menu-razonamiento > div.space-y-2 > div:first-child button[role='menuitem'] {
+	min-height: 0;
+	height: auto;
+	padding: 0 !important;
+	background: none !important;
+	text-decoration: none;
+	font-size: 15px !important;
+	line-height: 20px;
+	font-weight: 700;
+	color: var(--sk-ink);
+}
+
+.sk-menu-razonamiento > div.space-y-2 > div:first-child > span:last-child {
+	flex: none;
+	padding: 2px 9px;
+	border-radius: 9999px;
+	background: color-mix(in srgb, var(--sk-ins-razonamiento) 13%, var(--sk-surface));
+	color: var(--sk-ins-razonamiento);
+	font-size: 12px;
+	line-height: 16px;
+	font-weight: 700;
+}
+
+html.dark .sk-menu-razonamiento > div.space-y-2 > div:first-child > span:last-child {
+	background: color-mix(in srgb, var(--sk-ins-razonamiento) 24%, var(--sk-surface));
+	color: color-mix(in srgb, var(--sk-ins-razonamiento) 60%, #ffffff);
+}
+
+/* el deslizador original queda oculto (sigue guardando el valor) */
+.sk-menu-razonamiento .sk-razonamiento-original:has(+ .sk-niveles) {
+	display: none;
+}
+
+/* control segmentado */
+.sk-niveles {
+	display: flex;
+	gap: 2px;
+	padding: 3px;
+	border-radius: 12px;
+	background: color-mix(in srgb, var(--sk-sidebar) 85%, transparent);
+	box-shadow: inset 0 0 0 1px var(--sk-border);
+}
+
+.sk-niveles button {
+	flex: 1 1 auto;
+	min-width: 0;
+	height: 32px;
+	padding: 0 6px;
+	border: 0;
+	border-radius: 9px;
+	background: transparent;
+	color: var(--sk-ink-muted);
+	font-size: 12.5px;
+	line-height: 16px;
+	font-weight: 600;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	cursor: pointer;
+}
+
+.sk-niveles button:hover {
+	color: var(--sk-ink);
+	background: color-mix(in srgb, var(--sk-hover) 70%, transparent);
+}
+
+.sk-niveles button[aria-checked='true'] {
+	background: var(--sk-surface);
+	color: var(--sk-ins-razonamiento);
+	box-shadow: 0 1px 3px rgba(24, 24, 27, 0.12), 0 0 0 1px var(--sk-border);
+}
+
+html.dark .sk-niveles button[aria-checked='true'] {
+	background: var(--sk-hover);
+	color: color-mix(in srgb, var(--sk-ins-razonamiento) 60%, #ffffff);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.4), 0 0 0 1px var(--sk-border);
+}
+
+/* "Predeterminado · …": fila discreta para volver al valor del modelo */
+.sk-menu-razonamiento > div.space-y-2 > button[role='menuitem'] {
+	align-self: flex-start;
+	min-height: 0;
+	height: auto;
+	padding: 4px 8px !important;
+	margin-left: -2px !important;
+	border-radius: 8px;
+	font-size: 12.5px !important;
+	line-height: 16px;
+	color: var(--sk-ink-muted);
+}
+
+.sk-menu-razonamiento > div.space-y-2 > button[role='menuitem']:hover {
+	background: color-mix(in srgb, var(--sk-hover) 80%, transparent);
+	color: var(--sk-ink);
+}
+
+.sk-menu-razonamiento > hr {
+	margin: 2px 4px !important;
+	border-color: var(--sk-border);
+}
+
+/* "Controles": fila de 40 px sin subrayado */
+.sk-menu-razonamiento > button[role='menuitem'] {
+	min-height: 40px;
+	height: auto !important;
+	padding: 4px 8px !important;
+	border-radius: 10px !important;
+	font-size: 14px !important;
+	font-weight: 600;
+	color: var(--sk-ink);
+}
+
+.sk-menu-razonamiento > button[role='menuitem'] span {
+	text-decoration: none;
+}
+
+.sk-menu-razonamiento > button[role='menuitem'] svg {
+	width: 16px;
+	height: 16px;
+	color: var(--sk-ink-muted);
+}
+
+@media (max-width: 767px) {
+	.sk-niveles button {
+		height: 36px;
+	}
+
+	.sk-menu-razonamiento > button[role='menuitem'] {
+		min-height: 44px;
+	}
+}
+
+/* Hoja "Herramientas y opciones" del teléfono con las medidas compactas del menú +: filas de 44 px, insignias de
+   28 px, nombre de 14 px y descripción de 12.5 px, interruptor de 40 × 24 y encabezado de 15 px */
+@media (max-width: 767px) {
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) {
+		padding: 6px;
+		border-radius: 18px;
+	}
+
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2)::before {
+		padding: 6px 90px 6px 10px;
+		font-size: 15px;
+		line-height: 20px;
+		font-weight: 700;
+	}
+
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2)::after {
+		top: 11px;
+		right: 10px;
+		padding: 1px 7px;
+		font-size: 12px;
+		line-height: 16px;
+	}
+
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button {
+		grid-template-columns: 28px minmax(0, 1fr);
+		column-gap: 10px;
+		min-height: 44px;
+		padding: 4px 62px 4px 8px !important;
+		border-radius: 10px;
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='24'%3E%3Crect width='40' height='24' rx='12' fill='%2318181b'/%3E%3Ccircle cx='28' cy='12' r='9' fill='white'/%3E%3C/svg%3E") !important;
+		background-position: right 10px center !important;
+		background-size: 40px 24px !important;
+	}
+
+	html.dark :is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button {
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='24'%3E%3Crect width='40' height='24' rx='12' fill='%23ececee'/%3E%3Ccircle cx='28' cy='12' r='9' fill='%2318181b'/%3E%3C/svg%3E") !important;
+	}
+
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button.sk-inactiva {
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='24'%3E%3Crect width='40' height='24' rx='12' fill='%23e4e4e7'/%3E%3Ccircle cx='12' cy='12' r='9' fill='white'/%3E%3C/svg%3E") !important;
+	}
+
+	html.dark :is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button.sk-inactiva {
+		background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='40' height='24'%3E%3Crect width='40' height='24' rx='12' fill='%233f3f46'/%3E%3Ccircle cx='12' cy='12' r='9' fill='%23a1a1aa'/%3E%3C/svg%3E") !important;
+	}
+
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button svg {
+		width: 28px !important;
+		height: 28px !important;
+		padding: 6.5px;
+	}
+
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button::before {
+		font-size: 14px;
+		line-height: 19px;
+		font-weight: 600;
+	}
+
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button::after {
+		font-size: 12.5px;
+		line-height: 16px;
+	}
+}
+
+/* Círculo de carga: todas las cargas de pantalla completa (app, chat, carpetas, páginas) con el mismo círculo
+   de 44 px, para que al abrir no se vea primero uno y luego otro más chico */
+:is(div.h-full, div.h-screen).items-center.justify-center > div.flex.justify-center > svg:has(.spinner_ajPY),
+div.items-center.justify-center.h-full > div.pb-16 > div.flex.justify-center > svg:has(.spinner_ajPY) {
+	width: 44px;
+	height: 44px;
+	color: var(--sk-ink-muted);
+}
+
+/* Teléfono: selector de modelo con las medidas compactas de los demás menús (filas de 44 px, avatar de 26 px,
+   nombre de 14.5 px, buscador de 40 px y pie más bajo) */
+@media (max-width: 767px) {
+	div:has(> input#model-search-input) {
+		min-height: 40px;
+		padding: 2px 8px 2px 12px;
+	}
+
+	input#model-search-input {
+		font-size: 15px;
+		line-height: 20px;
+	}
+
+	div:has(> input#model-search-input) svg {
+		width: 18px;
+		height: 18px;
+	}
+
+	#model-selector-list {
+		padding: 4px 6px;
+	}
+
+	#model-selector-list [role='option'] {
+		min-height: 44px;
+		padding: 2px 6px 2px 10px;
+		border-radius: 10px;
+		font-size: 14.5px;
+		line-height: 20px;
+	}
+
+	#model-selector-list [role='option'] :is(div, span):not(:has(*)) {
+		font-size: 14.5px;
+	}
+
+	#model-selector-list [role='option'] img {
+		width: 26px;
+		height: 26px;
+	}
+
+	#model-selector-list [role='option'] div:has(> img) {
+		min-width: 26px;
+		min-height: 26px;
+	}
+
+	:has(#model-selector-list) div:has(> button.text-\[0\.65rem\]) {
+		padding: 2px 6px 4px;
+	}
+
+	:has(> #model-selector-list) button.text-\[0\.65rem\],
+	:has(#model-selector-list) button.text-\[0\.65rem\] {
+		font-size: 14px;
+		line-height: 20px;
+		min-height: 36px;
+	}
+}
+
+/* Menús compactos con un poco más de aire: 1 px entre filas y filas 2 px más altas (42 px en escritorio,
+   46 px en el teléfono) en el menú +, Workspace, Razonamiento, selector de modelo y la hoja de opciones */
+.sk-menu-mas.sk-menu-mas :is([role='menuitem'], [role='menuitemcheckbox']),
+.app-dropdown-menu.sk-menu-carpeta:has(input[placeholder='Buscar carpetas']) > button,
+.sk-menu-razonamiento > button[role='menuitem'] {
+	min-height: 42px;
+	margin-block: 0 1px;
+}
+
+.sk-menu-mas.sk-menu-mas div:has(> [role='menuitemcheckbox']) > [role='menuitemcheckbox'] {
+	margin-block: 0;
+}
+
+.sk-niveles {
+	gap: 3px;
+}
+
+#model-selector-list [role='option'] {
+	margin-bottom: 1px;
+}
+
+@media (max-width: 767px) {
+	.sk-menu-mas.sk-menu-mas :is([role='menuitem'], [role='menuitemcheckbox']),
+	.app-dropdown-menu.sk-menu-carpeta:has(input[placeholder='Buscar carpetas']) > button,
+	.sk-menu-razonamiento > button[role='menuitem'],
+	#model-selector-list [role='option'] {
+		min-height: 46px;
+	}
+
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button {
+		min-height: 46px;
+		margin-bottom: 1px;
+	}
+}
+
+/* Lista de Herramientas (Herramientas en el menú +): medidas compactas como los demás menús y más alta para
+   ver más herramientas a la vez (carbono.js le pone .sk-menu-herramientas) */
+[role='menu']:has(> div > .sk-menu-herramientas) {
+	max-height: min(470px, 100dvh - 150px) !important;
+}
+
+.app-dropdown-menu.sk-menu-herramientas.sk-menu-herramientas {
+	width: min(330px, calc(100vw - 24px));
+	max-width: none;
+	padding: 6px !important;
+	border-radius: 16px !important;
+}
+
+.app-dropdown-menu.sk-menu-herramientas.sk-menu-herramientas > div {
+	gap: 2px;
+}
+
+/* encabezado: volver + "Herramientas  5" */
+.app-dropdown-menu.sk-menu-herramientas.sk-menu-herramientas > div > button[role='menuitem'] {
+	min-height: 40px;
+	height: auto !important;
+	gap: 10px;
+	padding: 2px 6px !important;
+	border-radius: 10px !important;
+	font-size: 15px !important;
+	line-height: 20px;
+	font-weight: 700;
+	color: var(--sk-ink);
+}
+
+.app-dropdown-menu.sk-menu-herramientas.sk-menu-herramientas > div > button[role='menuitem'] > svg {
+	width: 28px !important;
+	height: 28px !important;
+	padding: 7px;
+	box-sizing: border-box;
+	border-radius: 9999px;
+	background: var(--sk-sidebar);
+	color: var(--sk-ink);
+}
+
+/* buscador */
+.app-dropdown-menu.sk-menu-herramientas.sk-menu-herramientas div:has(> input) {
+	height: 36px;
+	margin: 2px 2px 4px !important;
+	padding: 0 10px;
+	gap: 8px;
+	border-radius: 10px;
+	background: color-mix(in srgb, var(--sk-sidebar) 80%, transparent);
+	box-shadow: inset 0 0 0 1px var(--sk-border);
+}
+
+.app-dropdown-menu.sk-menu-herramientas.sk-menu-herramientas div:has(> input) input {
+	font-size: 14px;
+	line-height: 20px;
+}
+
+.app-dropdown-menu.sk-menu-herramientas.sk-menu-herramientas div:has(> input) svg {
+	width: 16px;
+	height: 16px;
+}
+
+/* filas */
+.app-dropdown-menu.sk-menu-herramientas.sk-menu-herramientas div:has(> [role='menuitemcheckbox']) {
+	min-height: 0;
+	margin: 0 0 1px;
+	padding-right: 6px;
+	border-radius: 10px;
+}
+
+.app-dropdown-menu.sk-menu-herramientas.sk-menu-herramientas [role='menuitemcheckbox'] {
+	min-height: 42px;
+	height: auto !important;
+	padding: 2px 8px !important;
+	border-radius: 10px !important;
+	font-size: 14px !important;
+	line-height: 19px;
+}
+
+.app-dropdown-menu.sk-menu-herramientas.sk-menu-herramientas [role='menuitemcheckbox'] .flex-1.gap-2 {
+	gap: 10px;
+}
+
+.app-dropdown-menu.sk-menu-herramientas.sk-menu-herramientas [role='menuitemcheckbox'] .truncate {
+	font-size: 14px;
+	font-weight: 500;
+}
+
+.app-dropdown-menu.sk-menu-herramientas.sk-menu-herramientas [role='menuitemcheckbox'] .shrink-0 > svg {
+	width: 28px !important;
+	height: 28px !important;
+	padding: 6.5px;
+	border-radius: 9999px;
+}
+
+.app-dropdown-menu.sk-menu-herramientas.sk-menu-herramientas button[role='switch'] {
+	width: 40px !important;
+	height: 24px !important;
+	min-height: 24px;
+}
+
+.app-dropdown-menu.sk-menu-herramientas.sk-menu-herramientas button[role='switch'] > span {
+	left: 0 !important;
+	top: 3px !important;
+	width: 18px !important;
+	height: 18px !important;
+	translate: none !important;
+}
+
+.app-dropdown-menu.sk-menu-herramientas.sk-menu-herramientas button[role='switch'] > span[data-state='checked'] {
+	transform: translateX(19px) !important;
+}
+
+.app-dropdown-menu.sk-menu-herramientas.sk-menu-herramientas button[role='switch'] > span[data-state='unchecked'] {
+	transform: translateX(3px) !important;
+}
+
+@media (max-width: 767px) {
+	.app-dropdown-menu.sk-menu-herramientas.sk-menu-herramientas [role='menuitemcheckbox'] {
+		min-height: 46px;
+	}
+}
+
+/* Más aire también en Razonamiento y Workspace: botones de nivel 2 px más altos, más separación entre
+   encabezado, niveles y "Predeterminado"; en Workspace, separadores y buscador con 1–2 px más */
+.sk-menu-razonamiento > div.space-y-2 {
+	gap: 10px;
+	padding: 9px 6px 7px !important;
+}
+
+.sk-niveles button {
+	height: 34px;
+}
+
+.sk-menu-razonamiento > div.space-y-2 > button[role='menuitem'] {
+	padding: 5px 8px !important;
+}
+
+.sk-menu-razonamiento > hr {
+	margin: 3px 4px !important;
+}
+
+.app-dropdown-menu.sk-menu-carpeta:has(input[placeholder='Buscar carpetas']) > hr {
+	margin: 5px 4px !important;
+}
+
+.app-dropdown-menu.sk-menu-carpeta:has(input[placeholder='Buscar carpetas']) > div:has(> input) {
+	height: 38px;
+	margin: 26px 2px 5px !important;
+}
+
+.app-dropdown-menu.sk-menu-carpeta:has(input[placeholder='Buscar carpetas']) > div:has(> input)::before {
+	top: -24px;
+}
+
+@media (max-width: 767px) {
+	.sk-niveles button {
+		height: 38px;
+	}
+}
+
+/* ---------- Imagen (generación de imágenes) ----------
+   Insignia roja #D9363E con el ícono blanco: en el menú + y en su chip del composer (que Open WebUI muestra
+   con "Mostrar selecciones en la entrada"), con el mismo diseño que Web, Open Terminal y los demás. */
+:root {
+	--sk-ins-imagen: #d9363e;
+}
+
+.sk-menu-mas.sk-menu-mas [role='menuitemcheckbox'] .shrink-0 > svg:has(path[d^='M21 7.6V20.4']) {
+	background: var(--sk-ins-imagen);
+	color: #ffffff;
+}
+
+:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) button:has(path[d^='M21 7.6V20.4']) {
+	--sk-insignia: var(--sk-ins-imagen);
+}
+
+@media (min-width: 768px) {
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) button[aria-pressed='true']:has(path[d^='M21 7.6V20.4']) {
+		display: inline-flex;
+		align-items: center;
+		gap: 8px;
+		height: 36px;
+		width: auto;
+		margin: 0;
+		padding: 0 14px 0 4px;
+		border: 0;
+		border-radius: 9999px;
+		background: var(--sk-chip-fondo);
+		box-shadow: inset 0 0 0 1px var(--sk-chip-filo);
+		color: var(--sk-ink);
+		font-size: 14px;
+		line-height: 20px;
+		font-weight: 600;
+		transform: none;
+	}
+
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) button[aria-pressed='true']:has(path[d^='M21 7.6V20.4']):hover {
+		background: var(--sk-hover);
+	}
+
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) button[aria-pressed='true']:has(path[d^='M21 7.6V20.4']) span {
+		color: inherit;
+		font-size: 14px;
+		font-weight: 600;
+	}
+
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) button[aria-pressed='true']:has(path[d^='M21 7.6V20.4']) svg {
+		flex: none;
+		width: 28px;
+		height: 28px;
+		padding: 6.5px;
+		box-sizing: border-box;
+		border-radius: 9999px;
+		background: var(--sk-ins-imagen);
+		color: #ffffff;
+		stroke-width: 2;
+	}
+}
+
+@container sk-composer (max-width: 800px) {
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) button[aria-pressed='true']:has(path[d^='M21 7.6V20.4']) {
+		gap: 4px;
+		padding-inline: 4px;
+	}
+
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) button[aria-pressed='true']:has(path[d^='M21 7.6V20.4']) span {
+		display: none;
+	}
+}
+
+@media (max-width: 767px) {
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button:has(path[d^='M21 7.6V20.4'])::before {
+		content: 'Imagen';
+	}
+
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button:has(path[d^='M21 7.6V20.4'])::after {
+		content: 'Genera imágenes al responder';
+	}
+
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button:has(path[d^='M21 7.6V20.4']) svg {
+		border-radius: 9999px;
+		background: var(--sk-ins-imagen);
+		color: #ffffff;
+	}
+
+	.sk-insignia-imagen { background: var(--sk-ins-imagen); z-index: 0; }
+}
+
+/* chip de Imagen: Open WebUI solo trae el ícono; el texto lo pone el tema, como en Web */
+@media (min-width: 768px) {
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) button[aria-pressed='true']:has(path[d^='M21 7.6V20.4'])::after {
+		content: 'Imagen';
+	}
+}
+
+@container sk-composer (max-width: 800px) {
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) button[aria-pressed='true']:has(path[d^='M21 7.6V20.4'])::after {
+		content: none;
+	}
+}
+
+/* ---------- Chips apagados en gris ----------
+   Herramientas sin número (solo la palabra). Cuando una opción se apaga su chip sigue a la vista con la insignia
+   gris: Open Terminal sin terminal elegida, Razonamiento en Apagado, y Herramientas, Web e Imagen (Open WebUI quita
+   su chip al apagarlas; carbono.js deja uno gris, .sk-fantasma, que al tocarlo la vuelve a encender). */
+:root {
+	--sk-ins-apagado: #8b8b94;
+}
+
+html.dark {
+	--sk-ins-apagado: #52525b;
+}
+
+:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) button:has(path[d^='M21.75 6.75']):not(.sk-fantasma) span {
+	font-size: 0;
+}
+
+:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) button:has(path[d^='M21.75 6.75']):not(.sk-fantasma) span::after {
+	content: 'Herramientas';
+	font-size: 14px;
+}
+
+@container sk-composer (max-width: 800px) {
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) button:has(path[d^='M21.75 6.75']):not(.sk-fantasma) span::after {
+		content: none;
+	}
+}
+
+@media (min-width: 768px) {
+	/* chips fantasma (opción apagada) en escritorio */
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) .sk-fantasma {
+		display: inline-flex !important;
+		align-items: center;
+		gap: 8px;
+		height: 36px;
+		margin: 0;
+		padding: 0 14px 0 4px;
+		border: 0;
+		border-radius: 9999px;
+		background: var(--sk-chip-fondo);
+		box-shadow: inset 0 0 0 1px var(--sk-chip-filo);
+		color: var(--sk-ink-muted);
+		font-size: 14px;
+		line-height: 20px;
+		font-weight: 600;
+		cursor: pointer;
+	}
+
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) .sk-fantasma:hover {
+		background: var(--sk-hover);
+		color: var(--sk-ink);
+	}
+
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) .sk-fantasma svg {
+		flex: none;
+		width: 28px;
+		height: 28px;
+		padding: 6.5px;
+		box-sizing: border-box;
+		border-radius: 9999px;
+		background: var(--sk-ins-apagado);
+		color: #ffffff;
+		stroke-width: 2;
+	}
+
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) .sk-fantasma[data-tipo='herramientas']::after { content: 'Herramientas'; }
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) .sk-fantasma[data-tipo='web']::after { content: 'Web'; }
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) .sk-fantasma[data-tipo='imagen']::after { content: 'Imagen'; }
+
+	/* Open Terminal sin terminal y Razonamiento en Apagado: insignia gris y texto atenuado, sin transparencia */
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) button:has(path[d^='M12 4C6 4 6 8']).opacity-50,
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) button.sk-razonamiento.sk-apagado {
+		opacity: 1;
+		color: var(--sk-ink-muted);
+	}
+
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) button:has(path[d^='M12 4C6 4 6 8']).opacity-50 svg,
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) button.sk-razonamiento.sk-apagado svg {
+		background: var(--sk-ins-apagado) !important;
+	}
+}
+
+@container sk-composer (max-width: 800px) {
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) .sk-fantasma {
+		gap: 4px;
+		padding-inline: 4px;
+	}
+
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) .sk-fantasma::after {
+		content: none !important;
+	}
+}
+
+/* teléfono: en la hoja, las opciones apagadas también llevan la insignia gris */
+@media (max-width: 767px) {
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) button.sk-inactiva svg {
+		background: var(--sk-ins-apagado) !important;
+	}
+
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) .sk-fantasma[data-tipo='imagen']::before {
+		content: 'Imagen';
+	}
+
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-opciones-abiertas > div[dir='ltr'] > div:nth-child(2) .sk-fantasma[data-tipo='imagen']::after {
+		content: 'Genera imágenes al responder';
+	}
+}
+
+/* Herramientas fuera de la caja de mensaje (sigue en el menú +); en el teléfono tampoco va en la hoja */
+:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) > div[dir='ltr'] > div:nth-child(2) button:has(path[d^='M21.75 6.75']),
+:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) > div[dir='ltr'] > div:nth-child(2) div:has(> button[aria-label='Herramientas Disponibles']) {
+	display: none !important;
+}
+
+/* chip gris: la insignia de 28 px con su ícono (una regla vieja lo dejaba de 17 px) */
+@media (min-width: 768px) {
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) button.sk-fantasma.sk-fantasma svg {
+		width: 28px !important;
+		height: 28px !important;
+		padding: 6.5px;
+		border-radius: 9999px;
+		background: var(--sk-ins-apagado) !important;
+		color: #ffffff !important;
+		stroke-width: 2;
+	}
+}
+
+/* mientras el chip gris enciende una opción, el menú + no se ve */
+.sk-encendiendo [role='menu']:has(.app-dropdown-menu) {
+	opacity: 0 !important;
+	pointer-events: none !important;
+}
+
+/* ---------- Visor de imágenes (al tocar una imagen) ----------
+   Fondo oscuro translúcido; sin la barra blanca (la regla general de ventanas pintaba su primer panel como
+   tarjeta): cerrar y descargar flotan en las esquinas como botones redondos de vidrio de 44 px, en escritorio
+   y en el teléfono (respetando la muesca). */
+.modal[role='dialog'][aria-modal='true'].bg-black {
+	background: rgba(9, 9, 11, 0.9);
+	-webkit-backdrop-filter: blur(14px);
+	backdrop-filter: blur(14px);
+}
+
+.modal[role='dialog'][aria-modal='true'].bg-black > div {
+	max-width: none;
+	margin: 0;
+	border: 0 !important;
+	border-radius: 0;
+	background: transparent !important;
+	-webkit-backdrop-filter: none;
+	backdrop-filter: none;
+	box-shadow: none !important;
+}
+
+.modal[role='dialog'][aria-modal='true'].bg-black > div:first-child {
+	top: 0;
+	padding: max(12px, env(safe-area-inset-top)) 12px 12px;
+	pointer-events: none;
+}
+
+.modal[role='dialog'][aria-modal='true'].bg-black > div:first-child button {
+	pointer-events: auto;
+	display: grid;
+	place-items: center;
+	width: 44px;
+	height: 44px;
+	padding: 0;
+	border-radius: 9999px;
+	background: rgba(255, 255, 255, 0.14);
+	-webkit-backdrop-filter: blur(16px) saturate(160%);
+	backdrop-filter: blur(16px) saturate(160%);
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18), 0 4px 14px rgba(0, 0, 0, 0.35);
+	color: #ffffff;
+	transition: background 0.15s;
+}
+
+.modal[role='dialog'][aria-modal='true'].bg-black > div:first-child button:hover {
+	background: rgba(255, 255, 255, 0.26);
+}
+
+.modal[role='dialog'][aria-modal='true'].bg-black > div:first-child button svg {
+	width: 22px;
+	height: 22px;
+	stroke-width: 1.8;
+}
+
+/* ---------- Imagen: chip apagado con contorno, panel de interruptor y tamaños ---------- */
+@media (min-width: 768px) {
+	/* apagado (chip gris): contorno, ícono gris, sin relleno */
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) button.sk-fantasma.sk-fantasma {
+		background: transparent;
+		color: var(--sk-ink-muted);
+		font-weight: 500;
+	}
+
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) button.sk-fantasma.sk-fantasma svg {
+		background: transparent !important;
+		box-shadow: inset 0 0 0 1.5px var(--sk-chip-filo);
+		color: var(--sk-ink-muted) !important;
+	}
+
+	/* panel abierto: el chip se marca en azul */
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) button.sk-imagen-abierto.sk-imagen-abierto {
+		background: var(--sk-azul-soft) !important;
+		box-shadow: inset 0 0 0 1.5px var(--sk-azul) !important;
+	}
+}
+
+/* la opción Imagen sale del menú + (se maneja desde su chip) */
+.sk-menu-mas.sk-menu-mas div:has(> [role='menuitemcheckbox'] path[d^='M21 7.6V20.4']) {
+	display: none !important;
+}
+
+.sk-imagen-panel {
+	position: fixed;
+	z-index: 9999;
+	left: 12px;
+	width: min(430px, calc(100vw - 24px));
+	max-height: calc(100dvh - 120px);
+	overflow-y: auto;
+	padding: 6px;
+	border-radius: 16px;
+	border: 1px solid var(--sk-border);
+	background: rgba(255, 255, 255, 0.6);
+	-webkit-backdrop-filter: saturate(180%) blur(20px);
+	backdrop-filter: saturate(180%) blur(20px);
+	box-shadow: 0 14px 36px rgba(24, 24, 27, 0.16), 0 1px 3px rgba(24, 24, 27, 0.06);
+	color: var(--sk-ink);
+	font-family: inherit;
+}
+
+html.dark .sk-imagen-panel {
+	background: rgba(28, 28, 30, 0.6);
+	box-shadow: 0 14px 36px rgba(0, 0, 0, 0.5);
+}
+
+.sk-imagen-cabeza {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 6px 8px 8px;
+	border-bottom: 1px solid var(--sk-border);
+	margin-bottom: 4px;
+}
+
+.sk-imagen-insignia svg {
+	display: block;
+	width: 32px;
+	height: 32px;
+	padding: 7.5px;
+	box-sizing: border-box;
+	border-radius: 9999px;
+	background: var(--sk-ins-imagen);
+	color: #ffffff;
+	stroke-width: 2;
+}
+
+.sk-imagen-textos {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.sk-imagen-textos b {
+	font-size: 15px;
+	line-height: 20px;
+	font-weight: 700;
+}
+
+.sk-imagen-sub {
+	font-size: 12.5px;
+	line-height: 16px;
+	color: var(--sk-ink-muted);
+}
+
+.sk-imagen-switch {
+	position: relative;
+	flex: none;
+	width: 40px;
+	height: 24px;
+	padding: 0;
+	border: 0;
+	border-radius: 9999px;
+	background: var(--sk-border-strong, #d4d4d8);
+	cursor: pointer;
+	transition: background 0.15s;
+}
+
+.sk-imagen-switch > span {
+	position: absolute;
+	top: 3px;
+	left: 3px;
+	width: 18px;
+	height: 18px;
+	border-radius: 9999px;
+	background: #ffffff;
+	transition: transform 0.15s;
+}
+
+.sk-imagen-switch[aria-checked='true'] {
+	background: #27272a;
+}
+
+.sk-imagen-switch[aria-checked='true'] > span {
+	transform: translateX(16px);
+}
+
+html.dark .sk-imagen-switch[aria-checked='true'] {
+	background: #ececee;
+}
+
+html.dark .sk-imagen-switch[aria-checked='true'] > span {
+	background: #18181b;
+}
+
+.sk-imagen-rotulo {
+	padding: 8px 8px 2px;
+	font-size: 11px;
+	line-height: 14px;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+	color: var(--sk-ink-muted);
+}
+
+.sk-imagen-tamanos button {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	width: 100%;
+	min-height: 46px;
+	margin: 0 0 1px;
+	padding: 4px 8px;
+	border: 0;
+	border-radius: 10px;
+	background: transparent;
+	color: inherit;
+	text-align: left;
+	cursor: pointer;
+}
+
+.sk-imagen-tamanos button:hover {
+	background: color-mix(in srgb, var(--sk-hover) 80%, transparent);
+}
+
+.sk-imagen-tamanos button[aria-checked='true'] {
+	background: color-mix(in srgb, var(--sk-sidebar) 85%, transparent);
+}
+
+.sk-imagen-forma {
+	display: inline-grid;
+	place-items: center;
+	flex: none;
+	width: 28px;
+	height: 28px;
+}
+
+.sk-imagen-forma i {
+	display: block;
+	border-radius: 4px;
+	box-shadow: inset 0 0 0 2px var(--sk-ins-apagado);
+}
+
+.sk-imagen-tamanos button[aria-checked='true'] .sk-imagen-forma i {
+	box-shadow: inset 0 0 0 2px var(--sk-ins-imagen);
+	background: color-mix(in srgb, var(--sk-ins-imagen) 12%, transparent);
+}
+
+.sk-imagen-fila {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.sk-imagen-fila > span {
+	display: flex;
+	align-items: baseline;
+	gap: 8px;
+}
+
+.sk-imagen-fila b {
+	font-family: 'JetBrains Mono', 'Atkinson Hyperlegible Mono', ui-monospace, monospace;
+	font-size: 13.5px;
+	line-height: 19px;
+	font-weight: 600;
+}
+
+.sk-imagen-fila em {
+	font-style: normal;
+	font-size: 13.5px;
+	line-height: 19px;
+	font-weight: 600;
+	color: color-mix(in srgb, var(--sk-ink) 80%, var(--sk-surface));
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.sk-imagen-fila small {
+	font-size: 12px;
+	line-height: 16px;
+	color: var(--sk-ink-muted);
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.sk-imagen-ritmo {
+	flex: none;
+	height: 20px;
+	padding: 0 7px;
+	border-radius: 9999px;
+	font-size: 11.5px;
+	line-height: 20px;
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.sk-imagen-ritmo.sk-rapida { background: color-mix(in srgb, #2b8a5a 13%, transparent); color: #2b8a5a; }
+.sk-imagen-ritmo.sk-lenta { background: color-mix(in srgb, #b5850b 16%, transparent); color: #985a06; }
+.sk-imagen-ritmo.sk-muy-lenta { background: color-mix(in srgb, #d9363e 13%, transparent); color: #c0262e; }
+
+html.dark .sk-imagen-ritmo.sk-rapida { color: #5fd39a; }
+html.dark .sk-imagen-ritmo.sk-lenta { color: #f0c04a; }
+html.dark .sk-imagen-ritmo.sk-muy-lenta { color: #ff8a80; }
+
+.sk-imagen-palomita {
+	flex: none;
+	width: 16px;
+	height: 16px;
+	color: var(--sk-azul);
+	visibility: hidden;
+}
+
+.sk-imagen-tamanos button[aria-checked='true'] .sk-imagen-palomita {
+	visibility: visible;
+}
+
+@media (max-width: 767px) {
+	.sk-imagen-panel {
+		left: 12px !important;
+		right: 12px;
+		width: auto;
+	}
+
+	.sk-imagen-tamanos button {
+		min-height: 50px;
+	}
+}
+
+/* Teléfono, encabezado de un chat: Nuevo chat · Acciones · Pestañas con el mismo peso visual (trazo 1.8, dibujo
+   de ~20 px) y repartidos parejo; cada botón conserva su área táctil de 44 px */
+@media (max-width: 767px) {
+	nav.sticky:has(h1) div:has(> * button[aria-label='Acciones del chat']),
+	nav.sticky:has(h1) div:has(> button[aria-label='Acciones del chat']) {
+		gap: 2px;
+	}
+
+	nav.sticky:has(h1) :is(button[aria-label='Nuevo Chat'], button[aria-label='Acciones del chat']) {
+		border-radius: 9999px;
+		color: color-mix(in srgb, var(--sk-ink) 85%, var(--sk-surface));
+	}
+
+	nav.sticky:has(h1) button[aria-label='Nuevo Chat'] svg {
+		width: 21px;
+		height: 21px;
+		stroke-width: 1.8;
+	}
+
+	nav.sticky:has(h1) button[aria-label='Acciones del chat'] svg {
+		width: 22px;
+		height: 22px;
+		stroke-width: 2;
+	}
+
+	nav.sticky:has(h1) :is(button[aria-label='Nuevo Chat'], button[aria-label='Acciones del chat'], button[aria-label='Pestañas'], #temporary-chat-button):active {
+		background: rgba(120, 120, 128, 0.16);
 	}
 }

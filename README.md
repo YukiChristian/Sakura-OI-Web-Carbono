@@ -1,6 +1,6 @@
 # Carbono para Open WebUI
 
-**Versión 0.86** · probado con Open WebUI **0.13.2**
+**Versión 0.87** · probado con Open WebUI **0.13.2**
 
 Carbono es el tema recomendado para [Sakura OI Web](https://github.com/YukiChristian/Sakura-OI-Web). Deja la interfaz de Open WebUI neutra (superficies en tonos carbón y zinc, acción principal en negro), con más jerarquía en el texto, tipografía Atkinson Hyperlegible, menús de vidrio esmerilado y un composer pensado para el teléfono.
 
@@ -44,6 +44,19 @@ La guía de estilo (principios, colores, tipografía y componentes) está en [do
 - **Rendimiento:** los selectores evitan buscar por el atributo `class` dentro de `:has()`, que obliga al navegador a recalcular toda la página en cada hover.
 
 ## Cambios
+
+### 0.87
+
+- **Menús más compactos y parejos:** el menú «+», el selector de Workspace, el de modelo, la lista de Herramientas, el menú de Razonamiento y la hoja «Herramientas y opciones» del teléfono comparten medidas: filas de 42 px (46 px en el teléfono) con 1 px entre ellas, íconos redondos de 28 px, texto de 14 px e interruptores de 40 × 24. La lista de Herramientas crece hasta ~470 px para ver más herramientas sin desplazarse.
+- **Razonamiento rediseñado:** encabezado con el nivel en una pastilla rosa y un control segmentado de cinco niveles (Apagado · Bajo · Medio · Alto · Adaptable) en lugar del deslizador; sigue moviendo el deslizador original, así que se guarda igual.
+- **Imagen (generación de imágenes):** chip siempre a la vista, rojo encendido y con contorno gris apagado. Tocarlo abre un panel de vidrio con el interruptor y el tamaño de la imagen (1024×1024, vertical, horizontal, retrato… con su velocidad relativa); el tamaño es el ajuste `IMAGE_SIZE` de Open WebUI y solo lo cambian los administradores. La opción sale del menú «+».
+- **Chips apagados en gris:** Web e Imagen dejan un chip gris al apagarlas (tocarlo las vuelve a encender sin que se vea el menú), y Open Terminal sin terminal y Razonamiento en Apagado llevan la insignia gris. Herramientas sale de la caja de mensaje (sigue en el menú «+»). Con «Mostrar selecciones en la entrada» encendido aparecen los chips de Web e Imagen.
+- **Workspace en el teléfono:** vive dentro del menú «+» (grupo Herramientas) y ya no cuenta en el contador de opciones.
+- **Visor de imágenes:** sin la barra blanca; fondo oscuro translúcido y botones redondos de vidrio de 44 px para cerrar y descargar. Un toque o clic fuera de la imagen lo cierra (no al arrastrar o ampliar).
+- **Carga más rápida:** el avatar del modelo, el chip de Razonamiento y los avatares de la barra contraída usan la lista de modelos guardados (`/api/v1/models/list`, milisegundos) en vez de `/api/models` (segundos); la lista completa solo se pide si hace falta. El avatar del chip también se actualiza cuando Open WebUI solo cambia el nombre del modelo.
+- **Encabezado del teléfono:** los íconos de chat temporal, panel, nuevo chat y acciones con el mismo tamaño y trazo que en escritorio y repartidos parejo, cada uno con área táctil de 44 px.
+- **Chats en pestaña** (chat lateral): la caja de mensaje lleva el mismo diseño que la del chat principal (chips, avatar, Razonamiento).
+- Corregido: el círculo de carga de los chats también mide 44 px (antes se veía uno grande y luego uno chico), el contador «3/3» del teléfono centrado, y al achicar la ventana con vista dividida se cierra el cajón de pestañas y queda el chat.
 
 ### 0.86
 
@@ -179,6 +192,27 @@ y esto al inicio de `tema_carbono`, después de `activo = ...`:
 ```
 
 `carbono.js` consulta `/static/carbono-parches.json` para refrescar una vez ese archivo en la caché del navegador (puede recargar la página una sola vez).
+
+Opcional: al generar una imagen, `generate_image` ya la muestra en el chat, pero si el modelo además llama `display_file` Open WebUI abre el visor de archivos (una pestaña, o un cajón en el teléfono). Para que no se abra con las imágenes recién generadas (se guardan con nombre UUID), agrega esto antes del `@open_webui.main.app.middleware`:
+
+```python
+import re
+import open_webui.utils.middleware as owui_middleware
+
+imagen_generada = re.compile(
+    r"(^|[\\/])[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}\.(png|jpe?g|webp|gif)$", re.I
+)
+terminal_event_handler_original = owui_middleware.terminal_event_handler
+
+
+async def terminal_event_handler_sin_visor(nombre, parametros, resultado, emisor):
+    if nombre == "display_file" and imagen_generada.search(str((parametros or {}).get("path", ""))):
+        return
+    return await terminal_event_handler_original(nombre, parametros, resultado, emisor)
+
+
+owui_middleware.terminal_event_handler = terminal_event_handler_sin_visor
+```
 
 Opcional: define la variable de entorno `WEBUI_THEME_NAME` (por ejemplo, `Sakura OI Web`) para cambiar el nombre que se ve en la barra lateral, el inicio de sesión y la pestaña mientras el tema está activo. Revisa la [licencia de Open WebUI](https://docs.openwebui.com/license) antes de cambiar su marca.
 

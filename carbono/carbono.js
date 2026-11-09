@@ -1,5 +1,5 @@
 /*
- * Carbono 0.86 — comportamiento del tema. El lanzador lo sirve en /static/loader.js
+ * Carbono 0.87 — comportamiento del tema. El lanzador lo sirve en /static/loader.js
  * (que Open WebUI carga en cada página) mientras exista carbono/ACTIVO.
  *
  * Barras de desplazamiento que solo aparecen mientras haces scroll: carbono.css las deja
@@ -52,33 +52,86 @@ function skVisible(selector) {
 	let cargando = false;
 	let pendiente = false;
 
-	const cargar = async () => {
-		const headers = { Authorization: `Bearer ${localStorage.token}` };
+	// vuelve a acomodar el composer cuando llegan los datos
+	const programar = () => mover();
+
+	const agregarModelos = (lista, origen) => {
+		// con nombres repetidos (persona y modelo crudo oculto) gana el visible; las personas guardadas mandan
+		for (const m of lista) {
+			const oculto = origen === 'personas' ? m.meta?.hidden : m.info?.meta?.hidden;
+			if (origen === 'todos' && idPorNombre.has(m.name)) continue;
+			if (!idPorNombre.has(m.name) || !oculto) idPorNombre.set(m.name, m.id);
+		}
+	};
+
+	const razonamientoDe = (lista, origen) =>
+		lista
+			.filter((m) => {
+				if (origen === 'todos' && (m.pipe || m.direct)) return false;
+				const params = origen === 'personas' ? m.params : m.info?.params;
+				return Object.keys(params?.model_controls ?? {}).length > 0;
+			})
+			.map((m) => {
+				const params = origen === 'personas' ? m.params : m.info.params;
+				return [m.name, { id: m.id, predeterminado: params.model_controls.razonamiento?.default }];
+			});
+
+	/*
+	 * Carga rápida: /api/v1/models/list (modelos guardados en Espacio de Trabajo, como tus personas, con su
+	 * nivel de razonamiento) responde en milisegundos; /api/models consulta a cada servidor de modelos y tarda
+	 * segundos. Se usa primero la rápida para pintar el avatar y el chip de Razonamiento, y la completa se completa
+	 * después en segundo plano (para los modelos que no son personas). Sin caché: siempre datos al día.
+	 */
+	const headers = () => ({ Authorization: `Bearer ${localStorage.token}` });
+
+	// lista completa (lenta): solo si el modelo elegido no es una persona guardada, o si falla la rápida
+	let todosPedidos = false;
+	const cargarTodos = async () => {
+		if (todosPedidos) return;
+		todosPedidos = true;
 		try {
-			const { data } = await (await fetch('/api/models', { headers })).json();
-			// con nombres repetidos (persona y modelo crudo oculto) gana el visible
-			idPorNombre = new Map();
-			for (const m of data) {
-				if (!idPorNombre.has(m.name) || !m.info?.meta?.hidden) idPorNombre.set(m.name, m.id);
+			const { data } = await (await fetch('/api/models', { headers: headers() })).json();
+			conRazonamiento ??= new Map();
+			agregarModelos(data, 'todos');
+			for (const [nombre, info] of razonamientoDe(data, 'todos')) {
+				if (!conRazonamiento.has(nombre)) conRazonamiento.set(nombre, info);
 			}
-			for (const m of data.filter((x) => !x.info?.meta?.hidden)) idPorNombre.set(m.name, m.id);
-			conRazonamiento = new Map(
-				data
-					.filter((m) => !m.pipe && !m.direct && Object.keys(m.info?.params?.model_controls ?? {}).length > 0)
-					.map((m) => [m.name, { id: m.id, predeterminado: m.info.params.model_controls.razonamiento?.default }])
-			);
-			const ajustes = await (await fetch('/api/v1/users/user/settings', { headers })).json();
-			elecciones = ajustes?.ui?.params?.model_controls ?? {};
 		} catch {
 			conRazonamiento ??= new Map();
 		}
-		mover();
+		programar();
+	};
+
+	const cargar = async () => {
+		const ajustes = fetch('/api/v1/users/user/settings', { headers: headers() })
+			.then((r) => r.json())
+			.then((j) => {
+				elecciones = j?.ui?.params?.model_controls ?? {};
+			})
+			.catch(() => {});
+		try {
+			const r = await fetch('/api/v1/models/list', { headers: headers() });
+			const j = r.ok ? await r.json() : null;
+			const personas = (Array.isArray(j?.items) ? j.items : Array.isArray(j) ? j : []).filter(
+				(m) => m.is_active !== false
+			);
+			if (!personas.length) throw new Error('sin lista rápida');
+			idPorNombre = new Map();
+			agregarModelos(personas, 'personas');
+			conRazonamiento = new Map(razonamientoDe(personas, 'personas'));
+			await ajustes;
+			programar();
+		} catch {
+			await ajustes;
+			cargarTodos();
+		}
 	};
 
 	// Composer elegido: el chip del modelo lleva el avatar del modelo a la izquierda del nombre
 	const avatarModelo = () => {
 		const chip = skVisible(`${MODELO} > div`);
 		const id = idPorNombre.get(chip?.textContent.trim());
+		if (chip && !id && chip.textContent.trim()) cargarTodos();
 		if (!chip || !id) return;
 		let img = chip.querySelector(':scope > img.sk-modelo-avatar');
 		if (img?.dataset.id === id) return;
@@ -97,7 +150,7 @@ function skVisible(selector) {
 		if (conRazonamiento) avatarModelo();
 		if (!conRazonamiento) {
 			// La lista se pide al primer composer con sesión iniciada (no en la pantalla de acceso)
-			if (localStorage.token && !cargando && skVisible(BOTON)) {
+			if (localStorage.token && !cargando) {
 				cargando = true;
 				cargar();
 			}
@@ -145,7 +198,12 @@ function skVisible(selector) {
 		if (pendiente) return;
 		pendiente = true;
 		requestAnimationFrame(mover);
-	}).observe(document.documentElement, { childList: true, subtree: true });
+	}).observe(document.documentElement, {
+		childList: true,
+		subtree: true,
+		// al cambiar de modelo Open WebUI a veces solo cambia el texto del nombre (sin agregar nodos)
+		characterData: true
+	});
 })();
 
 /*
@@ -204,7 +262,7 @@ function skVisible(selector) {
 		const contenedor = chips?.querySelector(':scope > div');
 		if (contenedor) sincronizarApagadas(contenedor);
 		// Workspace no es un interruptor: no cuenta en el contador (en el teléfono va dentro del menú +)
-		const opciones = chips ? [...chips.querySelectorAll("button:not([aria-label='Choose working directory'])")] : [];
+		const opciones = chips ? [...chips.querySelectorAll("button:not([aria-label='Choose working directory']):not(:has(path[d^='M21.75 6.75']))")] : [];
 		let activas = 0;
 		for (const opcion of opciones) {
 			const activa = estaActiva(opcion);
@@ -250,24 +308,28 @@ function skVisible(selector) {
 	 * (.sk-fantasma) que los vuelve a encender desde el menú de Integraciones (o el "+" desde 0.13.1).
 	 */
 	const APAGABLES = [
-		{ clave: 'herramientas', icono: 'M21.75 6.75', nombre: 'Herramientas', menu: 'Herramientas', cerrarMenu: false },
-		{ clave: 'web', icono: 'M12 21a9.004', nombre: 'Búsqueda web', menu: 'Búsqueda Web', cerrarMenu: true }
+		{ clave: 'web', icono: 'M12 21a9.004', nombre: 'Búsqueda web', menu: 'Búsqueda Web', cerrarMenu: true },
+		{ clave: 'imagen', icono: 'M21 7.6V20.4', nombre: 'Imagen', menu: 'Imagen', cerrarMenu: true }
 	];
 	let iconos = {};
 	try {
-		iconos = JSON.parse(sessionStorage.getItem('sk-opciones-iconos') || '{}');
+		iconos = JSON.parse(localStorage.getItem('sk-opciones-iconos') || '{}');
 	} catch {
 		// sin sessionStorage: solo se recuerdan los íconos de esta página
 	}
 
 	const encender = async (apagable) => {
+		// el menú + se abre solo para tocar la opción: se mantiene invisible mientras tanto
+		document.documentElement.classList.add('sk-encendiendo');
+		setTimeout(() => document.documentElement.classList.remove('sk-encendiendo'), 1800);
 		// desde 0.13.1 Integraciones vive dentro del menú "+" (#input-menu-button)
 		const integraciones = document.querySelector('#integration-menu-button') ?? skVisible('#input-menu-button');
 		integraciones?.click();
 		for (let intento = 0; intento < 30; intento++) {
 			await new Promise((r) => setTimeout(r, 50));
 			const item = [...document.querySelectorAll("[role='menu'] [role^='menuitem']")].find((e) =>
-				e.textContent.trim().startsWith(apagable.menu)
+				// sin distinguir mayúsculas: el tema traduce "Búsqueda Web" a "Búsqueda web"
+				e.textContent.trim().toLowerCase().startsWith(apagable.menu.toLowerCase())
 			);
 			if (item) {
 				item.click();
@@ -295,7 +357,7 @@ function skVisible(selector) {
 				if (svg && iconos[apagable.clave] !== svg) {
 					iconos[apagable.clave] = svg;
 					try {
-						sessionStorage.setItem('sk-opciones-iconos', JSON.stringify(iconos));
+						localStorage.setItem('sk-opciones-iconos', JSON.stringify(iconos));
 					} catch {
 						// sin sessionStorage
 					}
@@ -303,6 +365,18 @@ function skVisible(selector) {
 				fantasma?.remove();
 				anterior = hijoDirecto(contenedor, real);
 				continue;
+			}
+			if (!iconos[apagable.clave]) {
+				// el ícono también está en el menú +: se toma de ahí si el chip nunca se ha visto
+				const enMenu = document.querySelector(`.sk-menu-mas svg:has(path[d^='${apagable.icono}'])`);
+				if (enMenu) {
+					iconos[apagable.clave] = enMenu.outerHTML;
+					try {
+						localStorage.setItem('sk-opciones-iconos', JSON.stringify(iconos));
+					} catch {
+						// sin localStorage
+					}
+				}
 			}
 			if (!iconos[apagable.clave]) continue;
 			if (!fantasma) {
@@ -312,7 +386,12 @@ function skVisible(selector) {
 				fantasma.dataset.tipo = apagable.clave;
 				fantasma.setAttribute('aria-label', `${apagable.nombre} (apagada)`);
 				fantasma.innerHTML = iconos[apagable.clave];
-				fantasma.addEventListener('click', () => encender(apagable));
+				fantasma.dataset.creado = String(Date.now());
+				fantasma.addEventListener('click', () => {
+					// el mismo clic que apagó la opción cae en el chip gris que aparece en su lugar: se ignora
+					if (Date.now() - Number(fantasma.dataset.creado) < 600) return;
+					encender(apagable);
+				});
 				contenedor.insertBefore(fantasma, anterior ? anterior.nextSibling : contenedor.firstChild);
 			}
 			anterior = fantasma;
@@ -325,6 +404,7 @@ function skVisible(selector) {
 		if (opcion.querySelector("path[d^='M21.75 6.75']")) return 'herramientas';
 		if (opcion.querySelector("path[d^='M12 21a9.004']")) return 'web';
 		if (opcion.querySelector("path[d^='M12 4C6 4 6 8']")) return 'terminal';
+		if (opcion.querySelector("path[d^='M21 7.6V20.4']")) return 'imagen';
 		return null;
 	};
 
@@ -590,12 +670,30 @@ function skVisible(selector) {
 	const cargarModelos = async () => {
 		modelosFijados = [];
 		try {
-			const [ajustes, { data }] = await Promise.all([pedir('/api/v1/users/user/settings'), pedir('/api/models')]);
+			// lista rápida (personas guardadas, milisegundos): se pintan ya; la completa (/api/models, segundos) se pide
+			// después solo si algún modelo fijado no es persona, y entonces se vuelven a pintar los avatares
+			const [ajustes, rapida] = await Promise.all([
+				pedir('/api/v1/users/user/settings'),
+				pedir('/api/v1/models/list').catch(() => null)
+			]);
 			const ids = ajustes?.ui?.pinnedModels ?? [];
-			modelosFijados = ids
-				.map((id) => data.find((m) => m.id === id && !m.info?.meta?.hidden))
-				.filter(Boolean)
-				.map((m) => ({ id: m.id, nombre: m.name }));
+			const personas = (rapida?.items ?? []).filter((m) => m.is_active !== false && !m.meta?.hidden);
+			const encontrados = ids.map((id) => personas.find((m) => m.id === id));
+			modelosFijados = encontrados.filter(Boolean).map((m) => ({ id: m.id, nombre: m.name }));
+			if (encontrados.some((m) => !m)) {
+				pedir('/api/models')
+					.then(({ data = [] } = {}) => {
+						const completos = ids
+							.map((id, i) => encontrados[i] ?? data.find((m) => m.id === id && !m.info?.meta?.hidden))
+							.filter(Boolean)
+							.map((m) => ({ id: m.id, nombre: m.name }));
+						if (completos.length === modelosFijados.length) return;
+						modelosFijados = completos;
+						document.querySelector('.sk-chats-envoltura')?.remove();
+						asegurarBoton();
+					})
+					.catch(() => {});
+			}
 		} catch {
 			// sin modelos fijados en la barra contraída
 		}
@@ -820,4 +918,302 @@ function skVisible(selector) {
 	} catch {
 		// sin el lanzador del tema (o sin red): nada que refrescar
 	}
+})();
+
+/* Menú de Razonamiento (Controles del modelo): en lugar del deslizador con puntitos, un control segmentado con
+   los niveles (Apagado · Bajo · Medio · Alto · Adaptable). Cada botón mueve el deslizador original de Open WebUI
+   (se conserva oculto), así que se guarda igual que antes. */
+(() => {
+	const NIVELES_5 = ['Apagado', 'Bajo', 'Medio', 'Alto', 'Adaptable'];
+	let pendiente = false;
+
+	const mover = (rango, valor) => {
+		const setter = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+		setter.call(rango, String(valor));
+		rango.dispatchEvent(new Event('input', { bubbles: true }));
+		rango.dispatchEvent(new Event('change', { bubbles: true }));
+	};
+
+	const asegurar = () => {
+		pendiente = false;
+		document.querySelectorAll('.app-dropdown-menu').forEach((menu) => {
+			const rango = menu.querySelector("input[type='range'][aria-label='Razonamiento']");
+			if (!rango) return;
+			menu.classList.add('sk-menu-razonamiento');
+			const caja = skVisible(":is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper'])");
+			if (caja) {
+				const abajo = Math.max(12, window.innerHeight - caja.getBoundingClientRect().top + 8);
+				document.documentElement.style.setProperty('--sk-mas-abajo', `${abajo}px`);
+			}
+			const max = Number(rango.max);
+			// solo con los cinco niveles conocidos; con otra escala se deja el deslizador
+			if (max !== NIVELES_5.length - 1) return;
+			const bloque = rango.closest('.space-y-1');
+			if (!bloque) return;
+			bloque.classList.add('sk-razonamiento-original');
+			let niveles = menu.querySelector('.sk-niveles');
+			if (!niveles) {
+				niveles = document.createElement('div');
+				niveles.className = 'sk-niveles';
+				niveles.setAttribute('role', 'radiogroup');
+				niveles.setAttribute('aria-label', 'Nivel de razonamiento');
+				NIVELES_5.forEach((nombre, i) => {
+					const b = document.createElement('button');
+					b.type = 'button';
+					b.setAttribute('role', 'radio');
+					b.textContent = nombre;
+					b.addEventListener('click', (e) => {
+						e.stopPropagation();
+						const r = menu.querySelector("input[type='range'][aria-label='Razonamiento']");
+						if (r) mover(r, i);
+					});
+					niveles.appendChild(b);
+				});
+				bloque.after(niveles);
+			}
+			const actual = Number(rango.value);
+			niveles.querySelectorAll('button').forEach((b, i) => {
+				const marcado = i === actual ? 'true' : 'false';
+				if (b.getAttribute('aria-checked') !== marcado) b.setAttribute('aria-checked', marcado);
+			});
+		});
+	};
+
+	new MutationObserver(() => {
+		if (pendiente) return;
+		pendiente = true;
+		requestAnimationFrame(asegurar);
+	}).observe(document.documentElement, {
+		childList: true,
+		subtree: true,
+		attributes: true,
+		attributeFilter: ['aria-valuetext']
+	});
+})();
+
+/* Visor de imágenes: un toque o clic fuera de la imagen (en el fondo oscuro) lo cierra. Se cierra al soltar
+   (pointerup) porque en el teléfono el visor se queda con los toques y el "click" no llega; luego se descarta el
+   clic que sigue para que no caiga en el chat de atrás. No cierra si se arrastró o amplió la imagen (el puntero se
+   movió o hubo dos dedos) ni al tocar los botones. */
+(() => {
+	let inicio = null;
+	let dedos = 0;
+	const visor = (e) => e.target.closest?.(".modal[role='dialog'][aria-modal='true'].bg-black");
+
+	document.addEventListener(
+		'pointerdown',
+		(e) => {
+			const modal = visor(e);
+			if (!modal) {
+				inicio = null;
+				return;
+			}
+			dedos = e.isPrimary ? 1 : dedos + 1;
+			inicio = { x: e.clientX, y: e.clientY };
+		},
+		true
+	);
+
+	document.addEventListener(
+		'pointerup',
+		(e) => {
+			const modal = visor(e);
+			const datos = inicio;
+			inicio = null;
+			if (!modal || !datos || dedos > 1) return;
+			if (Math.hypot(e.clientX - datos.x, e.clientY - datos.y) > 8) return;
+			if (e.target.closest('button')) return;
+			const img = modal.querySelector('img');
+			if (img) {
+				// la caja de la imagen puede llenar la pantalla (object-fit: scale-down/contain): se mide lo dibujado
+				const r = img.getBoundingClientRect();
+				let { left, top, width, height } = r;
+				if (img.naturalWidth && img.naturalHeight) {
+					const ajuste = getComputedStyle(img).objectFit;
+					if (ajuste === 'contain' || ajuste === 'scale-down') {
+						let escala = Math.min(r.width / img.naturalWidth, r.height / img.naturalHeight);
+						if (ajuste === 'scale-down') escala = Math.min(escala, 1);
+						width = img.naturalWidth * escala;
+						height = img.naturalHeight * escala;
+						left = r.left + (r.width - width) / 2;
+						top = r.top + (r.height - height) / 2;
+					}
+				}
+				if (e.clientX >= left && e.clientX <= left + width && e.clientY >= top && e.clientY <= top + height) return;
+			}
+			const cerrar = modal.querySelector(':scope > div:first-child button');
+			if (!cerrar) return;
+			const tragar = (ev) => {
+				ev.preventDefault();
+				ev.stopPropagation();
+			};
+			cerrar.click();
+			document.addEventListener('click', tragar, { capture: true, once: true });
+			setTimeout(() => document.removeEventListener('click', tragar, true), 500);
+		},
+		true
+	);
+})();
+
+/* ---------- Imagen: interruptor y tamaños (lienzo "Composer · Imagen") ----------
+   El chip de Imagen siempre está a la vista (rojo encendido, contorno gris apagado). Tocarlo abre un panel de vidrio
+   con el interruptor de generar imágenes y el tamaño de la imagen (ajuste IMAGE_SIZE de Open WebUI, solo
+   administradores; si no se puede leer, el panel muestra solo el interruptor). */
+(() => {
+	const COMPOSER = ":is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper'])";
+	const ICONO = "path[d^='M21 7.6V20.4']";
+	const TAMANOS = [
+		{ valor: '1024x1024', nombre: 'Cuadrada', nota: 'Predeterminada · lo que FLUX maneja mejor · 1 MP', ritmo: 'Rápida', clase: 'rapida', w: 22, h: 22 },
+		{ valor: '768x1344', nombre: 'Vertical alta (4:7)', nota: 'Móvil e historias, misma calidad y velocidad · 1 MP', ritmo: 'Rápida', clase: 'rapida', w: 13, h: 22 },
+		{ valor: '1344x768', nombre: 'Horizontal ancha (7:4)', nota: 'Fondos y paisajes, misma velocidad · 1 MP', ritmo: 'Rápida', clase: 'rapida', w: 22, h: 13 },
+		{ valor: '1216x1664', nombre: 'Retrato (≈3:4)', nota: 'Más detalle, más cálculo · 2 MP', ritmo: 'Lenta', clase: 'lenta', w: 16, h: 22 },
+		{ valor: '1664x1216', nombre: 'Horizontal (≈4:3)', nota: 'Más detalle, más cálculo · 2 MP', ritmo: 'Lenta', clase: 'lenta', w: 22, h: 16 },
+		{ valor: '1920x1080', nombre: 'Pantalla completa (16:9)', nota: 'Tamaño exacto; el más pesado · 2,1 MP', ritmo: 'Muy lenta', clase: 'muy-lenta', w: 22, h: 12 }
+	];
+	const headers = () => ({ Authorization: `Bearer ${localStorage.token}`, 'Content-Type': 'application/json' });
+	let configuracion = null;
+	let permitirClic = false;
+
+	const chipReal = () =>
+		[...document.querySelectorAll(`${COMPOSER} button[aria-pressed]`)].find(
+			(b) => b.querySelector(ICONO) && b.getClientRects().length
+		);
+	const chipGris = () =>
+		[...document.querySelectorAll(`${COMPOSER} .sk-fantasma[data-tipo='imagen']`)].find((b) => b.getClientRects().length);
+	const encendida = () => Boolean(chipReal());
+
+	const cerrar = () => {
+		document.querySelector('.sk-imagen-panel')?.remove();
+		document.querySelectorAll('.sk-imagen-abierto').forEach((b) => b.classList.remove('sk-imagen-abierto'));
+	};
+
+	const alternar = async () => {
+		const real = chipReal();
+		if (real) {
+			permitirClic = true;
+			real.click();
+			permitirClic = false;
+		} else {
+			// encender: el menú + se abre invisible y se toca su opción Imagen (aunque esté oculta)
+			document.documentElement.classList.add('sk-encendiendo');
+			const mas = [...document.querySelectorAll('#input-menu-button')].find((b) => b.getClientRects().length);
+			mas?.click();
+			for (let i = 0; i < 30; i++) {
+				await new Promise((r) => setTimeout(r, 50));
+				const item = [...document.querySelectorAll("[role='menu'] [role='menuitemcheckbox']")].find((e) =>
+					e.querySelector(ICONO)
+				);
+				if (item) {
+					item.click();
+					mas?.click();
+					break;
+				}
+			}
+			setTimeout(() => document.documentElement.classList.remove('sk-encendiendo'), 300);
+		}
+		setTimeout(pintar, 250);
+	};
+
+	const guardarTamano = async (valor) => {
+		if (!configuracion) return;
+		const anterior = configuracion.IMAGE_SIZE;
+		configuracion.IMAGE_SIZE = valor;
+		pintar();
+		try {
+			const r = await fetch('/api/v1/images/config/update', {
+				method: 'POST',
+				headers: headers(),
+				body: JSON.stringify(configuracion)
+			});
+			if (!r.ok) throw new Error(String(r.status));
+		} catch {
+			configuracion.IMAGE_SIZE = anterior;
+			pintar();
+		}
+	};
+
+	const pintar = () => {
+		const panel = document.querySelector('.sk-imagen-panel');
+		if (!panel) return;
+		const on = encendida();
+		const sw = panel.querySelector('.sk-imagen-switch');
+		sw.setAttribute('aria-checked', on ? 'true' : 'false');
+		const modelo = configuracion?.IMAGE_GENERATION_MODEL || '';
+		panel.querySelector('.sk-imagen-sub').textContent = `${/flux/i.test(modelo) ? 'FLUX' : modelo || 'Imágenes'} · se usa cuando le pidas una imagen`;
+		panel.querySelectorAll('[role="menuitemradio"]').forEach((fila) => {
+			fila.setAttribute('aria-checked', fila.dataset.valor === configuracion?.IMAGE_SIZE ? 'true' : 'false');
+		});
+	};
+
+	const abrir = async (chip) => {
+		cerrar();
+		chip.classList.add('sk-imagen-abierto');
+		const panel = document.createElement('div');
+		panel.className = 'sk-imagen-panel';
+		panel.setAttribute('role', 'dialog');
+		panel.setAttribute('aria-label', 'Imagen');
+		panel.innerHTML = `
+			<div class="sk-imagen-cabeza">
+				<span class="sk-imagen-insignia">${chip.querySelector('svg')?.outerHTML ?? ''}</span>
+				<span class="sk-imagen-textos"><b>Generar imagen</b><span class="sk-imagen-sub"></span></span>
+				<button type="button" class="sk-imagen-switch" role="switch" aria-label="Generación de imágenes"><span></span></button>
+			</div>
+			<div class="sk-imagen-tamanos" hidden>
+				<div class="sk-imagen-rotulo">Tamaño</div>
+				${TAMANOS.map(
+					(t) => `<button type="button" role="menuitemradio" data-valor="${t.valor}">
+						<span class="sk-imagen-forma"><i style="width:${t.w}px;height:${t.h}px"></i></span>
+						<span class="sk-imagen-fila"><span><b>${t.valor.replace('x', '×')}</b><em>${t.nombre}</em></span><small>${t.nota}</small></span>
+						<span class="sk-imagen-ritmo sk-${t.clase}">${t.ritmo}</span>
+						<svg class="sk-imagen-palomita" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>
+					</button>`
+				).join('')}
+			</div>`;
+		document.body.appendChild(panel);
+		const caja = chip.closest(COMPOSER);
+		const r = caja?.getBoundingClientRect();
+		const c = chip.getBoundingClientRect();
+		if (r) {
+			panel.style.bottom = `${Math.max(12, window.innerHeight - r.top + 8)}px`;
+			if (window.innerWidth >= 768) panel.style.left = `${Math.max(12, Math.min(c.left - 8, window.innerWidth - 452))}px`;
+		}
+		panel.querySelector('.sk-imagen-switch').addEventListener('click', alternar);
+		panel.querySelectorAll('[role="menuitemradio"]').forEach((b) =>
+			b.addEventListener('click', () => guardarTamano(b.dataset.valor))
+		);
+		pintar();
+		try {
+			const res = await fetch('/api/v1/images/config', { headers: headers() });
+			if (res.ok) {
+				configuracion = await res.json();
+				panel.querySelector('.sk-imagen-tamanos').hidden = false;
+				pintar();
+			}
+		} catch {
+			// sin permiso de administrador: solo el interruptor
+		}
+	};
+
+	// tocar el chip de Imagen (encendido o el gris) abre el panel en lugar de apagar/encender directo
+	document.addEventListener(
+		'click',
+		(e) => {
+			if (permitirClic) return;
+			const chip = e.target.closest?.(`${COMPOSER} button`);
+			if (chip && chip.querySelector(ICONO) && (chip.hasAttribute('aria-pressed') || chip.dataset.tipo === 'imagen')) {
+				e.preventDefault();
+				e.stopImmediatePropagation();
+				if (chip.classList.contains('sk-imagen-abierto')) cerrar();
+				else abrir(chip);
+				return;
+			}
+			const panel = document.querySelector('.sk-imagen-panel');
+			if (panel && !panel.contains(e.target) && !document.documentElement.classList.contains('sk-encendiendo')) cerrar();
+		},
+		true
+	);
+
+	document.addEventListener('keydown', (e) => {
+		if (e.key === 'Escape') cerrar();
+	});
 })();
