@@ -1,5 +1,5 @@
 /*
- * Carbono 0.87 — comportamiento del tema. El lanzador lo sirve en /static/loader.js
+ * Carbono 0.88 — comportamiento del tema. El lanzador lo sirve en /static/loader.js
  * (que Open WebUI carga en cada página) mientras exista carbono/ACTIVO.
  *
  * Barras de desplazamiento que solo aparecen mientras haces scroll: carbono.css las deja
@@ -1063,7 +1063,7 @@ function skVisible(selector) {
 	const COMPOSER = ":is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper'])";
 	const ICONO = "path[d^='M21 7.6V20.4']";
 	const TAMANOS = [
-		{ valor: '1024x1024', nombre: 'Cuadrada', nota: 'Predeterminada · lo que FLUX maneja mejor · 1 MP', ritmo: 'Rápida', clase: 'rapida', w: 22, h: 22 },
+		{ valor: '1024x1024', nombre: 'Cuadrada', nota: 'Predeterminada · la más equilibrada · 1 MP', ritmo: 'Rápida', clase: 'rapida', w: 22, h: 22 },
 		{ valor: '768x1344', nombre: 'Vertical alta (4:7)', nota: 'Móvil e historias, misma calidad y velocidad · 1 MP', ritmo: 'Rápida', clase: 'rapida', w: 13, h: 22 },
 		{ valor: '1344x768', nombre: 'Horizontal ancha (7:4)', nota: 'Fondos y paisajes, misma velocidad · 1 MP', ritmo: 'Rápida', clase: 'rapida', w: 22, h: 13 },
 		{ valor: '1216x1664', nombre: 'Retrato (≈3:4)', nota: 'Más detalle, más cálculo · 2 MP', ritmo: 'Lenta', clase: 'lenta', w: 16, h: 22 },
@@ -1139,7 +1139,8 @@ function skVisible(selector) {
 		const sw = panel.querySelector('.sk-imagen-switch');
 		sw.setAttribute('aria-checked', on ? 'true' : 'false');
 		const modelo = configuracion?.IMAGE_GENERATION_MODEL || '';
-		panel.querySelector('.sk-imagen-sub').textContent = `${/flux/i.test(modelo) ? 'FLUX' : modelo || 'Imágenes'} · se usa cuando le pidas una imagen`;
+		const nombreModelo = /z[_-]?image/i.test(modelo) ? 'Z-Image-Turbo' : /flux/i.test(modelo) ? 'FLUX' : modelo.replace(/\.(safetensors|gguf)$/i, '') || 'Imágenes';
+		panel.querySelector('.sk-imagen-sub').textContent = `${nombreModelo} · se usa cuando le pidas una imagen`;
 		panel.querySelectorAll('[role="menuitemradio"]').forEach((fila) => {
 			fila.setAttribute('aria-checked', fila.dataset.valor === configuracion?.IMAGE_SIZE ? 'true' : 'false');
 		});

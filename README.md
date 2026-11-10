@@ -1,6 +1,6 @@
 # Carbono para Open WebUI
 
-**Versión 0.87** · probado con Open WebUI **0.13.2**
+**Versión 0.88** · probado con Open WebUI **0.13.2**
 
 Carbono es el tema recomendado para [Sakura OI Web](https://github.com/YukiChristian/Sakura-OI-Web). Deja la interfaz de Open WebUI neutra (superficies en tonos carbón y zinc, acción principal en negro), con más jerarquía en el texto, tipografía Atkinson Hyperlegible, menús de vidrio esmerilado y un composer pensado para el teléfono.
 
@@ -44,6 +44,10 @@ La guía de estilo (principios, colores, tipografía y componentes) está en [do
 - **Rendimiento:** los selectores evitan buscar por el atributo `class` dentro de `:has()`, que obliga al navegador a recalcular toda la página en cada hover.
 
 ## Cambios
+
+### 0.88
+
+- **Panel de Imagen:** el subtítulo reconoce el modelo configurado (Z-Image-Turbo, FLUX o el nombre del archivo sin extensión) en vez de mostrar el nombre completo, y la nota del tamaño 1024×1024 ya no habla de FLUX («la más equilibrada»).
 
 ### 0.87
 
