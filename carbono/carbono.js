@@ -1,5 +1,5 @@
 /*
- * Carbono 0.88 — comportamiento del tema. El lanzador lo sirve en /static/loader.js
+ * Carbono 0.89 — comportamiento del tema. El lanzador lo sirve en /static/loader.js
  * (que Open WebUI carga en cada página) mientras exista carbono/ACTIVO.
  *
  * Barras de desplazamiento que solo aparecen mientras haces scroll: carbono.css las deja

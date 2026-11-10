@@ -1,6 +1,6 @@
 # Carbono para Open WebUI
 
-**Versión 0.88** · probado con Open WebUI **0.13.2**
+**Versión 0.89** · probado con Open WebUI **0.13.3**
 
 Carbono es el tema recomendado para [Sakura OI Web](https://github.com/YukiChristian/Sakura-OI-Web). Deja la interfaz de Open WebUI neutra (superficies en tonos carbón y zinc, acción principal en negro), con más jerarquía en el texto, tipografía Atkinson Hyperlegible, menús de vidrio esmerilado y un composer pensado para el teléfono.
 
@@ -44,6 +44,10 @@ La guía de estilo (principios, colores, tipografía y componentes) está en [do
 - **Rendimiento:** los selectores evitan buscar por el atributo `class` dentro de `:has()`, que obliga al navegador a recalcular toda la página en cada hover.
 
 ## Cambios
+
+### 0.89
+
+- **Probado con Open WebUI 0.13.3:** sin cambios de diseño; el bloque opcional del chat en pestaña sigue funcionando (el lanzador busca el archivo por su contenido, así que no importa que cambie de nombre). Después de actualizar Open WebUI con `pip`, vuelve a aplicar tus íconos si los reemplazaste: la actualización restaura los originales.
 
 ### 0.88
 
@@ -169,7 +173,7 @@ Ajustes para Open WebUI 0.13.0:
 
 3. Reinicia Open WebUI **una sola vez** para que cargue el bloque.
 
-Opcional (Open WebUI 0.13.2): los chats que se abren como pestaña («Nuevo Chat» del menú de pestañas) llegan sin Open Terminal ni Workspace porque Open WebUI los oculta en ese componente, aunque al enviar ya usa la terminal elegida. Para mostrarlos, agrega esto antes del `@open_webui.main.app.middleware` (con `import json` arriba):
+Opcional (Open WebUI 0.13.2 y 0.13.3): los chats que se abren como pestaña («Nuevo Chat» del menú de pestañas) llegan sin Open Terminal ni Workspace porque Open WebUI los oculta en ese componente, aunque al enviar ya usa la terminal elegida. Para mostrarlos, agrega esto antes del `@open_webui.main.app.middleware` (con `import json` arriba):
 
 ```python
 # Chats en pestaña con Open Terminal y Workspace: se sirve ese archivo con el interruptor encendido.
