@@ -24,6 +24,10 @@ La guía de estilo (principios, colores, tipografía y componentes) está en [do
 | --- | --- |
 | ![Menú «+» reorganizado](docs/capturas/escritorio-menu-mas.jpg) | ![Selector de modelo](docs/capturas/escritorio-selector-modelo.jpg) |
 
+| Modo voz en escritorio |
+| --- |
+| ![Modo voz en escritorio con vista dividida: chat, panel de voz y columna de archivos](docs/capturas/escritorio-voz.jpg) |
+
 ### Móvil
 
 | Bienvenida | Menú «+» |
@@ -57,7 +61,12 @@ La guía de estilo (principios, colores, tipografía y componentes) está en [do
   - **Respondiendo:** el avatar habla y salen ondas suaves; cada reacción de la persona (😊…) sale con un rebote en un círculo blanco abajo a la derecha.
   - **Silenciado:** el avatar queda en gris y quieto, con aro punteado, insignia del micrófono tachado y barras planas.
   - Píldora de estado con ícono y texto («Te escucho…», «Pensando…», «Toca para interrumpir», «Micrófono silenciado»); botones de 64 px con etiqueta en español: Cámara en blanco, Silenciar y Finalizar en negro, y Silenciar en rojo solo cuando el micrófono está silenciado. La pestaña del modo voz lleva el subrayado azul. Con «reducir movimiento» del sistema la escena queda quieta.
-- **Nueva captura** del modo voz en el teléfono.
+- **Botones del modo voz:** cuatro de 60 px (Cámara · Razonar · Silenciar · Finalizar). **Razonar** es nuevo: rosa con el nivel en una etiqueta (gris en Apagado) y abre una hoja con el vidrio de los menús para elegir el nivel (Apagado, Bajo, Medio, Alto, Adaptable), usando el mismo control de Razonamiento del chat. El avatar se queda siempre fijo y del mismo tamaño; la animación va alrededor.
+- **Razonamiento automático en el modo voz:** al iniciar la llamada pasa a Apagado y al salir vuelve al nivel que tenías (se recuerda aunque la página se recargue a media llamada).
+- **Silenciado en rojo:** insignia del micrófono tachado, píldora y botón «Activar mic.».
+- **Vidrio:** el área del modo voz lleva el mismo vidrio que la barra de pestañas (blanco al 42 % con desenfoque), así se leen como una sola pieza.
+- **Modo voz en escritorio con el chat a la vista:** el chat se queda a la izquierda y la voz en un panel de 420 px con su propia pestaña encima; tocar el chat ya no oculta la voz. Con la vista dividida el orden es chat · voz · columna de la derecha. Al achicar la ventana a tamaño teléfono durante una llamada, el modo voz sigue a la vista.
+- **Nuevas capturas** del modo voz en el teléfono y en escritorio.
 
 ### 0.90
 

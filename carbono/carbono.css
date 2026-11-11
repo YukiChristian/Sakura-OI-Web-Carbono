@@ -8576,3 +8576,386 @@ div.flex-col:has(> [role='status'][aria-live]:not([data-sonner-toast]) > button)
 #controls-container .panel-tab.panel-tab:has([role='tab'] path[d^='M12 1C10.34']) {
 	--sk-pestana: #2361c7;
 }
+
+/* ---------- Modo voz: cuatro botones de 60 px, botón Razonar y hoja de nivel (lienzo "Azul/negro", mejoras) ----------
+   Cámara · Razonar · Silenciar · Finalizar en columnas de 80 px con etiquetas de 12.5 px. Razonar en rosa (gris en
+   Apagado) con el nivel en una etiqueta; la hoja usa el vidrio de los menús. Silenciado pasa a rojo. */
+div.flex-col:has(> [role='status'][aria-live]:not([data-sonner-toast]) > button) > div:last-child {
+	gap: 0 !important;
+	justify-content: center;
+}
+
+div.flex-col:has(> [role='status'][aria-live]:not([data-sonner-toast]) > button) > div:last-child button.rounded-full {
+	width: 60px !important;
+	height: 60px !important;
+	margin: 0 10px;
+}
+
+div.flex-col:has(> [role='status'][aria-live]:not([data-sonner-toast]) > button) > div:last-child button.rounded-full svg {
+	width: 23px !important;
+	height: 23px !important;
+}
+
+div.flex-col:has(> [role='status'][aria-live]:not([data-sonner-toast]) > button) > div:last-child button.rounded-full::after {
+	top: calc(100% + 7px) !important;
+	font-size: 12.5px !important;
+	line-height: 16px !important;
+	font-weight: 600 !important;
+}
+
+div.flex-col:has(> [role='status'][aria-live]:not([data-sonner-toast]) > button) > div:last-child button.rounded-full[aria-label='Unmute']::after {
+	content: 'Activar mic.' !important;
+}
+
+/* Razonar: rosa con la etiqueta del nivel; gris en Apagado */
+div.flex-col:has(> [role='status'][aria-live]:not([data-sonner-toast]) > button) > div:last-child button.sk-voz-razonar {
+	position: relative;
+	display: grid;
+	place-items: center;
+	padding: 0;
+	border: 0;
+	background-color: var(--sk-ins-razonamiento, #d6336c) !important;
+	color: #ffffff !important;
+	box-shadow: 0 6px 16px color-mix(in srgb, var(--sk-ins-razonamiento, #d6336c) 30%, transparent);
+	cursor: pointer;
+}
+
+div.flex-col:has(> [role='status'][aria-live]:not([data-sonner-toast]) > button) > div:last-child button.sk-voz-razonar.sk-apagada {
+	background-color: var(--sk-ins-apagado) !important;
+	box-shadow: 0 6px 16px rgba(24, 24, 27, 0.18);
+}
+
+.sk-voz-razonar-nivel {
+	position: absolute;
+	top: -6px;
+	right: -10px;
+	height: 20px;
+	padding: 0 7px;
+	border-radius: 9999px;
+	background: var(--sk-surface, #ffffff);
+	color: #a61e4d;
+	box-shadow: 0 0 0 1.5px var(--sk-ins-razonamiento, #d6336c);
+	font-size: 11px;
+	line-height: 20px;
+	font-weight: 700;
+	white-space: nowrap;
+}
+
+.sk-voz-razonar.sk-apagada .sk-voz-razonar-nivel {
+	color: var(--sk-ink-muted);
+	box-shadow: 0 0 0 1.5px var(--sk-ins-apagado);
+}
+
+.sk-voz-razonar-nivel:empty {
+	display: none;
+}
+
+/* hoja de nivel: vidrio de los menús, esquinas de 28 px arriba */
+.sk-voz-raiz {
+	position: relative;
+}
+
+.sk-voz-velo {
+	position: absolute;
+	inset: 0;
+	z-index: 70;
+	background: rgba(24, 24, 27, 0.28);
+}
+
+.sk-voz-hoja {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+	z-index: 71;
+	box-sizing: border-box;
+	padding: 10px 14px calc(28px + env(safe-area-inset-bottom));
+	border-radius: 28px 28px 0 0;
+	border: 1px solid var(--sk-border);
+	border-bottom: 0;
+	background: rgba(255, 255, 255, 0.6);
+	-webkit-backdrop-filter: saturate(180%) blur(20px);
+	backdrop-filter: saturate(180%) blur(20px);
+	box-shadow: 0 -10px 30px rgba(24, 24, 27, 0.18);
+	color: var(--sk-ink);
+	animation: sk-voz-sube 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+html.dark .sk-voz-hoja {
+	background: rgba(28, 28, 30, 0.6);
+}
+
+@keyframes sk-voz-sube {
+	from { transform: translateY(40px); opacity: 0; }
+	to { transform: none; opacity: 1; }
+}
+
+.sk-voz-hoja-asa {
+	display: block;
+	width: 40px;
+	height: 5px;
+	margin: 0 auto 12px;
+	border-radius: 9999px;
+	background: var(--sk-border-strong, #d4d4d8);
+}
+
+.sk-voz-hoja-cabeza {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	padding: 0 4px 12px;
+}
+
+.sk-voz-hoja-insignia {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: none;
+	width: 40px;
+	height: 40px;
+	border-radius: 9999px;
+	background: var(--sk-ins-razonamiento, #d6336c);
+	color: #ffffff;
+}
+
+.sk-voz-hoja-insignia svg {
+	width: 20px;
+	height: 20px;
+}
+
+.sk-voz-hoja-titulos {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.sk-voz-hoja-titulos b {
+	font-size: 19px;
+	line-height: 25px;
+	font-weight: 700;
+}
+
+.sk-voz-hoja-titulos span,
+.sk-voz-hoja-textos span {
+	font-size: 13.5px;
+	line-height: 19px;
+	color: var(--sk-ink-muted);
+}
+
+.sk-voz-hoja-cerrar {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: none;
+	width: 44px;
+	height: 44px;
+	border: 0;
+	border-radius: 9999px;
+	background: color-mix(in srgb, var(--sk-sidebar) 85%, transparent);
+	color: var(--sk-ink);
+	cursor: pointer;
+}
+
+.sk-voz-hoja-cerrar svg {
+	width: 18px;
+	height: 18px;
+}
+
+.sk-voz-hoja [role='radiogroup'] {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+}
+
+.sk-voz-hoja [role='radio'] {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	width: 100%;
+	min-height: 60px;
+	padding: 6px 14px;
+	border: 0;
+	border-radius: 16px;
+	background: transparent;
+	color: inherit;
+	text-align: left;
+	cursor: pointer;
+}
+
+.sk-voz-hoja [role='radio']:hover {
+	background: color-mix(in srgb, var(--sk-hover) 80%, transparent);
+}
+
+.sk-voz-hoja [role='radio'][aria-checked='true'] {
+	background: color-mix(in srgb, var(--sk-ins-razonamiento, #d6336c) 8%, transparent);
+	box-shadow: inset 0 0 0 1.5px color-mix(in srgb, var(--sk-ins-razonamiento, #d6336c) 35%, transparent);
+}
+
+.sk-voz-hoja-radio {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	flex: none;
+	width: 24px;
+	height: 24px;
+	border-radius: 9999px;
+	box-shadow: inset 0 0 0 2px var(--sk-ins-apagado);
+}
+
+[aria-checked='true'] > .sk-voz-hoja-radio {
+	box-shadow: inset 0 0 0 2px var(--sk-ins-razonamiento, #d6336c);
+}
+
+[aria-checked='true'] > .sk-voz-hoja-radio::after {
+	content: '';
+	width: 12px;
+	height: 12px;
+	border-radius: 9999px;
+	background: var(--sk-ins-razonamiento, #d6336c);
+}
+
+.sk-voz-hoja-textos {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.sk-voz-hoja-textos b {
+	font-size: 17px;
+	line-height: 23px;
+	font-weight: 600;
+}
+
+/* silenciado en rojo: insignia del micrófono y píldora */
+.sk-voz-silenciado .sk-voz-mudo {
+	background: #d9363e;
+	color: #ffffff;
+	box-shadow: 0 0 0 4px var(--sk-surface, #ffffff), 0 8px 18px rgba(217, 54, 62, 0.35);
+}
+
+[role='status'][aria-live][data-sk-voz='silenciado'] > button {
+	background: rgba(217, 54, 62, 0.1);
+}
+
+[role='status'][aria-live][data-sk-voz='silenciado'] > button::before {
+	background-color: #d9363e !important;
+}
+
+/* el avatar no se mueve entre estados: el medidor guarda su espacio siempre (al pensar y responder solo se vuelve
+   invisible); si desapareciera, la parte de abajo se encogería y el avatar, centrado en lo que queda, bajaría */
+[role='status'][aria-live][data-sk-voz] > .sk-voz-medidor {
+	display: flex !important;
+	align-items: center;
+	gap: 4px;
+	height: 30px;
+	visibility: hidden;
+	opacity: 0;
+}
+
+[role='status'][aria-live]:is([data-sk-voz='escuchando'], [data-sk-voz='silenciado']) > .sk-voz-medidor {
+	visibility: visible;
+	opacity: 1;
+}
+
+/* Sakura siempre fija en el modo voz: su imagen no cambia de tamaño en ningún estado; la animación va alrededor
+   (ondas, aro, burbuja, barras y reacción) */
+button.sk-voz-boton .sk-voz-avatar {
+	animation: none !important;
+	transform: none !important;
+}
+
+/* ---------- Modo voz: vidrio de la barra de pestañas y, en escritorio, chat a la vista ----------
+   El área del modo voz lleva el mismo vidrio que la barra de pestañas (blanco al 42 %, desenfoque de 18 px y
+   saturación 1.5): el fondo del chat se ve difuminado detrás y la barra y la voz se leen como una sola pieza.
+   En escritorio (lienzo "4 · Escritorio · azul y negro") Open WebUI pone el modo voz en el contenedor de paneles,
+   que cubre todo el ancho y deja oculto el chat; mientras la pestaña Voz está activa, ese contenedor se reduce a un
+   panel de 420 px a la derecha y el chat se queda a la izquierda, para leer la conversación mientras hablas.
+   Solo sin vista dividida (Open WebUI esconde el chat con .hidden); con la vista dividida el chat ya tiene su
+   columna y el modo voz llena la columna de la derecha, como hace Open WebUI. */
+[role='tabpanel']:has(.sk-voz-boton) {
+	background: rgba(255, 255, 255, 0.42);
+	-webkit-backdrop-filter: blur(18px) saturate(1.5);
+	backdrop-filter: blur(18px) saturate(1.5);
+}
+
+html.dark [role='tabpanel']:has(.sk-voz-boton) {
+	background: rgba(22, 22, 23, 0.42);
+}
+
+@media (min-width: 900px) {
+	/* --sk-voz-l y --sk-voz-w (carbono.js) son la posición y el ancho de la columna del modo voz: toda la ventana, o la
+	   columna izquierda con la vista dividida; el chat y la voz se reparten esa columna */
+	div[data-sk-voz-junto] > #chat-panel-main-chat-view {
+		display: flex !important;
+		left: var(--sk-voz-l, 0%) !important;
+		width: calc(var(--sk-voz-w, 100%) - 420px) !important;
+	}
+
+	/* la barra de pestañas sigue a lo ancho: el contenedor de paneles conserva su ancho, queda transparente y deja
+	   pasar los clics al chat; solo el panel de voz se reduce a 420 px a la derecha */
+	div[data-sk-voz-junto] > div.contents > #controls-container {
+		pointer-events: none;
+		background: transparent !important;
+	}
+
+	div[data-sk-voz-junto] > div.contents > #controls-container [data-panel-tab-bar] {
+		pointer-events: auto;
+	}
+
+	div[data-sk-voz-junto] > div.contents > #controls-container div:has(> [role='tabpanel'] .sk-voz-boton) {
+		background: transparent !important;
+	}
+
+	div[data-sk-voz-junto] > div.contents > #controls-container [role='tabpanel']:has(.sk-voz-boton) {
+		display: block !important;
+		left: calc(var(--sk-voz-l, 0%) + var(--sk-voz-w, 100%) - 420px) !important;
+		right: auto !important;
+		width: 420px !important;
+		pointer-events: auto;
+		border-left: 1px solid rgba(24, 24, 27, 0.08);
+	}
+
+	html.dark div[data-sk-voz-junto] > div.contents > #controls-container [role='tabpanel']:has(.sk-voz-boton) {
+		border-left-color: rgba(255, 255, 255, 0.08);
+	}
+
+	/* el modo voz llena su panel y centra la escena */
+	[role='tabpanel']:has(.sk-voz-boton) .max-w-lg:has(.sk-voz-boton) {
+		max-width: none;
+		margin-inline: auto;
+	}
+}
+
+/* la pestaña Voz encabeza su propia columna: se coloca encima del panel de voz (los últimos 420 px de la barra de su
+   grupo) con una línea divisoria que sigue la del panel; "Testing Connection" y el + se quedan sobre el chat */
+@media (min-width: 900px) {
+	div[data-sk-voz-junto] [data-panel-tab-bar]:has(.panel-tab [role='tab'] path[d^='M12 1C10.34']) {
+		position: relative;
+	}
+
+	div[data-sk-voz-junto] [data-panel-tab-bar]:has(.panel-tab [role='tab'] path[d^='M12 1C10.34']) .panel-tab:has([role='tab'] path[d^='M12 1C10.34']) {
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		left: calc(100% - 420px + 12px);
+		display: flex;
+		align-items: center;
+	}
+
+	div[data-sk-voz-junto] [data-panel-tab-bar]:has(.panel-tab [role='tab'] path[d^='M12 1C10.34'])::after {
+		content: '';
+		position: absolute;
+		top: 0;
+		bottom: 0;
+		left: calc(100% - 420px);
+		width: 1px;
+		background: rgba(24, 24, 27, 0.08);
+		pointer-events: none;
+	}
+
+	html.dark div[data-sk-voz-junto] [data-panel-tab-bar]:has(.panel-tab [role='tab'] path[d^='M12 1C10.34'])::after {
+		background: rgba(255, 255, 255, 0.08);
+	}
+}

@@ -915,6 +915,12 @@ function skVisible(selector) {
 			const boton = document.querySelector(
 				".modal[role='dialog'][aria-label='Pestañas'] button[aria-label='Ocultar pestañas'], .modal[role='dialog'][aria-label='Tabs'] button[aria-label='Hide tabs']"
 			);
+			// con una llamada de voz en curso el cajón se queda abierto (ahí vive el modo voz) y se muestra la pestaña Voz
+			if (document.querySelector('button.sk-voz-boton')) {
+				const voz = [...document.querySelectorAll("[role='tab']")].find((t) => t.querySelector("path[d^='M12 1C10.34']"));
+				if (voz && voz.getAttribute('aria-selected') !== 'true') voz.click();
+				return;
+			}
 			if (boton) boton.click();
 			else if (Date.now() < hasta) setTimeout(cerrar, 100);
 		};
@@ -1991,6 +1997,9 @@ function skVisible(selector) {
 
 	const actualizar = () => {
 		pendiente = false;
+		if (!document.querySelector(BOTON)) {
+			document.querySelectorAll('[data-sk-voz-junto]').forEach((r) => r.removeAttribute('data-sk-voz-junto'));
+		}
 		document.querySelectorAll(BOTON).forEach((boton) => {
 			// con un avatar animado propio (video/Live2D) se deja el de Open WebUI
 			if (boton.classList.contains('min-h-64')) return;
@@ -2050,6 +2059,22 @@ function skVisible(selector) {
 				poner(caja.querySelector(':scope > .sk-voz-medidor'), '--sk-voz-nivel', String(Math.max(0, nivel)));
 			}
 
+			// columna del modo voz en escritorio: su posición y ancho reales (estilo en línea de Open WebUI; con la vista
+			// dividida es la columna izquierda) para repartirla entre el chat y el panel de voz (carbono.css)
+			const panelVoz = boton.closest("[role='tabpanel']");
+			const panelChat = document.getElementById('chat-panel-main-chat-view');
+			const raizPaneles = panelChat?.parentElement;
+			if (panelVoz && raizPaneles) {
+				const l = panelVoz.style.left || '0%';
+				const w = panelVoz.style.width || '100%';
+				if (raizPaneles.style.getPropertyValue('--sk-voz-l') !== l) raizPaneles.style.setProperty('--sk-voz-l', l);
+				if (raizPaneles.style.getPropertyValue('--sk-voz-w') !== w) raizPaneles.style.setProperty('--sk-voz-w', w);
+				// chat y voz en la misma columna (mismo grupo de pestañas): se muestran juntos aunque toques el chat y
+				// Open WebUI active su pestaña; con la voz en la otra columna de la vista dividida no hace falta
+				const junto = (panelChat.style.left || '0%') === l && (panelChat.style.width || '100%') === w;
+				if (raizPaneles.hasAttribute('data-sk-voz-junto') !== junto) raizPaneles.toggleAttribute('data-sk-voz-junto', junto);
+			}
+
 			// la pestaña del modo voz lleva el subrayado del color del modelo
 			const panel = boton.closest('[role="tabpanel"]');
 			const pestana = panel?.id && document.querySelector(`[aria-controls="${panel.id}"]`);
@@ -2066,4 +2091,213 @@ function skVisible(selector) {
 		pendiente = true;
 		requestAnimationFrame(actualizar);
 	}).observe(document.documentElement, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['class', 'style', 'aria-label'] });
+})();
+
+/*
+ * Modo voz: botón "Razonar" (rosa, con el nivel en una etiqueta) entre Cámara y Silenciar, y hoja inferior para elegir
+ * el nivel (lienzo "Azul/negro · 6 Razonamiento"). El nivel se cambia con el mismo control de Razonamiento del chat
+ * (el menú se abre invisible y se toca el nivel), así que se guarda igual. Sin un modelo que razone no aparece.
+ */
+(() => {
+	const NIVELES = [
+		['apagado', 'Apagado', 'Responde al instante, sin pensar antes'],
+		['bajo', 'Bajo', 'Piensa un poco; casi igual de rápido'],
+		['medio', 'Medio', 'Equilibrio entre rapidez y cuidado'],
+		['alto', 'Alto', 'Piensa más a fondo; tarda un poco más'],
+		['adaptable', 'Adaptable', 'Decide cuánto pensar según la pregunta']
+	];
+	const ICONO =
+		'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>';
+	const CERRAR =
+		'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>';
+	let pendiente = false;
+
+	const chip = () => document.querySelector('button.sk-razonamiento');
+	const nombreNivel = (clave) => NIVELES.find(([c]) => c === clave)?.[1] ?? (clave ? clave[0].toUpperCase() + clave.slice(1) : '');
+
+	const elegir = async (clave) => {
+		const c = chip();
+		if (!c) return;
+		document.documentElement.classList.add('sk-encendiendo');
+		c.click();
+		for (let i = 0; i < 30; i++) {
+			await new Promise((r) => setTimeout(r, 50));
+			// por posición (Apagado · Bajo · Medio · Alto · Adaptable): el nombre puede cambiar ("Apagado / Modo Voz")
+			const indice = NIVELES.findIndex(([c]) => c === clave);
+			const boton = document.querySelectorAll('.sk-menu-razonamiento .sk-niveles button')[indice];
+			if (boton) {
+				boton.click();
+				break;
+			}
+		}
+		// se cierra volviendo a tocar el chip: con Esc también se cerraba el modo voz
+		await new Promise((r) => setTimeout(r, 80));
+		if (document.querySelector('.sk-menu-razonamiento')) c.click();
+		setTimeout(() => document.documentElement.classList.remove('sk-encendiendo'), 250);
+	};
+
+	const cerrarHoja = () => {
+		document.querySelector('.sk-voz-hoja')?.remove();
+		document.querySelector('.sk-voz-velo')?.remove();
+	};
+
+	// la hoja va dentro del propio modo voz (en el teléfono vive en el cajón de pestañas, encima de todo; fuera de él
+	// quedaba por debajo y no se veía)
+	const abrirHoja = (raiz) => {
+		cerrarHoja();
+		const c = chip();
+		if (!c) return;
+		const actual = c.dataset.skNivel || '';
+		const modelo = document.querySelector('#model-selector-model-button')?.textContent.trim() || 'el modelo';
+		if (getComputedStyle(raiz).position === 'static') raiz.classList.add('sk-voz-raiz');
+		const velo = document.createElement('div');
+		velo.className = 'sk-voz-velo';
+		velo.addEventListener('click', cerrarHoja);
+		const hoja = document.createElement('div');
+		hoja.className = 'sk-voz-hoja';
+		hoja.setAttribute('role', 'dialog');
+		hoja.setAttribute('aria-label', 'Razonamiento');
+		hoja.innerHTML = `
+			<span class="sk-voz-hoja-asa" aria-hidden="true"></span>
+			<div class="sk-voz-hoja-cabeza">
+				<span class="sk-voz-hoja-insignia">${ICONO}</span>
+				<span class="sk-voz-hoja-titulos"><b>Razonamiento</b><span>Cuánto piensa ${modelo} antes de hablar</span></span>
+				<button type="button" class="sk-voz-hoja-cerrar" aria-label="Cerrar">${CERRAR}</button>
+			</div>
+			<div role="radiogroup" aria-label="Nivel de razonamiento">
+				${NIVELES.map(
+					([clave, nombre, nota]) => `<button type="button" role="radio" data-nivel="${clave}" aria-checked="${clave === actual}">
+						<span class="sk-voz-hoja-radio" aria-hidden="true"></span>
+						<span class="sk-voz-hoja-textos"><b>${nombre}</b><span>${nota}</span></span>
+					</button>`
+				).join('')}
+			</div>`;
+		hoja.querySelector('.sk-voz-hoja-cerrar').addEventListener('click', cerrarHoja);
+		hoja.querySelectorAll('[role="radio"]').forEach((b) =>
+			b.addEventListener('click', async () => {
+				hoja.querySelectorAll('[role="radio"]').forEach((x) => x.setAttribute('aria-checked', String(x === b)));
+				await elegir(b.dataset.nivel);
+				setTimeout(cerrarHoja, 180);
+			})
+		);
+		raiz.append(velo, hoja);
+		hoja.querySelector('[aria-checked="true"]')?.focus();
+	};
+
+	const actualizar = () => {
+		pendiente = false;
+		// el modo voz que está a la vista: su píldora de estado y, justo después, su fila de botones
+		const avatar = [...document.querySelectorAll('button.sk-voz-boton')].find((b) => b.getClientRects().length);
+		const raiz = avatar?.closest('.max-w-lg') ?? avatar?.closest('.flex-col')?.parentElement;
+		const estado = raiz?.querySelector("[role='status'][aria-live]");
+		const fila = estado?.nextElementSibling;
+		const c = chip();
+		document.querySelectorAll('.sk-voz-razonar').forEach((b) => {
+			if (b.parentElement !== fila) b.remove();
+		});
+		let boton = fila?.querySelector(':scope > .sk-voz-razonar');
+		if (!fila || !c) {
+			boton?.remove();
+			if (!avatar) cerrarHoja();
+			return;
+		}
+		if (!boton) {
+			boton = document.createElement('button');
+			boton.type = 'button';
+			boton.className = 'rounded-full sk-voz-razonar';
+			boton.setAttribute('aria-label', 'Razonar');
+			boton.innerHTML = `${ICONO}<span class="sk-voz-razonar-nivel"></span>`;
+			boton.addEventListener('click', () => {
+				const voz = [...document.querySelectorAll('button.sk-voz-boton')].find((b) => b.getClientRects().length);
+				abrirHoja(voz?.closest('.max-w-lg')?.parentElement ?? voz?.closest('.max-w-lg') ?? document.body);
+			});
+		}
+		// siempre entre Cámara y Silenciar: Open WebUI arma la fila por partes, así que se reacomoda en cada cambio
+		const arriba = (b) => {
+			while (b && b.parentElement !== fila) b = b.parentElement;
+			return b;
+		};
+		const botones = [...fila.querySelectorAll('button[aria-label]')].filter((b) => b !== boton);
+		const camara = arriba(botones.find((b) => /camera|c[aá]mara/i.test(b.getAttribute('aria-label'))));
+		const mute = arriba(botones.find((b) => /^(un)?mute$|silenc|activar mic/i.test(b.getAttribute('aria-label'))));
+		if (camara) {
+			if (camara.nextElementSibling !== boton) camara.after(boton);
+		} else if (mute) {
+			if (boton.nextElementSibling !== mute) fila.insertBefore(boton, mute);
+		} else if (boton.parentElement !== fila) fila.prepend(boton);
+		const clave = c.dataset.skNivel || '';
+		const texto = nombreNivel(clave);
+		const etiqueta = boton.querySelector('.sk-voz-razonar-nivel');
+		if (etiqueta.textContent !== texto) etiqueta.textContent = texto;
+		const apagado = clave === 'apagado';
+		if (boton.classList.contains('sk-apagada') !== apagado) boton.classList.toggle('sk-apagada', apagado);
+		const hoja = document.querySelector('.sk-voz-hoja');
+		hoja?.querySelectorAll('[role="radio"]').forEach((x) => {
+			const marcado = String(x.dataset.nivel === clave);
+			if (x.getAttribute('aria-checked') !== marcado && !hoja.dataset.eligiendo) x.setAttribute('aria-checked', marcado);
+		});
+	};
+
+	document.addEventListener('keydown', (e) => {
+		if (e.key === 'Escape' && document.querySelector('.sk-voz-hoja') && !document.documentElement.classList.contains('sk-encendiendo')) cerrarHoja();
+	});
+
+	/*
+	 * Al iniciar el modo voz el razonamiento pasa a Apagado (responde sin pensar antes) y al salir vuelve al nivel que
+	 * tenías. El nivel anterior se guarda en el navegador, así que también vuelve si la página se recarga a media llamada.
+	 */
+	const CLAVE_PREVIO = 'sk-voz-nivel-previo';
+	let enVoz = false;
+	let ocupado = false;
+	const modeloActual = () => document.querySelector('#model-selector-model-button')?.textContent.trim() || '';
+	const leerPrevio = () => {
+		try {
+			return JSON.parse(localStorage.getItem(CLAVE_PREVIO) || 'null');
+		} catch {
+			return null;
+		}
+	};
+	const guardarPrevio = (valor) => {
+		try {
+			if (valor) localStorage.setItem(CLAVE_PREVIO, JSON.stringify(valor));
+			else localStorage.removeItem(CLAVE_PREVIO);
+		} catch {
+			// sin localStorage: solo dura mientras la página siga abierta
+		}
+	};
+	const vigilarVoz = async () => {
+		if (ocupado) return;
+		const activo = Boolean(document.querySelector('button.sk-voz-boton'));
+		const c = chip();
+		if (!c) return; // el modelo aún no carga sus niveles: se intenta en el siguiente cambio
+		const nivel = c.dataset.skNivel || '';
+		ocupado = true;
+		try {
+			if (activo && !enVoz) {
+				enVoz = true;
+				if (!leerPrevio() && nivel && nivel !== 'apagado') {
+					guardarPrevio({ nivel, modelo: modeloActual() });
+					await elegir('apagado');
+				}
+			} else if (!activo) {
+				enVoz = false;
+				const previo = leerPrevio();
+				if (previo) {
+					guardarPrevio(null);
+					if (previo.modelo === modeloActual() && nivel !== previo.nivel) await elegir(previo.nivel);
+				}
+			}
+		} finally {
+			ocupado = false;
+		}
+	};
+
+	new MutationObserver(() => {
+		if (pendiente) return;
+		pendiente = true;
+		requestAnimationFrame(() => {
+			actualizar();
+			vigilarVoz();
+		});
+	}).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-sk-nivel', 'data-sk-voz'] });
 })();
