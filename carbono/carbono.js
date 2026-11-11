@@ -1,5 +1,5 @@
 /*
- * Carbono 0.89 — comportamiento del tema. El lanzador lo sirve en /static/loader.js
+ * Carbono 0.90 — comportamiento del tema. El lanzador lo sirve en /static/loader.js
  * (que Open WebUI carga en cada página) mientras exista carbono/ACTIVO.
  *
  * Barras de desplazamiento que solo aparecen mientras haces scroll: carbono.css las deja
@@ -166,6 +166,7 @@ function skVisible(selector) {
 		boton.classList.toggle('sk-razonamiento', razona);
 		// "Apagado" cuenta como opción inactiva en el botón de opciones del teléfono
 		boton.classList.toggle('sk-apagado', razona && nivel === 'apagado');
+		if (razona && boton.dataset.skNivel !== nivel) boton.dataset.skNivel = nivel;
 		if (razona && envoltura.parentElement !== chips) {
 			envoltura.skOrigen = envoltura.parentElement;
 			envoltura.skSiguiente = envoltura.nextSibling;
@@ -261,8 +262,9 @@ function skVisible(selector) {
 		const chips = skVisible(CHIPS);
 		const contenedor = chips?.querySelector(':scope > div');
 		if (contenedor) sincronizarApagadas(contenedor);
-		// Workspace no es un interruptor: no cuenta en el contador (en el teléfono va dentro del menú +)
-		const opciones = chips ? [...chips.querySelectorAll("button:not([aria-label='Choose working directory']):not(:has(path[d^='M21.75 6.75']))")] : [];
+		// Workspace, Web e Intérprete de código viven en el menú +: no cuentan en el contador
+		// en el teléfono Open Terminal vive en el menú +: tampoco cuenta
+		const opciones = (chips ? [...chips.querySelectorAll("button:not([aria-label='Choose working directory']):not(:has(path[d^='M21.75 6.75'])):not(:has(path[d^='M12 21a9.004'])):not([aria-label*='rprete de c' i]):not([aria-label*='code interpreter' i]):not(.sk-fantasma[data-tipo='web'])")] : []).filter((o) => !(window.matchMedia('(max-width: 767px)').matches && o.querySelector("path[d^='M12 4C6 4 6 8']")));
 		let activas = 0;
 		for (const opcion of opciones) {
 			const activa = estaActiva(opcion);
@@ -300,7 +302,74 @@ function skVisible(selector) {
 		}
 		const resumen = `${activas} de ${opciones.length} activas`;
 		if (chips && chips.dataset.activas !== resumen) chips.dataset.activas = resumen;
+		sueltos(composer, izquierda, boton, opciones.length);
+		compactos(composer, chips);
 	};
+
+	/*
+	 * Teléfono: si en la fila caben las opciones como íconos de 40 px, van sueltas (.sk-chips-sueltos) en lugar de
+	 * juntarse en el botón "3/4". Se mide con lo que ocupa lo demás (+, modelo con su nombre completo, micrófono y
+	 * voz), no con el estado actual, para que no cambie de un modo a otro sin motivo.
+	 */
+	const telefono = window.matchMedia('(max-width: 767px)');
+	const sueltos = (composer, izquierda, boton, n) => {
+		if (composer.classList.contains('sk-opciones-abiertas')) return;
+		let caben = false;
+		const fila = izquierda.parentElement;
+		if (telefono.matches && n > 0 && fila) {
+			const ancho = (el) => el.getBoundingClientRect().width;
+			// la fila (div[dir=ltr]) no tiene caja propia (mide 0 px): su ancho real va del borde izquierdo del primer
+			// grupo (+) al borde derecho del último (modelo, micrófono y voz, que se estira hasta el final)
+			const hijos = [...fila.children].filter((h) => h.getClientRects().length);
+			if (hijos.length < 2) return;
+			const caja = fila.getBoundingClientRect().width ? fila : fila.parentElement;
+			const separacion = parseFloat(getComputedStyle(caja).columnGap) || 0;
+			const lado = hijos[hijos.length - 1].getBoundingClientRect().right - hijos[0].getBoundingClientRect().left;
+			let libre = lado - hijos.reduce((t, h) => t + ancho(h), 0) - (hijos.length - 1) * separacion;
+			// más lo que el contenedor del modelo se estira de sobra (el chip del modelo con su nombre completo)
+			const modelo = [...fila.querySelectorAll('#model-selector-model-button > div')].find((m) => m.getClientRects().length);
+			if (modelo) {
+				let contenedor = modelo;
+				while (contenedor.parentElement && contenedor.parentElement.parentElement !== fila && contenedor.parentElement !== fila)
+					contenedor = contenedor.parentElement;
+				const nombre = [...modelo.querySelectorAll('*')].find((e) => e.scrollWidth > e.clientWidth + 1);
+				const natural = ancho(modelo) + (nombre ? nombre.scrollWidth - nombre.clientWidth : 0);
+				libre += Math.max(0, ancho(contenedor) - natural - 4);
+			}
+			// lo que ya ocupan las opciones ahora (el botón "3/4" o los íconos sueltos)
+			const chips = fila.children[1];
+			const actual = composer.classList.contains('sk-chips-sueltos') && chips ? ancho(chips) + 2 : ancho(boton) + 2;
+			const necesario = n * 40 + (n - 1) * 4 + 2;
+			caben = libre + actual >= necesario + 4;
+		}
+		if (composer.classList.contains('sk-chips-sueltos') !== caben) composer.classList.toggle('sk-chips-sueltos', caben);
+	};
+	/*
+	 * Escritorio: si los chips con texto no caben en su espacio (la fila se recortaba y escondía alguno tras el
+	 * desvanecido), van como bolitas (.sk-chips-compactos). Se recuerda qué ancho de caja hacía falta con texto para
+	 * volver a ponerlo solo cuando de verdad quepa (sin parpadeo entre un modo y otro).
+	 */
+	const compactos = (composer, chips) => {
+		let compacto = false;
+		if (!telefono.matches && chips) {
+			const firma = String(chips.querySelectorAll('button').length);
+			if (composer.dataset.skChipsFirma !== firma) {
+				composer.dataset.skChipsFirma = firma;
+				delete composer.dataset.skAnchoTexto;
+				composer.classList.remove('sk-chips-compactos');
+			}
+			const ancho = composer.clientWidth;
+			if (composer.classList.contains('sk-chips-compactos')) {
+				compacto = ancho < Number(composer.dataset.skAnchoTexto || 0);
+			} else if (chips.scrollWidth > chips.clientWidth + 1) {
+				composer.dataset.skAnchoTexto = String(ancho + (chips.scrollWidth - chips.clientWidth) + 12);
+				compacto = true;
+			}
+		}
+		if (composer.classList.contains('sk-chips-compactos') !== compacto) composer.classList.toggle('sk-chips-compactos', compacto);
+	};
+	telefono.addEventListener('change', () => requestAnimationFrame(actualizar));
+	window.addEventListener('resize', () => requestAnimationFrame(actualizar));
 
 	/*
 	 * Open WebUI quita el chip de Web al apagarla (y el de Herramientas si no hay ninguna elegida), así que
@@ -308,7 +377,6 @@ function skVisible(selector) {
 	 * (.sk-fantasma) que los vuelve a encender desde el menú de Integraciones (o el "+" desde 0.13.1).
 	 */
 	const APAGABLES = [
-		{ clave: 'web', icono: 'M12 21a9.004', nombre: 'Búsqueda web', menu: 'Búsqueda Web', cerrarMenu: true },
 		{ clave: 'imagen', icono: 'M21 7.6V20.4', nombre: 'Imagen', menu: 'Imagen', cerrarMenu: true }
 	];
 	let iconos = {};
@@ -345,7 +413,21 @@ function skVisible(selector) {
 		return el;
 	};
 
+	// Web e Intérprete de código viven en el menú +: se oculta su envoltorio entero (si solo se ocultara el botón,
+	// el envoltorio vacío seguiría ocupando un hueco de separación en la fila)
+	const SOLO_MENU =
+		"button:has(path[d^='M12 21a9.004']), button[aria-label*='rprete de c' i], button[aria-label*='code interpreter' i]";
+	const ocultarSoloMenu = (contenedor) => {
+		for (const hijo of contenedor.children) {
+			const oculto = Boolean(hijo.matches(SOLO_MENU) || hijo.querySelector(SOLO_MENU)) && !hijo.querySelector('.sk-fantasma');
+			if (hijo.classList.contains('sk-chip-oculto') !== oculto) hijo.classList.toggle('sk-chip-oculto', oculto);
+			const terminal = Boolean(hijo.querySelector("path[d^='M12 4C6 4 6 8']")) && !hijo.querySelector('.sk-fantasma');
+			if (hijo.classList.contains('sk-chip-menu-tel') !== terminal) hijo.classList.toggle('sk-chip-menu-tel', terminal);
+		}
+	};
+
 	const sincronizarApagadas = (contenedor) => {
+		ocultarSoloMenu(contenedor);
 		let anterior = null; // el chip (real o apagado) tras el que va el siguiente, para conservar el orden
 		for (const apagable of APAGABLES) {
 			const real = [...contenedor.querySelectorAll('button:not(.sk-fantasma)')].find((b) =>
@@ -766,15 +848,18 @@ function skVisible(selector) {
 	const TEXTOS = {
 		'No folder': 'Sin carpeta',
 		'Open folder': 'Abrir carpeta…',
-		'Add Context': 'Añadir contexto',
-		'Subir Archivos': 'Subir archivos',
-		Captura: 'Captura de pantalla',
+		// los tres botones de arriba del menú + llevan un nombre corto
+		'Add Context': 'Contexto',
+		'Añadir contexto': 'Contexto',
+		'Subir Archivos': 'Archivos',
+		'Subir archivos': 'Archivos',
+		Captura: 'Captura',
+		'Captura de pantalla': 'Captura',
 		'Búsqueda Web': 'Búsqueda web',
 		'Permisos de Herramientas': 'Permisos de Open Terminal'
 	};
 	const SUBTITULOS = {
-		'Sin carpeta': 'El chat no usa ninguna carpeta',
-		'Añadir contexto': 'Notas, chats o conocimiento'
+		'Sin carpeta': 'El chat no usa ninguna carpeta'
 	};
 	let pendiente = false;
 
@@ -854,6 +939,8 @@ function skVisible(selector) {
 		if (!menu) return;
 		const carpeta = skVisible(CARPETA);
 		let fila = menu.querySelector('.sk-menu-workspace');
+		filaTerminal(menu);
+		marcarApagadas(menu);
 		if (!telefono.matches || !carpeta) {
 			fila?.remove();
 			return;
@@ -875,11 +962,144 @@ function skVisible(selector) {
 			});
 			grupo.appendChild(fila);
 		}
+		const terminal = menu.querySelector('.sk-menu-terminal');
+		if (terminal && fila.nextElementSibling !== terminal) fila.after(terminal);
+		rotuloTrabajo(menu);
 		const sub = fila.querySelector('.sk-workspace-sub');
 		const texto = nombre || 'Sin carpeta';
 		if (sub && sub.textContent !== texto) sub.textContent = texto;
 		const etiqueta = `Workspace: ${texto}`;
 		if (fila.getAttribute('aria-label') !== etiqueta) fila.setAttribute('aria-label', etiqueta);
+	};
+
+	// Open Terminal: en el teléfono su chip sale de la caja y vive aquí, debajo de Workspace
+	const TERMINAL = ":is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) button:has(path[d^='M12 4C6 4 6 8'])";
+	// opciones apagadas del menú +: insignia gris y nombre atenuado (lienzo "Menú + con todo apagado")
+	const marcarApagadas = (menu) => {
+		const poner = (el, apagada) => {
+			if (el && el.classList.contains('sk-apagada') !== apagada) el.classList.toggle('sk-apagada', apagada);
+		};
+		for (const fila of menu.querySelectorAll("[role='menuitemcheckbox']")) {
+			const codigo = /rprete de c|code interpreter/i.test(fila.textContent);
+			if (fila.classList.contains('sk-fila-codigo') !== codigo) fila.classList.toggle('sk-fila-codigo', codigo);
+			poner(fila, fila.getAttribute('aria-checked') !== 'true');
+		}
+		const herramientas = menu.querySelector("[role='menuitem']:has(path[d^='M21.75 6.75'])");
+		if (herramientas) {
+			const elegidas = /([1-9]\d*)\s+seleccionad/i.test(herramientas.textContent);
+			poner(herramientas, !elegidas);
+			const titulo = herramientas.querySelector(':scope > div.justify-between > :first-child');
+			if (titulo && !elegidas && !titulo.dataset.skSub) {
+				titulo.dataset.skSub = 'Ninguna seleccionada';
+				titulo.classList.add('sk-con-subtitulo', 'sk-sub-ninguna');
+			} else if (titulo && elegidas && titulo.classList.contains('sk-sub-ninguna')) {
+				delete titulo.dataset.skSub;
+				titulo.classList.remove('sk-con-subtitulo', 'sk-sub-ninguna');
+			}
+		}
+		const workspace = menu.querySelector('.sk-menu-workspace');
+		if (workspace) poner(workspace, /sin carpeta/i.test(workspace.querySelector('.sk-workspace-sub')?.textContent || ''));
+	};
+
+	// rótulo "Trabajo" antes de Workspace y Open Terminal
+	const rotuloTrabajo = (menu) => {
+		const primera = menu.querySelector('.sk-menu-workspace') ?? menu.querySelector('.sk-menu-terminal');
+		let rotulo = menu.querySelector('.sk-menu-trabajo');
+		if (!primera) {
+			rotulo?.remove();
+			return;
+		}
+		if (!rotulo) {
+			rotulo = document.createElement('div');
+			rotulo.className = 'sk-menu-trabajo';
+			rotulo.setAttribute('role', 'presentation');
+			rotulo.textContent = 'Trabajo';
+		}
+		if (primera.previousElementSibling !== rotulo) primera.before(rotulo);
+	};
+
+	const filaTerminal = (menu) => {
+		const chip = skVisible(TERMINAL);
+		let fila = menu.querySelector('.sk-menu-terminal');
+		if (!telefono.matches || !chip) {
+			fila?.remove();
+			rotuloTrabajo(menu);
+			return;
+		}
+		if (!fila) {
+			fila = document.createElement('button');
+			fila.type = 'button';
+			fila.setAttribute('role', 'menuitemcheckbox');
+			fila.className = 'sk-menu-terminal';
+			// el ícono del chip trae clases de tamaño (size-3.5): se copia limpio para que tome la insignia del menú
+			const svg = chip.querySelector('svg')?.cloneNode(true);
+			svg?.removeAttribute('class');
+			svg?.setAttribute('stroke-width', '2');
+			const icono = svg?.outerHTML ?? '';
+			fila.innerHTML = `${icono}<div class="sk-terminal-textos"><div>Open Terminal</div><div class="sk-terminal-sub"></div></div><span class="sk-imagen-switch" aria-hidden="true"><span></span></span>`;
+			fila.addEventListener('click', (e) => {
+				e.stopPropagation();
+				alternarTerminal();
+			});
+			const grupo = menu.querySelector("button:has(path[d^='M21.75 6.75'])")?.parentElement;
+			if (!grupo) return;
+			grupo.appendChild(fila);
+		}
+		// siempre justo debajo de Workspace (si está), dentro de Herramientas
+		const workspace = menu.querySelector('.sk-menu-workspace');
+		if (workspace && workspace.nextElementSibling !== fila) workspace.after(fila);
+		rotuloTrabajo(menu);
+		const elegida = !chip.classList.contains('opacity-50');
+		const nombre = elegida ? chip.querySelector('span')?.textContent.trim() || chip.getAttribute('aria-label') || '' : '';
+		if (nombre) {
+			try {
+				localStorage.setItem('sk-terminal-ultima', nombre);
+			} catch {
+				// sin localStorage: al encender se elige la primera terminal
+			}
+		}
+		const texto = nombre || 'Sin terminal';
+		const sub = fila.querySelector('.sk-terminal-sub');
+		if (sub && sub.textContent !== texto) sub.textContent = texto;
+		fila.setAttribute('aria-checked', elegida ? 'true' : 'false');
+		fila.querySelector('.sk-imagen-switch')?.setAttribute('aria-checked', elegida ? 'true' : 'false');
+		if (fila.classList.contains('sk-apagada') === elegida) fila.classList.toggle('sk-apagada', !elegida);
+		const etiqueta = `Open Terminal: ${texto}`;
+		if (fila.getAttribute('aria-label') !== etiqueta) fila.setAttribute('aria-label', etiqueta);
+	};
+
+	// encender/apagar: se abre invisible el selector de terminal de Open WebUI y se toca la terminal (tocar la
+	// elegida la quita); así se guarda igual que desde el chip
+	const alternarTerminal = async () => {
+		const chip = skVisible(TERMINAL);
+		if (!chip) return;
+		const elegida = !chip.classList.contains('opacity-50');
+		const actual = elegida ? chip.querySelector('span')?.textContent.trim() || chip.getAttribute('aria-label') || '' : '';
+		let ultima = '';
+		try {
+			ultima = localStorage.getItem('sk-terminal-ultima') || '';
+		} catch {
+			// sin localStorage
+		}
+		document.documentElement.classList.add('sk-encendiendo');
+		document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+		await new Promise((r) => setTimeout(r, 150));
+		chip.click();
+		for (let intento = 0; intento < 30; intento++) {
+			await new Promise((r) => setTimeout(r, 50));
+			const opciones = [...document.querySelectorAll("[role='menu'] .app-dropdown-menu button")].filter(
+				(b) => !b.closest('.sk-menu-mas') && b.textContent.trim() && !/add terminal|agregar terminal|añadir terminal/i.test(b.getAttribute('aria-label') || '')
+			);
+			if (!opciones.length) continue;
+			const nombreDe = (b) => b.textContent.trim();
+			const objetivo = elegida
+				? opciones.find((b) => nombreDe(b) === actual) ?? opciones.find((b) => nombreDe(b).startsWith(actual))
+				: opciones.find((b) => nombreDe(b) === ultima) ?? opciones[0];
+			if (objetivo) objetivo.click();
+			else document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+			break;
+		}
+		setTimeout(() => document.documentElement.classList.remove('sk-encendiendo'), 300);
 	};
 
 	new MutationObserver(() => {
@@ -979,6 +1199,90 @@ function skVisible(selector) {
 		});
 	};
 
+	// Open Terminal: en el teléfono su chip sale de la caja y vive aquí, debajo de Workspace
+	const TERMINAL = ":is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) button:has(path[d^='M12 4C6 4 6 8'])";
+	// opciones apagadas del menú +: insignia gris y nombre atenuado (lienzo "Menú + con todo apagado")
+	const marcarApagadas = (menu) => {
+		const poner = (el, apagada) => {
+			if (el && el.classList.contains('sk-apagada') !== apagada) el.classList.toggle('sk-apagada', apagada);
+		};
+		for (const fila of menu.querySelectorAll("[role='menuitemcheckbox']")) {
+			const codigo = /rprete de c|code interpreter/i.test(fila.textContent);
+			if (fila.classList.contains('sk-fila-codigo') !== codigo) fila.classList.toggle('sk-fila-codigo', codigo);
+			poner(fila, fila.getAttribute('aria-checked') !== 'true');
+		}
+		const herramientas = menu.querySelector("[role='menuitem']:has(path[d^='M21.75 6.75'])");
+		if (herramientas) {
+			const elegidas = /([1-9]\d*)\s+seleccionad/i.test(herramientas.textContent);
+			poner(herramientas, !elegidas);
+			const titulo = herramientas.querySelector(':scope > div.justify-between > :first-child');
+			if (titulo && !elegidas && !titulo.dataset.skSub) {
+				titulo.dataset.skSub = 'Ninguna seleccionada';
+				titulo.classList.add('sk-con-subtitulo', 'sk-sub-ninguna');
+			} else if (titulo && elegidas && titulo.classList.contains('sk-sub-ninguna')) {
+				delete titulo.dataset.skSub;
+				titulo.classList.remove('sk-con-subtitulo', 'sk-sub-ninguna');
+			}
+		}
+		const workspace = menu.querySelector('.sk-menu-workspace');
+		if (workspace) poner(workspace, /sin carpeta/i.test(workspace.querySelector('.sk-workspace-sub')?.textContent || ''));
+	};
+
+	// rótulo "Trabajo" antes de Workspace y Open Terminal
+	const rotuloTrabajo = (menu) => {
+		const primera = menu.querySelector('.sk-menu-workspace') ?? menu.querySelector('.sk-menu-terminal');
+		let rotulo = menu.querySelector('.sk-menu-trabajo');
+		if (!primera) {
+			rotulo?.remove();
+			return;
+		}
+		if (!rotulo) {
+			rotulo = document.createElement('div');
+			rotulo.className = 'sk-menu-trabajo';
+			rotulo.setAttribute('role', 'presentation');
+			rotulo.textContent = 'Trabajo';
+		}
+		if (primera.previousElementSibling !== rotulo) primera.before(rotulo);
+	};
+
+	const filaTerminal = (menu) => {
+		const chip = skVisible(TERMINAL);
+		let fila = menu.querySelector('.sk-menu-terminal');
+		if (!telefono.matches || !chip) {
+			fila?.remove();
+			rotuloTrabajo(menu);
+			return;
+		}
+		if (!fila) {
+			fila = document.createElement('button');
+			fila.type = 'button';
+			fila.setAttribute('role', 'menuitem');
+			fila.className = 'sk-menu-terminal';
+			const icono = chip.querySelector('svg')?.outerHTML ?? '';
+			fila.innerHTML = `${icono}<div class="justify-between"><div>Open Terminal</div><div><div class="sk-terminal-sub"></div>${SVG_FLECHA}</div></div>`;
+			fila.addEventListener('click', (e) => {
+				e.stopPropagation();
+				document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+				setTimeout(() => skVisible(TERMINAL)?.click(), 120);
+			});
+			const grupo = menu.querySelector("button:has(path[d^='M21.75 6.75'])")?.parentElement;
+			if (!grupo) return;
+			grupo.appendChild(fila);
+		}
+		// siempre justo debajo de Workspace (si está), dentro de Herramientas
+		const workspace = menu.querySelector('.sk-menu-workspace');
+		if (workspace && workspace.nextElementSibling !== fila) workspace.after(fila);
+		rotuloTrabajo(menu);
+		const elegida = !chip.classList.contains('opacity-50');
+		const nombre = elegida ? chip.querySelector('span')?.textContent.trim() || chip.getAttribute('aria-label') || '' : '';
+		const texto = nombre || 'Sin terminal';
+		const sub = fila.querySelector('.sk-terminal-sub');
+		if (sub && sub.textContent !== texto) sub.textContent = texto;
+		if (fila.classList.contains('sk-apagada') === elegida) fila.classList.toggle('sk-apagada', !elegida);
+		const etiqueta = `Open Terminal: ${texto}`;
+		if (fila.getAttribute('aria-label') !== etiqueta) fila.setAttribute('aria-label', etiqueta);
+	};
+
 	new MutationObserver(() => {
 		if (pendiente) return;
 		pendiente = true;
@@ -1074,12 +1378,11 @@ function skVisible(selector) {
 	let configuracion = null;
 	let permitirClic = false;
 
+	// en el teléfono los chips están ocultos (Imagen vive en el menú +): si no hay uno visible vale el oculto
+	const primeroVisible = (lista) => lista.find((b) => b.getClientRects().length) ?? lista[0];
 	const chipReal = () =>
-		[...document.querySelectorAll(`${COMPOSER} button[aria-pressed]`)].find(
-			(b) => b.querySelector(ICONO) && b.getClientRects().length
-		);
-	const chipGris = () =>
-		[...document.querySelectorAll(`${COMPOSER} .sk-fantasma[data-tipo='imagen']`)].find((b) => b.getClientRects().length);
+		primeroVisible([...document.querySelectorAll(`${COMPOSER} button[aria-pressed]`)].filter((b) => b.querySelector(ICONO)));
+	const chipGris = () => primeroVisible([...document.querySelectorAll(`${COMPOSER} .sk-fantasma[data-tipo='imagen']`)]);
 	const encendida = () => Boolean(chipReal());
 
 	const cerrar = () => {
@@ -1217,4 +1520,422 @@ function skVisible(selector) {
 	document.addEventListener('keydown', (e) => {
 		if (e.key === 'Escape') cerrar();
 	});
+
+	// la fila Imagen del menú + del teléfono abre este panel y lee el tamaño elegido
+	window.skImagen = {
+		abrir: () => {
+			const chip = chipReal() ?? chipGris();
+			if (chip) abrir(chip);
+		},
+		tamano: async () => {
+			if (!configuracion) {
+				try {
+					const res = await fetch('/api/v1/images/config', { headers: headers() });
+					if (res.ok) configuracion = await res.json();
+				} catch {
+					// sin permiso de administrador
+				}
+			}
+			return configuracion?.IMAGE_SIZE ?? '';
+		}
+	};
+})();
+
+/*
+ * Teléfono (lienzo "Menú + reorganizado" y "+ con mini insignias"): la caja de mensaje lleva solo el + con una
+ * bolita de color por opción activa; Imagen y Razonamiento pasan al menú + (Imagen con su tamaño, interruptor y
+ * flecha al panel de tamaños; Razonamiento con su nivel, que abre el selector de nivel).
+ */
+(() => {
+	const telefono = window.matchMedia('(max-width: 767px)');
+	const COMPOSER = ":is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper'])";
+	const ICONO_IMAGEN = "path[d^='M21 7.6V20.4']";
+	const NIVELES = { apagado: 'Apagado', bajo: 'Bajo', medio: 'Medio', alto: 'Alto', adaptable: 'Adaptable' };
+	const SVG_FLECHA =
+		'<svg class="sk-fila-flecha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m8.25 4.5 7.5 7.5-7.5 7.5"/></svg>';
+	let pendiente = false;
+	let tamano = '';
+	let pidiendoTamano = false;
+
+	const activas = (composer) => {
+		const chips = composer.querySelector(":scope > div[dir='ltr'] > div:nth-child(2)");
+		if (!chips) return [];
+		const lista = [];
+		const herr = chips.querySelector("button:has(path[d^='M21.75 6.75'])");
+		if (herr && /[1-9]/.test(herr.textContent)) lista.push('herramientas');
+		if (chips.querySelector("button:not(.sk-fantasma):has(path[d^='M12 21a9.004'])")) lista.push('web');
+		if (chips.querySelector(`button[aria-pressed='true']:has(${ICONO_IMAGEN})`)) lista.push('imagen');
+		if (chips.querySelector("button[aria-pressed='true']:is([aria-label*='rprete de c' i], [aria-label*='code interpreter' i])")) lista.push('codigo');
+		const razona = chips.querySelector('button.sk-razonamiento');
+		if (razona && !razona.classList.contains('sk-apagado')) lista.push('razonamiento');
+		const terminal = chips.querySelector("button:has(path[d^='M12 4C6 4 6 8'])");
+		if (terminal && !terminal.classList.contains('opacity-50')) lista.push('terminal');
+		return lista;
+	};
+
+	const insigniasMas = () => {
+		document.querySelectorAll(COMPOSER).forEach((composer) => {
+			const mas = composer.querySelector("#input-menu-button, [id$='-input-menu-button']");
+			if (!mas) return;
+			let caja = mas.querySelector('.sk-mas-insignias');
+			const lista = telefono.matches ? activas(composer) : [];
+			const firma = lista.join(',');
+			if (!caja && !lista.length) return;
+			if (!caja) {
+				caja = document.createElement('span');
+				caja.className = 'sk-mas-insignias';
+				caja.setAttribute('aria-hidden', 'true');
+				mas.appendChild(caja);
+			}
+			if (caja.dataset.firma === firma) return;
+			caja.dataset.firma = firma;
+			caja.innerHTML = lista.map((t) => `<i class="sk-insignia-${t}"></i>`).join('');
+			mas.classList.toggle('sk-mas-con-insignias', lista.length > 0);
+		});
+	};
+
+	const fila = (menu, clase, crear) => {
+		let el = menu.querySelector(`.${clase}`);
+		if (el) return el;
+		const grupo = menu.querySelector("button:has(path[d^='M21.75 6.75'])")?.parentElement;
+		if (!grupo) return null;
+		el = crear();
+		el.classList.add(clase);
+		grupo.appendChild(el);
+		return el;
+	};
+
+	const filasMenu = () => {
+		const menu = document.querySelector('.app-dropdown-menu.sk-menu-mas');
+		if (!menu) return;
+		if (!telefono.matches) {
+			menu.querySelectorAll('.sk-menu-imagen, .sk-menu-razonamiento-fila').forEach((e) => e.remove());
+			return;
+		}
+		const composer = skVisible(COMPOSER);
+		if (!composer) return;
+
+		// Imagen: solo si Open WebUI la ofrece (su opción nativa está en el menú, oculta)
+		const nativa = menu.querySelector(`[role='menuitemcheckbox']:has(${ICONO_IMAGEN}):not(.sk-menu-imagen)`);
+		if (nativa) {
+			const img = fila(menu, 'sk-menu-imagen', () => {
+				const b = document.createElement('button');
+				b.type = 'button';
+				b.setAttribute('role', 'menuitemcheckbox');
+				const svg = nativa.querySelector('svg')?.cloneNode(true);
+				svg?.removeAttribute('class');
+				b.innerHTML = `${svg?.outerHTML ?? ''}<div class="sk-fila-textos"><div>Imagen</div><div class="sk-fila-sub"></div></div>${SVG_FLECHA}<span class="sk-imagen-switch" aria-hidden="true"><span></span></span>`;
+				b.addEventListener('click', (e) => {
+					e.stopPropagation();
+					if (e.target.closest('.sk-imagen-switch')) {
+						menu.querySelector(`[role='menuitemcheckbox']:has(${ICONO_IMAGEN}):not(.sk-menu-imagen)`)?.click();
+						return;
+					}
+					document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+					setTimeout(() => window.skImagen?.abrir(), 150);
+				});
+				return b;
+			});
+			if (img) {
+				const on = nativa.getAttribute('aria-checked') === 'true';
+				img.setAttribute('aria-checked', on ? 'true' : 'false');
+				img.querySelector('.sk-imagen-switch')?.setAttribute('aria-checked', on ? 'true' : 'false');
+				if (img.classList.contains('sk-apagada') === on) img.classList.toggle('sk-apagada', !on);
+				if (!tamano && !pidiendoTamano && window.skImagen) {
+					pidiendoTamano = true;
+					window.skImagen.tamano().then((t) => {
+						tamano = t;
+						programar();
+					});
+				}
+				const sub = img.querySelector('.sk-fila-sub');
+				const texto = tamano ? tamano.replace('x', '×') : '';
+				if (sub && sub.textContent !== texto) sub.textContent = texto;
+			}
+		}
+
+		// Razonamiento: solo con un modelo que razona
+		const chip = composer.querySelector('button.sk-razonamiento');
+		let raz = menu.querySelector('.sk-menu-razonamiento-fila');
+		if (!chip) raz?.remove();
+		else {
+			raz = fila(menu, 'sk-menu-razonamiento-fila', () => {
+				const b = document.createElement('button');
+				b.type = 'button';
+				b.setAttribute('role', 'menuitem');
+				const svg = chip.querySelector('svg')?.cloneNode(true);
+				svg?.removeAttribute('class');
+				b.innerHTML = `${svg?.outerHTML ?? ''}<div class="sk-fila-textos"><div>Razonamiento</div><div class="sk-fila-sub"></div></div>${SVG_FLECHA}`;
+				b.addEventListener('click', (e) => {
+					e.stopPropagation();
+					document.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+					setTimeout(() => skVisible(`${COMPOSER} button.sk-razonamiento`)?.click(), 150);
+				});
+				return b;
+			});
+			if (raz) {
+				const nivel = chip.dataset.skNivel || '';
+				const apagado = chip.classList.contains('sk-apagado');
+				if (raz.classList.contains('sk-apagada') !== apagado) raz.classList.toggle('sk-apagada', apagado);
+				const sub = raz.querySelector('.sk-fila-sub');
+				const texto = NIVELES[nivel] ?? (nivel ? nivel[0].toUpperCase() + nivel.slice(1) : '');
+				if (sub && sub.textContent !== texto) sub.textContent = texto;
+			}
+		}
+	};
+
+	const actualizar = () => {
+		pendiente = false;
+		insigniasMas();
+		filasMenu();
+	};
+	const programar = () => {
+		if (pendiente) return;
+		pendiente = true;
+		requestAnimationFrame(actualizar);
+	};
+	new MutationObserver(programar).observe(document.documentElement, {
+		childList: true,
+		subtree: true,
+		attributes: true,
+		attributeFilter: ['aria-pressed', 'aria-checked', 'class']
+	});
+	telefono.addEventListener('change', programar);
+})();
+
+/*
+ * Bienvenida con pétalos por modelo (lienzo "Pétalos por modelo"): en la pantalla de nuevo chat el
+ * avatar del modelo va grande y centrado, con pétalos y sombra en los colores de su ícono. Los colores se sacan del
+ * propio avatar (dibujado en un lienzo de 32 × 32, ~1 ms) cada vez que cambia, así que un ícono nuevo o un modelo
+ * nuevo toma sus colores solo; el último resultado se guarda para pintarlo al instante.
+ */
+(() => {
+	const PETALO = 'M12 2c3 3 4 7 0 12C8 9 9 5 12 2z';
+	// [izquierda, arriba, tamaño, giro, opacidad, tono] sobre una caja de 170 px con el avatar de 140 px al centro
+	const PETALOS = [
+		[-10, 20, 26, -30, 0.9, 'claro'],
+		[150, 0, 22, 40, 0.8, 'fuerte'],
+		[170, 110, 28, 110, 0.85, 'claro'],
+		[-24, 120, 20, 200, 0.7, 'fuerte'],
+		[60, -26, 18, 10, 0.75, 'claro'],
+		[120, 170, 18, 160, 0.6, 'fuerte'],
+		[10, 175, 16, 250, 0.6, 'claro']
+	];
+	const CLAVE = 'sk-petalos-colores';
+	let cache = {};
+	try {
+		cache = JSON.parse(localStorage.getItem(CLAVE) || '{}');
+	} catch {
+		// sin localStorage: se calcula en cada carga
+	}
+	let pendiente = false;
+
+	const hsl = (r, g, b) => {
+		r /= 255;
+		g /= 255;
+		b /= 255;
+		const max = Math.max(r, g, b);
+		const min = Math.min(r, g, b);
+		const l = (max + min) / 2;
+		if (max === min) return [0, 0, l];
+		const d = max - min;
+		const s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+		let h;
+		if (max === r) h = (g - b) / d + (g < b ? 6 : 0);
+		else if (max === g) h = (b - r) / d + 2;
+		else h = (r - g) / d + 4;
+		return [h * 60, s, l];
+	};
+
+	// dos tonos dominantes del avatar: el más presente (claro) y otro de tono distinto si lo hay (fuerte)
+	const calcular = (img) => {
+		const lienzo = document.createElement('canvas');
+		lienzo.width = lienzo.height = 32;
+		const ctx = lienzo.getContext('2d', { willReadFrequently: true });
+		ctx.drawImage(img, 0, 0, 32, 32);
+		const datos = ctx.getImageData(0, 0, 32, 32).data;
+		const cubetas = Array.from({ length: 24 }, () => ({ peso: 0, s: 0, l: 0, x: 0, y: 0 }));
+		for (let i = 0; i < datos.length; i += 4) {
+			if (datos[i + 3] < 128) continue;
+			const [h, s, l] = hsl(datos[i], datos[i + 1], datos[i + 2]);
+			if (s < 0.18 || l < 0.12 || l > 0.93) continue; // blancos, negros y grises no cuentan
+			// tonos piel (anaranjado claro poco saturado): casi no cuentan, para que manden el pelo, la ropa y el fondo
+			const piel = h >= 10 && h <= 45 && l > 0.5 && s < 0.75;
+			const peso = s * (1 - Math.abs(l - 0.55)) * (piel ? 0.15 : 1);
+			const c = cubetas[Math.floor(h / 15) % 24];
+			c.peso += peso;
+			c.s += s * peso;
+			c.l += l * peso;
+			c.x += Math.cos((h * Math.PI) / 180) * peso;
+			c.y += Math.sin((h * Math.PI) / 180) * peso;
+		}
+		const orden = cubetas
+			.map((c, i) => ({ ...c, i }))
+			.filter((c) => c.peso > 0)
+			.sort((a, b) => b.peso - a.peso);
+		if (!orden.length) return { claro: 'hsl(220 14% 82%)', fuerte: 'hsl(220 14% 60%)', anillo: 'hsl(220 14% 92%)', sombra: 'hsl(220 14% 40% / 0.22)' };
+		const tono = (c) => ({
+			h: Math.round(((Math.atan2(c.y, c.x) * 180) / Math.PI + 360) % 360),
+			s: c.s / c.peso,
+			l: c.l / c.peso
+		});
+		const a = tono(orden[0]);
+		const distancia = (x, y) => Math.min(Math.abs(x - y), 360 - Math.abs(x - y));
+		// tono fuerte: de la misma familia que el claro pero más oscuro (rosa fuerte, rojo oscuro, azul marino…): el
+		// tono más presente a menos de 45° del principal y más oscuro que él; si no hay, el principal oscurecido
+		const cerca = orden.filter((c) => c !== orden[0] && distancia(tono(c).h, a.h) <= 45 && tono(c).l < a.l - 0.08);
+		const oscuro = cerca[0] ? tono(cerca[0]) : null;
+		const b = oscuro ? { ...oscuro, l: Math.min(0.5, Math.max(0.3, oscuro.l)) } : { ...a, l: 0.42 };
+		const sat = (s, max) => Math.round(Math.min(max, Math.max(0.6, s * 1.25)) * 100); // tonos vivos aunque el avatar sea suave
+		return {
+			claro: `hsl(${a.h} ${sat(a.s, 0.8)}% 78%)`,
+			fuerte: `hsl(${b.h} ${sat(b.s, 0.7)}% ${Math.round(b.l * 100)}%)`,
+			anillo: `hsl(${a.h} ${sat(a.s, 0.7)}% 90%)`,
+			sombra: `hsl(${a.h} ${sat(a.s, 0.7)}% 40% / 0.24)`
+		};
+	};
+
+	const pintar = (caja, c) => {
+		caja.style.setProperty('--sk-petalo-claro', c.claro);
+		caja.style.setProperty('--sk-petalo-fuerte', c.fuerte);
+		caja.style.setProperty('--sk-petalo-anillo', c.anillo);
+		caja.style.setProperty('--sk-petalo-sombra', c.sombra);
+	};
+
+	const preparar = () => {
+		pendiente = false;
+		const imgs = [...document.querySelectorAll("img[src^='/api/v1/models/model/profile/image']")].filter(
+			(i) => i.closest('div.flex.justify-start') && !i.closest('#sidebar, nav, [role="menu"], #message-input-container')
+		);
+		for (const img of imgs) {
+			const fila = img.closest('div.flex.justify-start');
+			const caja = fila?.parentElement;
+			if (!caja) continue;
+			// con varios modelos a la vez se deja la bienvenida de Open WebUI
+			const varios = fila.querySelectorAll('img').length > 1;
+			caja.classList.toggle('sk-bienvenida', !varios);
+			fila.classList.toggle('sk-bienvenida-avatar', !varios);
+			if (varios) continue;
+			const ancla = img.parentElement;
+			if (!ancla.querySelector(':scope > .sk-petalos')) {
+				const petalos = document.createElement('span');
+				petalos.className = 'sk-petalos';
+				petalos.setAttribute('aria-hidden', 'true');
+				petalos.innerHTML = PETALOS.map(
+					([x, y, t, g, o, tono]) =>
+						`<svg viewBox="0 0 24 24" style="left:${x}px;top:${y}px;width:${t}px;height:${t}px;transform:rotate(${g}deg);opacity:${o}"><path d="${PETALO}" fill="var(--sk-petalo-${tono})"/></svg>`
+				).join('');
+				ancla.appendChild(petalos);
+			}
+			const src = img.getAttribute('src');
+			if (cache[src] && caja.dataset.skPetalos !== src) pintar(caja, cache[src]);
+			const listo = () => {
+				if (caja.dataset.skPetalosHecho === src + img.naturalWidth) return;
+				caja.dataset.skPetalosHecho = src + img.naturalWidth;
+				try {
+					const c = calcular(img);
+					pintar(caja, c);
+					if (JSON.stringify(cache[src]) !== JSON.stringify(c)) {
+						cache[src] = c;
+						try {
+							localStorage.setItem(CLAVE, JSON.stringify(cache));
+						} catch {
+							// sin localStorage
+						}
+					}
+				} catch {
+					// imagen de otro origen: se queda con el color guardado o el de respaldo
+				}
+			};
+			caja.dataset.skPetalos = src;
+			if (img.complete && img.naturalWidth) listo();
+			else img.addEventListener('load', listo, { once: true });
+		}
+	};
+
+	new MutationObserver(() => {
+		if (pendiente) return;
+		pendiente = true;
+		requestAnimationFrame(preparar);
+	}).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['src'] });
+})();
+
+/*
+ * Ajustes en el teléfono: la fila de pestañas se desliza también con la rueda del ratón y arrastrando, marca con
+ * .sk-hay-mas que quedan pestañas a la derecha (desvanecido) y acomoda la pestaña activa a la vista.
+ */
+(() => {
+	const preparadas = new WeakSet();
+	let pendiente = false;
+
+	const marcar = (fila) => {
+		const hayMas = fila.scrollLeft + fila.clientWidth < fila.scrollWidth - 4;
+		if (fila.classList.contains('sk-hay-mas') !== hayMas) fila.classList.toggle('sk-hay-mas', hayMas);
+	};
+
+	const preparar = (fila) => {
+		if (preparadas.has(fila)) return;
+		preparadas.add(fila);
+		fila.addEventListener('scroll', () => marcar(fila), { passive: true });
+		// rueda vertical → desplazamiento horizontal (solo cuando la fila va en horizontal)
+		fila.addEventListener(
+			'wheel',
+			(e) => {
+				if (getComputedStyle(fila).flexDirection !== 'row' || Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+				fila.scrollLeft += e.deltaY;
+				e.preventDefault();
+			},
+			{ passive: false }
+		);
+		// arrastrar con el ratón; un arrastre de más de 5 px no cuenta como clic en la pestaña
+		let inicio = null;
+		let movido = false;
+		fila.addEventListener('pointerdown', (e) => {
+			if (e.pointerType !== 'mouse' || getComputedStyle(fila).flexDirection !== 'row') return;
+			inicio = { x: e.clientX, scroll: fila.scrollLeft };
+			movido = false;
+		});
+		window.addEventListener('pointermove', (e) => {
+			if (!inicio) return;
+			const dx = e.clientX - inicio.x;
+			if (Math.abs(dx) > 5) {
+				movido = true;
+				fila.classList.add('sk-arrastrando');
+			}
+			if (movido) fila.scrollLeft = inicio.scroll - dx;
+		});
+		window.addEventListener('pointerup', () => {
+			inicio = null;
+			fila.classList.remove('sk-arrastrando');
+		});
+		fila.addEventListener(
+			'click',
+			(e) => {
+				if (!movido) return;
+				movido = false;
+				e.preventDefault();
+				e.stopPropagation();
+			},
+			true
+		);
+	};
+
+	const actualizar = () => {
+		pendiente = false;
+		const fila = document.querySelector('#settings-tabs-container .tabs');
+		if (!fila) return;
+		preparar(fila);
+		marcar(fila);
+		const activa = fila.querySelector("[role='tab'][aria-selected='true']");
+		if (activa && getComputedStyle(fila).flexDirection === 'row' && fila.dataset.skActiva !== activa.textContent) {
+			fila.dataset.skActiva = activa.textContent;
+			activa.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+		}
+	};
+
+	new MutationObserver(() => {
+		if (pendiente) return;
+		pendiente = true;
+		requestAnimationFrame(actualizar);
+	}).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['aria-selected'] });
 })();

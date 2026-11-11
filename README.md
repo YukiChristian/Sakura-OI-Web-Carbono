@@ -1,6 +1,6 @@
 # Carbono para Open WebUI
 
-**Versión 0.89** · probado con Open WebUI **0.13.3**
+**Versión 0.90** · probado con Open WebUI **0.13.3**
 
 Carbono es el tema recomendado para [Sakura OI Web](https://github.com/YukiChristian/Sakura-OI-Web). Deja la interfaz de Open WebUI neutra (superficies en tonos carbón y zinc, acción principal en negro), con más jerarquía en el texto, tipografía Atkinson Hyperlegible, menús de vidrio esmerilado y un composer pensado para el teléfono.
 
@@ -44,6 +44,19 @@ La guía de estilo (principios, colores, tipografía y componentes) está en [do
 - **Rendimiento:** los selectores evitan buscar por el atributo `class` dentro de `:has()`, que obliga al navegador a recalcular toda la página en cada hover.
 
 ## Cambios
+
+### 0.90
+
+- **Menú «+» reorganizado:** arriba tres botones grises del mismo tamaño (Archivos · Captura · Contexto) con el ícono sobre el nombre; luego Herramientas (Herramientas, Búsqueda web, Intérprete de código) y al final Permisos. Las opciones apagadas llevan la insignia gris y el nombre atenuado; Herramientas sin ninguna elegida dice «Ninguna seleccionada».
+- **Teléfono, todo en el menú «+»:** la caja de mensaje lleva solo el «+» con una bolita de color por opción activa. Imagen (tamaño, interruptor y flecha al panel de tamaños) y Razonamiento (nivel) tienen su fila en el menú, y el grupo Trabajo reúne Workspace y Open Terminal (con interruptor: elige la última terminal o la quita).
+- **Búsqueda web e Intérprete de código solo en el menú «+»:** ya no tienen chip en la caja de mensaje.
+- **Chips apagados en gris:** insignia gris rellena; Open Terminal sin terminal conserva su nombre (desde 0.13.3 Open WebUI lo quitaba).
+- **Escritorio, caja angosta:** si los chips con texto no caben, pasan a bolitas de color de 30 px (antes se recortaban tras el desvanecido).
+- **Bienvenida con pétalos por modelo:** el avatar va grande y centrado con aro, sombra y siete pétalos en los colores de su ícono. Los colores se sacan del propio avatar (un lienzo de 32 × 32, ~0,1 ms) cada vez que cambia, así que un ícono o un modelo nuevo toma sus colores solo. El avatar ya no muestra la mano del cursor (el botón de Open WebUI no hacía nada).
+- **Barra lateral contraída de 60 px:** botones de 40 px, íconos de 19 px y avatares de 28 px, más fáciles de tocar.
+- **Campana de notificaciones** del mismo tamaño y trazo que el botón de la barra lateral, y separada de él.
+- **Ajustes en el teléfono:** la fila de pestañas se desliza con el dedo, la rueda o arrastrando, se desvanece a la derecha mientras haya más y la lupa es un botón visible.
+- **Panel de Imagen:** en el teléfono mide lo que necesita.
 
 ### 0.89
 

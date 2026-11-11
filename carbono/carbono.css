@@ -1,5 +1,5 @@
 /*
- * Carbono 0.89 — tema para Open WebUI (probado con 0.13.3).
+ * Carbono 0.90 — tema para Open WebUI (probado con 0.13.3).
  * https://github.com/YukiChristian/Sakura-OI-Web-Carbono
  *
  * El lanzador lo sirve en /static/custom.css mientras exista carbono/ACTIVO (ver README).
@@ -6969,19 +6969,11 @@ html.dark {
 	stroke-width: 1.8;
 }
 
-/* ---------- Imagen: chip apagado con contorno, panel de interruptor y tamaños ---------- */
+/* ---------- Imagen: chip apagado en gris, panel de interruptor y tamaños ---------- */
 @media (min-width: 768px) {
-	/* apagado (chip gris): contorno, ícono gris, sin relleno */
+	/* apagado (chip gris): insignia gris rellena con el ícono en blanco, como Open Terminal sin terminal */
 	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) button.sk-fantasma.sk-fantasma {
-		background: transparent;
 		color: var(--sk-ink-muted);
-		font-weight: 500;
-	}
-
-	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) button.sk-fantasma.sk-fantasma svg {
-		background: transparent !important;
-		box-shadow: inset 0 0 0 1.5px var(--sk-chip-filo);
-		color: var(--sk-ink-muted) !important;
 	}
 
 	/* panel abierto: el chip se marca en azul */
@@ -6992,7 +6984,7 @@ html.dark {
 }
 
 /* la opción Imagen sale del menú + (se maneja desde su chip) */
-.sk-menu-mas.sk-menu-mas div:has(> [role='menuitemcheckbox'] path[d^='M21 7.6V20.4']) {
+.sk-menu-mas.sk-menu-mas div:has(> [role='menuitemcheckbox']:not(.sk-menu-imagen) path[d^='M21 7.6V20.4']) {
 	display: none !important;
 }
 
@@ -7224,10 +7216,12 @@ html.dark .sk-imagen-ritmo.sk-muy-lenta { color: #ff8a80; }
 }
 
 @media (max-width: 767px) {
+	/* mide lo que necesita (como el menú de Razonamiento), sin pasar del ancho de la pantalla */
 	.sk-imagen-panel {
 		left: 12px !important;
-		right: 12px;
-		width: auto;
+		right: auto;
+		width: max-content;
+		max-width: calc(100vw - 24px);
 	}
 
 	.sk-imagen-tamanos button {
@@ -7262,5 +7256,923 @@ html.dark .sk-imagen-ritmo.sk-muy-lenta { color: #ff8a80; }
 
 	nav.sticky:has(h1) :is(button[aria-label='Nuevo Chat'], button[aria-label='Acciones del chat'], button[aria-label='Pestañas'], #temporary-chat-button):active {
 		background: rgba(120, 120, 128, 0.16);
+	}
+}
+
+/* ---------- Open Terminal sin terminal: conserva su nombre ----------
+   Desde 0.13.3 Open WebUI solo escribe el nombre cuando hay una terminal elegida; apagado quedaba solo el ícono. */
+@media (min-width: 768px) {
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) button:has(path[d^='M12 4C6 4 6 8']).opacity-50:not(:has(span))::after {
+		content: 'Open Terminal';
+		font-size: 14px;
+		line-height: 20px;
+	}
+}
+
+@container sk-composer (max-width: 800px) {
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) button:has(path[d^='M12 4C6 4 6 8']).opacity-50:not(:has(span))::after {
+		content: none;
+	}
+}
+
+/* ---------- Teléfono: chips sueltos si caben ----------
+   Si en la fila caben las opciones como íconos (carbono.js mide y pone .sk-chips-sueltos), cada una va como un
+   círculo con su insignia de color (gris apagada) y se toca directo; si no caben, se juntan en el botón "3/4". */
+@media (max-width: 767px) {
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-chips-sueltos:not(.sk-opciones-abiertas) .sk-opciones-boton {
+		display: none;
+	}
+
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-chips-sueltos:not(.sk-opciones-abiertas) > div[dir='ltr'] > div:nth-child(2) {
+		display: flex;
+		align-items: center;
+		flex: 0 0 auto !important;
+		order: 0 !important;
+		width: auto !important;
+		max-width: none !important;
+		min-width: 0;
+		grid-row: 4;
+		grid-column: 2;
+		align-self: stretch;
+		padding: 4px 0 0 !important;
+		margin: 0 !important;
+		border: 0 !important;
+		border-top: 1px solid var(--sk-border) !important;
+		box-shadow: none !important;
+		background: transparent !important;
+		-webkit-mask-image: none;
+		mask-image: none;
+	}
+
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-chips-sueltos:not(.sk-opciones-abiertas) > div[dir='ltr'] > div:nth-child(2) > div {
+		display: flex;
+		align-items: center;
+		gap: 4px;
+		margin: 0;
+		padding: 0;
+		overflow: visible;
+	}
+
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-chips-sueltos:not(.sk-opciones-abiertas) > div[dir='ltr'] > div:nth-child(2) div:has(> button) {
+		display: flex;
+		margin: 0;
+		padding: 0;
+	}
+
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-chips-sueltos:not(.sk-opciones-abiertas) > div[dir='ltr'] > div:nth-child(2) button {
+		display: grid !important;
+		place-items: center;
+		flex: none;
+		width: 40px !important;
+		height: 40px !important;
+		min-width: 0;
+		margin: 0;
+		padding: 0 !important;
+		border: 0;
+		border-radius: 9999px;
+		background: transparent !important;
+		box-shadow: none !important;
+		opacity: 1 !important;
+		font-size: 0;
+		transform: none;
+	}
+
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-chips-sueltos:not(.sk-opciones-abiertas) > div[dir='ltr'] > div:nth-child(2) button > :not(svg),
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-chips-sueltos:not(.sk-opciones-abiertas) > div[dir='ltr'] > div:nth-child(2) button::before,
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-chips-sueltos:not(.sk-opciones-abiertas) > div[dir='ltr'] > div:nth-child(2) button::after {
+		display: none !important;
+		content: none !important;
+	}
+
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-chips-sueltos:not(.sk-opciones-abiertas) > div[dir='ltr'] > div:nth-child(2) button svg {
+		display: block;
+		width: 30px !important;
+		height: 30px !important;
+		padding: 7px;
+		box-sizing: border-box;
+		border-radius: 9999px;
+		background: var(--sk-insignia) !important;
+		box-shadow: none;
+		color: #ffffff !important;
+		stroke-width: 2;
+	}
+
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-chips-sueltos:not(.sk-opciones-abiertas) > div[dir='ltr'] > div:nth-child(2) button.sk-inactiva svg {
+		background: var(--sk-ins-apagado) !important;
+	}
+
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-chips-sueltos:not(.sk-opciones-abiertas) > div[dir='ltr'] > div:nth-child(2) button:has(path[d^='M21 7.6V20.4']),
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) .sk-fantasma[data-tipo='imagen'] {
+		--sk-insignia: var(--sk-ins-imagen);
+	}
+
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-chips-sueltos:not(.sk-opciones-abiertas) > div[dir='ltr'] > div:nth-child(2) button.sk-imagen-abierto svg {
+		box-shadow: 0 0 0 2px var(--sk-surface), 0 0 0 3.5px var(--sk-azul);
+	}
+
+	/* Herramientas tampoco va en la caja (sigue en el menú +) */
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-chips-sueltos:not(.sk-opciones-abiertas) > div[dir='ltr'] > div:nth-child(2) button:has(path[d^='M21.75 6.75']),
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-chips-sueltos:not(.sk-opciones-abiertas) > div[dir='ltr'] > div:nth-child(2) div:has(> button[aria-label='Herramientas Disponibles']) {
+		display: none !important;
+	}
+
+	/* Workspace y Open Terminal viven en el menú + en el teléfono */
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-chips-sueltos:not(.sk-opciones-abiertas) > div[dir='ltr'] > div:nth-child(2) button[aria-label='Choose working directory'],
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-chips-sueltos:not(.sk-opciones-abiertas) > div[dir='ltr'] > div:nth-child(2) div:has(> button[aria-label='Choose working directory']),
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-chips-sueltos:not(.sk-opciones-abiertas) > div[dir='ltr'] > div:nth-child(2) .sk-chip-oculto,
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-chips-sueltos:not(.sk-opciones-abiertas) > div[dir='ltr'] > div:nth-child(2) .sk-chip-menu-tel {
+		display: none !important;
+	}
+}
+
+/* ---------- Búsqueda web e Intérprete de código: solo en el menú + ----------
+   No son opciones que se prendan y apaguen a cada rato: sin chip en la caja de mensaje (ni en la hoja ni sueltos
+   en el teléfono); se cambian desde el menú +. */
+:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']):not(.sk-nunca-1):not(.sk-nunca-2):not(.sk-nunca-3) > div[dir='ltr'] > div:nth-child(2) button:is(:has(path[d^='M12 21a9.004']), [aria-label*='rprete de c' i], [aria-label*='code interpreter' i], .sk-fantasma[data-tipo='web']),
+:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']):not(.sk-nunca-1):not(.sk-nunca-2):not(.sk-nunca-3) > div[dir='ltr'] > div:nth-child(2) div:has(> button:is(:has(path[d^='M12 21a9.004']), [aria-label*='rprete de c' i], [aria-label*='code interpreter' i], .sk-fantasma[data-tipo='web'])) {
+	display: none !important;
+}
+
+/* envoltorio de un chip que solo vive en el menú + (carbono.js): fuera de la fila, sin dejar hueco */
+:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) .sk-chip-oculto.sk-chip-oculto {
+	display: none !important;
+}
+
+/* teléfono, chips sueltos: van en el renglón de abajo, entre el + y el modelo (columna intermedia de la rejilla) */
+@media (max-width: 767px) {
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-chips-sueltos:not(.sk-opciones-abiertas) {
+		grid-template-columns: auto auto minmax(0, 1fr);
+	}
+
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-chips-sueltos:not(.sk-opciones-abiertas) > div[dir='ltr'] > div:last-child {
+		grid-column: 3;
+	}
+}
+
+/* ---------- Caja angosta en escritorio: solo la bolita de color ----------
+   Con los chips solo con ícono, bolitas de 30 px en un área de 40 px con 4 px entre ellas, igual que los íconos sueltos del teléfono. */
+@media (min-width: 768px) {
+	@container sk-composer (max-width: 800px) {
+		:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']):not(.sk-nunca-1):not(.sk-nunca-2) > div[dir='ltr'] > div:nth-child(2) button {
+			width: 40px !important;
+			height: 40px !important;
+			min-width: 0 !important;
+			padding: 0 !important;
+			gap: 0 !important;
+			border: 0 !important;
+			background: transparent !important;
+			box-shadow: none !important;
+			justify-content: center;
+		}
+
+		:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']):not(.sk-nunca-1):not(.sk-nunca-2) > div[dir='ltr'] > div:nth-child(2) button > :not(svg),
+		:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']):not(.sk-nunca-1):not(.sk-nunca-2) > div[dir='ltr'] > div:nth-child(2) button::before,
+		:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']):not(.sk-nunca-1):not(.sk-nunca-2) > div[dir='ltr'] > div:nth-child(2) button::after {
+			display: none !important;
+			content: none !important;
+		}
+
+		:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']):not(.sk-nunca-1):not(.sk-nunca-2) > div[dir='ltr'] > div:nth-child(2) button svg {
+			width: 30px !important;
+			height: 30px !important;
+			padding: 7px !important;
+			box-sizing: border-box;
+			border-radius: 9999px;
+		}
+
+		:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']):not(.sk-nunca-1):not(.sk-nunca-2) > div[dir='ltr'] > div:nth-child(2) > div {
+			gap: 4px !important;
+		}
+
+		:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']):not(.sk-nunca-1):not(.sk-nunca-2) > div[dir='ltr'] > div:nth-child(2) button.sk-imagen-abierto svg {
+			box-shadow: 0 0 0 2px var(--sk-surface), 0 0 0 3.5px var(--sk-azul) !important;
+		}
+	}
+}
+
+/* lo mismo cuando la caja es más ancha pero los chips con texto no caben en su espacio (carbono.js pone
+   .sk-chips-compactos al medir; antes se recortaban y quedaban escondidos tras el desvanecido) */
+@media (min-width: 768px) {
+		:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-chips-compactos:not(.sk-nunca-1):not(.sk-nunca-2) > div[dir='ltr'] > div:nth-child(2) button {
+			width: 40px !important;
+			height: 40px !important;
+			min-width: 0 !important;
+			padding: 0 !important;
+			gap: 0 !important;
+			border: 0 !important;
+			background: transparent !important;
+			box-shadow: none !important;
+			justify-content: center;
+		}
+
+		:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-chips-compactos:not(.sk-nunca-1):not(.sk-nunca-2) > div[dir='ltr'] > div:nth-child(2) button > :not(svg),
+		:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-chips-compactos:not(.sk-nunca-1):not(.sk-nunca-2) > div[dir='ltr'] > div:nth-child(2) button::before,
+		:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-chips-compactos:not(.sk-nunca-1):not(.sk-nunca-2) > div[dir='ltr'] > div:nth-child(2) button::after {
+			display: none !important;
+			content: none !important;
+		}
+
+		:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-chips-compactos:not(.sk-nunca-1):not(.sk-nunca-2) > div[dir='ltr'] > div:nth-child(2) button svg {
+			width: 30px !important;
+			height: 30px !important;
+			padding: 7px !important;
+			box-sizing: border-box;
+			border-radius: 9999px;
+		}
+
+		:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-chips-compactos:not(.sk-nunca-1):not(.sk-nunca-2) > div[dir='ltr'] > div:nth-child(2) > div {
+			gap: 4px !important;
+		}
+
+		:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-chips-compactos:not(.sk-nunca-1):not(.sk-nunca-2) > div[dir='ltr'] > div:nth-child(2) button.sk-imagen-abierto svg {
+			box-shadow: 0 0 0 2px var(--sk-surface), 0 0 0 3.5px var(--sk-azul) !important;
+		}
+	
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-chips-compactos button:is(:has(path[d^='M12 4C6 4 6 8']), .sk-razonamiento, .sk-fantasma, [aria-label='Choose working directory'])::after,
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']).sk-chips-compactos button:has(path[d^='M12 4C6 4 6 8']) span {
+		display: none !important;
+		content: none !important;
+	}
+}
+
+/* ---------- Teléfono: Open Terminal en el menú + ----------
+   Su chip sale de la caja (ni suelto ni en la hoja "3/3"; carbono.js marca su envoltorio con .sk-chip-menu-tel) y el
+   menú + lleva la fila "Open Terminal" con la terminal elegida, que abre el selector de terminal. */
+.sk-menu-terminal {
+	display: none;
+}
+
+@media (max-width: 767px) {
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) .sk-chip-menu-tel.sk-chip-menu-tel {
+		display: none !important;
+	}
+
+	.sk-menu-mas.sk-menu-mas .sk-menu-terminal {
+		display: flex;
+		align-items: center;
+		order: 6;
+		text-align: left;
+		cursor: pointer;
+	}
+
+	.sk-menu-mas.sk-menu-mas .sk-menu-terminal > svg:first-child {
+		flex: none;
+		width: 28px !important;
+		height: 28px !important;
+		padding: 6.5px;
+		box-sizing: border-box;
+		border-radius: 9999px;
+		overflow: visible;
+		background: var(--sk-ins-terminal);
+		color: #ffffff;
+	}
+
+	.sk-menu-mas.sk-menu-mas .sk-menu-terminal.sk-apagada > svg:first-child {
+		background: var(--sk-ins-apagado);
+	}
+
+	.sk-menu-mas.sk-menu-mas .sk-menu-terminal > .sk-terminal-textos {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.sk-menu-mas.sk-menu-mas .sk-menu-terminal .sk-terminal-sub {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		font-size: 12px;
+		line-height: 16px;
+		font-weight: 400;
+		color: var(--sk-ink-muted);
+	}
+}
+
+
+/* ---------- Menú + reorganizado (lienzo "Menú + reorganizado, común a A, B y C") ----------
+   Arriba tres botones grises (Archivos · Captura · Contexto) con el ícono sobre el nombre; después Herramientas
+   (Herramientas, Búsqueda web, Intérprete de código), en el teléfono el grupo Trabajo (Workspace y Open
+   Terminal) y al final Permisos, sin rótulo. Mismo vidrio de los demás menús; los botones usan el gris del tema. */
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas {
+	flex-direction: row;
+	flex-wrap: wrap;
+	align-content: flex-start;
+	column-gap: 6px;
+}
+
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas > div > *,
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas > div.h-px {
+	flex: 0 0 100%;
+	max-width: 100%;
+}
+
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas::before {
+	content: none;
+}
+
+/* los tres botones de arriba */
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas div:has(> button path[d^='M21.4383 11.6622']),
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas div:has(> button path[d^='M2 19V9']),
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas > div > button:has(path[d^='M15.75 17.25']) {
+	flex: 1 1 0 !important;
+	min-width: 0;
+	width: auto !important;
+	margin: 2px 0 6px;
+}
+
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas div:has(> button path[d^='M21.4383 11.6622']) > button,
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas div:has(> button path[d^='M2 19V9']) > button,
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas > div > button:has(path[d^='M15.75 17.25']) {
+	display: flex !important;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 4px !important;
+	width: 100%;
+	min-height: 64px !important;
+	padding: 10px 4px !important;
+	margin: 0 !important;
+	border-radius: 12px !important;
+	background: color-mix(in srgb, var(--sk-sidebar) 85%, transparent) !important;
+	font-size: 12.5px !important;
+	line-height: 16px !important;
+	font-weight: 600 !important;
+	text-align: center;
+	color: var(--sk-ink);
+}
+
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas div:has(> button path[d^='M21.4383 11.6622']) > button:hover,
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas div:has(> button path[d^='M2 19V9']) > button:hover,
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas > div > button:has(path[d^='M15.75 17.25']):hover {
+	background: var(--sk-hover) !important;
+}
+
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas div:has(> button path[d^='M21.4383 11.6622']) > button > svg:first-child,
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas div:has(> button path[d^='M2 19V9']) > button > svg:first-child,
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas > div > button:has(path[d^='M15.75 17.25']) > svg:first-child {
+	width: 22px !important;
+	height: 22px !important;
+	padding: 0 !important;
+	border-radius: 0 !important;
+	background: transparent !important;
+	color: var(--sk-ink-soft, var(--sk-ink)) !important;
+}
+
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas div:has(> button path[d^='M21.4383 11.6622']) > button > :not(svg),
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas div:has(> button path[d^='M2 19V9']) > button > :not(svg),
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas > div > button:has(path[d^='M15.75 17.25']) > :not(svg) {
+	display: block !important;
+	min-width: 0;
+	max-width: 100%;
+	overflow: hidden;
+	text-overflow: ellipsis;
+	white-space: nowrap;
+}
+
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas > div > button:has(path[d^='M15.75 17.25']) svg:not(:first-child),
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas > div > button:has(path[d^='M15.75 17.25']) .sk-con-subtitulo::after,
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas div:has(> button path[d^='M21.4383 11.6622']) .sk-con-subtitulo::after,
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas div:has(> button path[d^='M2 19V9']) .sk-con-subtitulo::after {
+	display: none !important;
+	content: none !important;
+}
+
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas > div > button:has(path[d^='M15.75 17.25']) > div.justify-between {
+	display: block !important;
+}
+
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas > div > button:has(path[d^='M15.75 17.25']) > div.justify-between > :last-child {
+	display: none !important;
+}
+
+/* Herramientas sin línea encima (los botones ya separan) */
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas > div.h-px {
+	margin-top: 0 !important;
+	border-top: 0;
+}
+
+/* Permisos al final, tras una línea y sin rótulo */
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas > div > div.h-px {
+	order: 10 !important;
+	margin: 4px 4px 2px !important;
+	border-top: 1px solid var(--sk-border);
+}
+
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas > div > div.h-px::after {
+	content: none;
+}
+
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas > div > button:has(path[d^='M12 22C12 22']) {
+	order: 11 !important;
+}
+
+/* Trabajo (teléfono): rótulo de carbono.js, Workspace y Open Terminal */
+.sk-menu-trabajo {
+	display: none;
+}
+
+@media (max-width: 767px) {
+	.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas .sk-menu-trabajo {
+		display: block;
+		order: 8;
+		flex: 0 0 100%;
+		margin: 4px 4px 0;
+		padding: 10px 6px 4px;
+		border-top: 1px solid var(--sk-border);
+		font-size: 12px;
+		line-height: 16px;
+		font-weight: 700;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: var(--sk-ink-muted);
+	}
+
+	.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas .sk-menu-workspace,
+	.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas .sk-menu-terminal {
+		order: 9 !important;
+	}
+}
+
+/* ---------- Menú + con todo apagado ----------
+   Cada opción apagada (carbono.js pone .sk-apagada): insignia en el gris del tema y nombre atenuado. Herramientas
+   sin ninguna elegida dice "Ninguna seleccionada". El Intérprete de código encendido lleva insignia azul cielo. */
+:root {
+	--sk-ins-codigo: #1c7ed6;
+}
+
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas .sk-fila-codigo .shrink-0 > svg {
+	width: 28px !important;
+	height: 28px !important;
+	padding: 6.5px !important;
+	box-sizing: border-box;
+	border-radius: 9999px !important;
+	background: var(--sk-ins-codigo) !important;
+	color: #ffffff !important;
+	stroke-width: 2;
+}
+
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas .sk-apagada > svg:first-child,
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas .sk-apagada .shrink-0 > svg {
+	background: var(--sk-ins-apagado) !important;
+	color: #ffffff !important;
+}
+
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas .sk-apagada > div.justify-between > :first-child,
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas .sk-apagada .flex-1 > :not(.shrink-0),
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas .sk-menu-terminal.sk-apagada .sk-terminal-textos > :first-child {
+	font-weight: 500;
+	color: var(--sk-ink-muted);
+}
+
+/* Nada activo (teléfono): el + es una bolita gris con borde, igual en los tres casos; abierto se marca en azul */
+@media (max-width: 767px) {
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) :is(#input-menu-button, [id$='-input-menu-button']) {
+		border-radius: 9999px;
+		background: var(--sk-chip-fondo);
+		box-shadow: inset 0 0 0 1px var(--sk-chip-filo);
+		color: var(--sk-ink);
+	}
+
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) :is(#input-menu-button, [id$='-input-menu-button'])[aria-expanded='true'],
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) :is(#input-menu-button, [id$='-input-menu-button'])[data-state='open'] {
+		background: var(--sk-azul-soft);
+		box-shadow: inset 0 0 0 1.5px var(--sk-azul);
+		color: var(--sk-azul);
+	}
+}
+
+/* ---------- Teléfono: todo en el menú + ----------
+   La caja lleva solo el + (con una bolita de color por opción activa, carbono.js); Imagen y Razonamiento tienen su
+   fila en el menú + (con Workspace y Open Terminal en Trabajo). Sin fila de chips ni botón de opciones. */
+.sk-menu-imagen,
+.sk-menu-razonamiento-fila {
+	display: none;
+}
+
+@media (max-width: 767px) {
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']):is(.sk-chips-sueltos, :not(.sk-chips-sueltos)):not(.sk-opciones-abiertas):not(.sk-nunca-1) > div[dir='ltr'] > div:nth-child(2) {
+		display: none !important;
+	}
+
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) .sk-opciones-boton.sk-opciones-boton {
+		display: none !important;
+	}
+
+	/* + con mini insignias */
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) :is(#input-menu-button, [id$='-input-menu-button']).sk-mas-con-insignias.sk-mas-con-insignias {
+		display: inline-flex !important;
+		flex-direction: row !important;
+		flex-wrap: nowrap !important;
+		align-items: center !important;
+		justify-content: flex-start !important;
+		width: auto !important;
+		min-width: 44px;
+		height: 44px !important;
+		gap: 8px !important;
+		padding: 0 12px 0 10px !important;
+		flex: none;
+	}
+
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) :is(#input-menu-button, [id$='-input-menu-button']).sk-mas-con-insignias > * {
+		flex: none;
+		margin: 0 !important;
+	}
+
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) :is(#input-menu-button, [id$='-input-menu-button']).sk-mas-con-insignias svg {
+		width: 22px !important;
+		height: 22px !important;
+	}
+
+	.sk-mas-insignias {
+		display: inline-flex;
+		align-items: center;
+	}
+
+	.sk-mas-insignias:empty {
+		display: none;
+	}
+
+	.sk-mas-insignias i {
+		position: relative;
+		width: 16px;
+		height: 16px;
+		margin-left: -6px;
+		border-radius: 9999px;
+		box-shadow: 0 0 0 2px var(--sk-chip-fondo);
+	}
+
+	.sk-mas-insignias i:first-child {
+		margin-left: 0;
+	}
+
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) :is(#input-menu-button, [id$='-input-menu-button'])[aria-expanded='true'] .sk-mas-insignias i,
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) :is(#input-menu-button, [id$='-input-menu-button'])[data-state='open'] .sk-mas-insignias i {
+		box-shadow: 0 0 0 2px var(--sk-azul-soft);
+	}
+
+	.sk-mas-insignias .sk-insignia-herramientas { background: var(--sk-ins-herramientas); z-index: 6; }
+	.sk-mas-insignias .sk-insignia-web { background: var(--sk-ins-web); z-index: 5; }
+	.sk-mas-insignias .sk-insignia-imagen { background: var(--sk-ins-imagen); z-index: 4; }
+	.sk-mas-insignias .sk-insignia-codigo { background: var(--sk-ins-codigo); z-index: 3; }
+	.sk-mas-insignias .sk-insignia-razonamiento { background: var(--sk-ins-razonamiento); z-index: 2; }
+	.sk-mas-insignias .sk-insignia-terminal { background: var(--sk-ins-terminal); z-index: 1; }
+
+	/* filas Imagen y Razonamiento del menú + */
+	.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas .sk-menu-imagen,
+	.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas .sk-menu-razonamiento-fila {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		order: 6;
+		text-align: left;
+		cursor: pointer;
+	}
+
+	.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas .sk-menu-imagen > svg:first-child,
+	.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas .sk-menu-razonamiento-fila > svg:first-child {
+		flex: none;
+		width: 28px !important;
+		height: 28px !important;
+		padding: 6.5px;
+		box-sizing: border-box;
+		border-radius: 9999px;
+		color: #ffffff;
+		stroke-width: 2;
+	}
+
+	.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas .sk-menu-imagen > svg:first-child {
+		background: var(--sk-ins-imagen);
+	}
+
+	.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas .sk-menu-razonamiento-fila > svg:first-child {
+		background: var(--sk-ins-razonamiento);
+	}
+
+	.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas :is(.sk-menu-imagen, .sk-menu-razonamiento-fila).sk-apagada > svg:first-child {
+		background: var(--sk-ins-apagado) !important;
+	}
+
+	.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas .sk-fila-textos {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas :is(.sk-menu-imagen, .sk-menu-razonamiento-fila).sk-apagada .sk-fila-textos > :first-child {
+		font-weight: 500;
+		color: var(--sk-ink-muted);
+	}
+
+	.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas .sk-fila-sub {
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		font-size: 12px;
+		line-height: 16px;
+		font-weight: 400;
+		color: var(--sk-ink-muted);
+	}
+
+	.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas .sk-fila-sub:empty {
+		display: none;
+	}
+
+	.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas .sk-fila-flecha {
+		flex: none;
+		width: 16px !important;
+		height: 16px !important;
+		padding: 0 !important;
+		background: transparent !important;
+		color: var(--sk-ink-muted);
+	}
+}
+
+/* teléfono: el selector de nivel de Razonamiento se abre desde su fila del menú + (el chip está oculto): a 12 px
+   del borde izquierdo, como el de Workspace */
+@media (max-width: 767px) {
+	[role='menu']:has(> div > .sk-menu-razonamiento) {
+		left: 12px !important;
+		right: auto !important;
+	}
+}
+
+/* menú +: sin el divisor viejo entre Herramientas y los interruptores; los tres botones de arriba iguales */
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas button[role='menuitem'] + div {
+	margin-top: 0;
+	padding-top: 0;
+	background: none;
+}
+
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas div:has(> button path[d^='M21.4383 11.6622']),
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas div:has(> button path[d^='M2 19V9']),
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas > div > button:has(path[d^='M15.75 17.25']) {
+	flex: 1 1 0 !important;
+	width: 0 !important;
+	margin: 2px 0 6px !important;
+}
+
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas div:has(> button path[d^='M21.4383 11.6622']) > button,
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas div:has(> button path[d^='M2 19V9']) > button,
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas > div > button:has(path[d^='M15.75 17.25']) {
+	height: 64px !important;
+	min-height: 64px !important;
+	box-sizing: border-box;
+}
+
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas > div > button:has(path[d^='M15.75 17.25']) > div.justify-between {
+	margin: 0 !important;
+	padding: 0 !important;
+	line-height: 16px;
+}
+
+/* botones de arriba del menú + como los chips: gris sólido con borde fino, ícono tinta en un círculo blanco */
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas div:has(> button path[d^='M21.4383 11.6622']) > button,
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas div:has(> button path[d^='M2 19V9']) > button,
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas > div > button:has(path[d^='M15.75 17.25']) {
+	height: 76px !important;
+	min-height: 76px !important;
+	gap: 6px !important;
+	padding: 8px 4px !important;
+	background: var(--sk-chip-fondo) !important;
+	box-shadow: inset 0 0 0 1px var(--sk-chip-filo) !important;
+	color: var(--sk-ink) !important;
+}
+
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas div:has(> button path[d^='M21.4383 11.6622']) > button:hover,
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas div:has(> button path[d^='M2 19V9']) > button:hover,
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas > div > button:has(path[d^='M15.75 17.25']):hover {
+	background: color-mix(in srgb, var(--sk-chip-fondo) 82%, var(--sk-ink) 8%) !important;
+}
+
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas div:has(> button path[d^='M21.4383 11.6622']) > button > svg:first-child,
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas div:has(> button path[d^='M2 19V9']) > button > svg:first-child,
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas > div > button:has(path[d^='M15.75 17.25']) > svg:first-child {
+	width: 36px !important;
+	height: 36px !important;
+	padding: 7px !important;
+	box-sizing: border-box;
+	border-radius: 9999px !important;
+	background: var(--sk-surface, #ffffff) !important;
+	box-shadow: 0 1px 2px rgba(24, 24, 27, 0.08);
+	color: var(--sk-ink) !important;
+	stroke-width: 1.8;
+}
+
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas > div > button:has(path[d^='M15.75 17.25']) > div.justify-between,
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas > div > button:has(path[d^='M15.75 17.25']) > div.justify-between > :first-child {
+	width: 100%;
+	text-align: center;
+	justify-content: center;
+}
+
+/* íconos de los botones de arriba sin círculo: sobre fondo transparente */
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas div:has(> button path[d^='M21.4383 11.6622']) > button,
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas div:has(> button path[d^='M2 19V9']) > button,
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas > div > button:has(path[d^='M15.75 17.25']) {
+	height: 68px !important;
+	min-height: 68px !important;
+}
+
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas div:has(> button path[d^='M21.4383 11.6622']) > button > svg:first-child,
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas div:has(> button path[d^='M2 19V9']) > button > svg:first-child,
+.app-dropdown-menu.sk-menu-mas.sk-menu-mas.sk-menu-mas > div > button:has(path[d^='M15.75 17.25']) > svg:first-child {
+	width: 24px !important;
+	height: 24px !important;
+	padding: 0 !important;
+	background: transparent !important;
+	box-shadow: none !important;
+}
+
+/* campana de notificaciones de la barra lateral: mismo tamaño y trazo que el botón de cerrar la barra (su span la
+   encogía a 16 px) */
+.sidebar button:has(path[d^='M14.857 17.082']) > span {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px !important;
+	height: 22px !important;
+}
+
+.sidebar button:has(path[d^='M14.857 17.082']) svg {
+	flex: none;
+	width: 22px !important;
+	height: 22px !important;
+	stroke-width: 1.5;
+}
+
+/* campana separada del botón de la barra lateral para no tocarla por accidente */
+.sidebar button:has(path[d^='M14.857 17.082']) {
+	margin-right: 10px !important;
+}
+
+/* ---------- Bienvenida con pétalos por modelo (teléfono y escritorio) ----------
+   Avatar de 140 px centrado con aro blanco, aro y sombra del color del modelo y siete pétalos alrededor (carbono.js
+   saca los colores del avatar y pone .sk-bienvenida); nombre y saludo centrados debajo. */
+.sk-petalos {
+	display: none;
+}
+
+@media all {
+	.sk-bienvenida {
+		text-align: center;
+	}
+
+	.sk-bienvenida > .sk-bienvenida-avatar {
+		justify-content: center;
+		margin: 0 auto 16px;
+	}
+
+	.sk-bienvenida-avatar > div,
+	.sk-bienvenida-avatar button,
+	.sk-bienvenida-avatar button > div {
+		position: relative;
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 170px;
+		height: 170px;
+		margin: 0;
+	}
+
+	.sk-bienvenida-avatar img {
+		width: 140px !important;
+		height: 140px !important;
+		border-radius: 9999px;
+		object-fit: cover;
+		box-shadow: 0 0 0 5px var(--sk-surface, #ffffff), 0 0 0 7px var(--sk-petalo-anillo, #e4e4e7),
+			0 10px 28px var(--sk-petalo-sombra, rgba(24, 24, 27, 0.18));
+		transition: box-shadow 0.3s;
+	}
+
+	.sk-petalos {
+		display: block;
+		position: absolute;
+		inset: 0;
+		pointer-events: none;
+	}
+
+	.sk-petalos svg {
+		position: absolute;
+		overflow: visible;
+	}
+
+	.sk-petalos path {
+		transition: fill 0.3s;
+	}
+
+	.sk-bienvenida > div:not(.sk-bienvenida-avatar),
+	.sk-bienvenida > div:not(.sk-bienvenida-avatar) * {
+		justify-content: center;
+		text-align: center;
+	}
+}
+
+/* ---------- Barra lateral contraída más grande (lienzo "Pétalos · escritorio") ----------
+   60 px de ancho en lugar de 42, botones de 40 px con íconos de 19 px, avatares de los modelos de 28 px, logo de
+   26 px y usuario de 30 px: blancos más fáciles de tocar con el ratón o el dedo. */
+@media (min-width: 768px) {
+	#sidebar[class*='w-[calc(42px'] {
+		width: 60px !important;
+		padding: 10px 0 12px !important;
+		align-items: center;
+	}
+
+	#sidebar[class*='w-[calc(42px'] > div {
+		align-items: center;
+		width: 100%;
+	}
+
+	#sidebar[class*='w-[calc(42px'] :is(a, button)[aria-label]:not(.sk-rail-modelo):not(.sk-chats-boton) {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		width: 40px !important;
+		height: 40px !important;
+		margin: 2px auto;
+		border-radius: 10px;
+	}
+
+	#sidebar[class*='w-[calc(42px'] :is(a, button)[aria-label] svg {
+		width: 19px !important;
+		height: 19px !important;
+		stroke-width: 1.8;
+	}
+
+	#sidebar[class*='w-[calc(42px'] img.sidebar-new-chat-icon {
+		width: 26px !important;
+		height: 26px !important;
+	}
+
+	#sidebar[class*='w-[calc(42px'] .sk-rail-modelo,
+	#sidebar[class*='w-[calc(42px'] .sk-chats-boton {
+		width: 40px;
+		height: 40px;
+		border-radius: 10px;
+	}
+
+	#sidebar[class*='w-[calc(42px'] .sk-rail-modelo img {
+		width: 28px;
+		height: 28px;
+	}
+
+	#sidebar[class*='w-[calc(42px'] .sk-chats-envoltura {
+		gap: 4px;
+	}
+
+	#sidebar[class*='w-[calc(42px'] .sk-chats-division {
+		width: 24px;
+		margin: 6px 0;
+	}
+
+	#sidebar[class*='w-[calc(42px'] img[aria-label='Abrir Menu de Perfiles de Usuario'],
+	#sidebar[class*='w-[calc(42px'] button[aria-label='Menu de Usuario'] img {
+		width: 30px !important;
+		height: 30px !important;
+	}
+}
+
+/* el avatar de la bienvenida es un botón de Open WebUI que no lleva a nada: sin mano ni reacción al tocarlo */
+.sk-bienvenida-avatar button {
+	cursor: default;
+	pointer-events: none;
+}
+
+/* ---------- Ajustes en el teléfono: pestañas deslizables y lupa visible ----------
+   La fila de pestañas se desliza en horizontal (dedo, rueda o arrastre, carbono.js) y se desvanece a la derecha
+   mientras haya más pestañas; la lupa es un botón de 38 px con borde, como los demás. */
+@media (max-width: 767px) {
+	#settings-tabs-container .tabs {
+		touch-action: pan-x pan-y;
+		overscroll-behavior-x: contain;
+		scroll-padding-inline: 12px;
+		cursor: grab;
+	}
+
+	#settings-tabs-container .tabs.sk-hay-mas {
+		-webkit-mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
+		mask-image: linear-gradient(to right, #000 calc(100% - 36px), transparent);
+	}
+
+	#settings-tabs-container .tabs.sk-arrastrando {
+		cursor: grabbing;
+		user-select: none;
+	}
+
+	#settings-tabs-container > div:first-child button[aria-label='Buscar'],
+	#settings-tabs-container > div:first-child button[aria-label='Search'] {
+		width: 38px !important;
+		height: 38px !important;
+		border: 1px solid var(--sk-border);
+		border-radius: var(--sk-r-md);
+		background: var(--sk-surface);
+		color: var(--sk-ink);
+	}
+
+	#settings-tabs-container > div:first-child button:is([aria-label='Buscar'], [aria-label='Search']) svg {
+		width: 18px !important;
+		height: 18px !important;
+		stroke-width: 1.8;
 	}
 }
