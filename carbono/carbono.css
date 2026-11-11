@@ -1,5 +1,5 @@
 /*
- * Carbono 0.90 — tema para Open WebUI (probado con 0.13.3).
+ * Carbono 0.94 — tema para Open WebUI (probado con 0.13.3).
  * https://github.com/YukiChristian/Sakura-OI-Web-Carbono
  *
  * El lanzador lo sirve en /static/custom.css mientras exista carbono/ACTIVO (ver README).
@@ -8175,4 +8175,404 @@ html.dark .sk-imagen-ritmo.sk-muy-lenta { color: #ff8a80; }
 		height: 18px !important;
 		stroke-width: 1.8;
 	}
+}
+
+/* ---------- Modo voz animado (lienzo "Móvil · Modo voz animado", versión 2 "Azul y negro") ----------
+   carbono.js monta .sk-voz-escena dentro del botón del avatar y marca el estado (.sk-voz-escuchando / -pensando /
+   -respondiendo / -silenciado). Azul para lo que está pasando, negro para los botones y rojo solo cuando el micrófono
+   está silenciado. Se ocultan el avatar, el ícono de carga y el emoji de Open WebUI porque la escena ya los muestra. */
+@keyframes sk-vz-ripple { 0% { transform: scale(1); opacity: 0.55; } 100% { transform: scale(1.55); opacity: 0; } }
+@keyframes sk-vz-beat { 0%, 100% { transform: scale(1); } 20% { transform: scale(1.06); } 45% { transform: scale(0.98); } 70% { transform: scale(1.04); } }
+@keyframes sk-vz-bar { 0%, 100% { transform: scaleY(0.3); } 50% { transform: scaleY(1); } }
+@keyframes sk-vz-dot { 0%, 80%, 100% { transform: translateY(0); opacity: 0.45; } 40% { transform: translateY(-10px); opacity: 1; } }
+@keyframes sk-vz-breathe { 0%, 100% { transform: scale(1); filter: saturate(0.85); } 50% { transform: scale(1.015); filter: saturate(0.95); } }
+@keyframes sk-vz-talk { 0%, 100% { transform: scale(1); } 25% { transform: scale(1.035); } 50% { transform: scale(1.01); } 75% { transform: scale(1.045); } }
+@keyframes sk-vz-arc { 0% { opacity: 0; transform: scale(0.9); } 40% { opacity: 0.9; } 100% { opacity: 0; transform: scale(1.25); } }
+@keyframes sk-vz-pop { 0% { transform: scale(0.6) rotate(-10deg); opacity: 0; } 60% { transform: scale(1.1) rotate(4deg); opacity: 1; } 100% { transform: scale(1) rotate(0); opacity: 1; } }
+@keyframes sk-vz-spin { to { transform: rotate(360deg); } }
+
+button.sk-voz-boton {
+	--sk-voz-azul: #2361c7;
+	position: relative;
+	display: grid !important;
+	place-items: center;
+	width: 300px !important;
+	height: 300px !important;
+	scale: 1 !important;
+	padding: 0;
+}
+
+html.dark button.sk-voz-boton {
+	--sk-voz-azul: #8ab4ff;
+}
+
+button.sk-voz-boton > :not(.sk-voz-escena) {
+	display: none !important;
+}
+
+.sk-voz-escena {
+	position: relative;
+	display: grid;
+	place-items: center;
+	width: 300px;
+	height: 300px;
+	pointer-events: none;
+}
+
+.sk-voz-escena > * {
+	grid-area: 1 / 1;
+}
+
+.sk-voz-avatar {
+	position: relative;
+	z-index: 2;
+	width: 200px;
+	height: 200px;
+	border-radius: 9999px;
+	object-fit: cover;
+	object-position: 50% 18%;
+	box-shadow: 0 0 0 5px var(--sk-surface, #ffffff), 0 16px 40px rgba(24, 24, 27, 0.18);
+	transition: filter 0.3s, opacity 0.3s;
+}
+
+.sk-voz-ondas,
+.sk-voz-aro,
+.sk-voz-burbuja,
+.sk-voz-reaccion,
+.sk-voz-punteado,
+.sk-voz-mudo {
+	display: none;
+}
+
+/* 1 · escuchando: late y salen 3 ondas azules */
+.sk-voz-escuchando .sk-voz-avatar {
+	animation: sk-vz-beat 1.1s ease-in-out infinite;
+}
+
+.sk-voz-escuchando .sk-voz-ondas,
+.sk-voz-respondiendo .sk-voz-ondas {
+	display: grid;
+	place-items: center;
+	width: 300px;
+	height: 300px;
+}
+
+.sk-voz-ondas i {
+	grid-area: 1 / 1;
+	width: 200px;
+	height: 200px;
+	border-radius: 9999px;
+	border: 3px solid var(--sk-voz-azul);
+	animation: sk-vz-ripple 1.8s ease-out infinite;
+}
+
+.sk-voz-ondas i:nth-child(2) { animation-delay: 0.6s; }
+.sk-voz-ondas i:nth-child(3) { animation-delay: 1.2s; }
+
+/* 2 · pensando: respira, aro azul girando y burbuja con 3 bolitas negras */
+.sk-voz-pensando .sk-voz-avatar {
+	animation: sk-vz-breathe 2.4s ease-in-out infinite;
+}
+
+.sk-voz-pensando .sk-voz-aro {
+	display: block;
+	width: 224px;
+	height: 224px;
+	border-radius: 9999px;
+	background: conic-gradient(from 0deg, transparent, color-mix(in srgb, var(--sk-voz-azul) 55%, transparent), transparent 60%);
+	-webkit-mask: radial-gradient(circle, transparent 62%, #000 63%);
+	mask: radial-gradient(circle, transparent 62%, #000 63%);
+	animation: sk-vz-spin 2.4s linear infinite;
+}
+
+.sk-voz-pensando .sk-voz-burbuja {
+	display: flex;
+	gap: 7px;
+	z-index: 3;
+	place-self: start end;
+	margin: 34px 18px 0 0;
+	padding: 14px 16px;
+	border-radius: 22px 22px 22px 6px;
+	background: var(--sk-surface, #ffffff);
+	box-shadow: 0 8px 22px rgba(24, 24, 27, 0.14);
+}
+
+.sk-voz-burbuja i {
+	width: 14px;
+	height: 14px;
+	border-radius: 9999px;
+	background: var(--sk-ink);
+	animation: sk-vz-dot 1.2s ease-in-out infinite;
+}
+
+.sk-voz-burbuja i:nth-child(2) { animation-delay: 0.15s; }
+.sk-voz-burbuja i:nth-child(3) { animation-delay: 0.3s; }
+
+/* 3 · respondiendo: habla, ondas azules suaves y reacción */
+.sk-voz-respondiendo .sk-voz-avatar {
+	animation: sk-vz-talk 0.9s ease-in-out infinite;
+}
+
+.sk-voz-respondiendo .sk-voz-ondas i {
+	width: 230px;
+	height: 230px;
+	border: 0;
+	box-shadow: 0 0 0 6px color-mix(in srgb, var(--sk-voz-azul) 35%, transparent);
+	animation: sk-vz-arc 1.4s ease-out infinite;
+}
+
+.sk-voz-respondiendo .sk-voz-ondas i:nth-child(2) { box-shadow: 0 0 0 4px color-mix(in srgb, var(--sk-voz-azul) 27%, transparent); animation-delay: 0.35s; }
+.sk-voz-respondiendo .sk-voz-ondas i:nth-child(3) { box-shadow: 0 0 0 2px color-mix(in srgb, var(--sk-voz-azul) 19%, transparent); animation-delay: 0.7s; }
+
+.sk-voz-respondiendo .sk-voz-reaccion:not(:empty) {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 3;
+	place-self: end end;
+	margin: 0 30px 34px 0;
+	width: 64px;
+	height: 64px;
+	border-radius: 9999px;
+	background: var(--sk-surface, #ffffff);
+	box-shadow: 0 8px 22px rgba(24, 24, 27, 0.16);
+	font-size: 38px;
+	line-height: 1;
+}
+
+.sk-voz-reaccion.sk-voz-salta {
+	animation: sk-vz-pop 0.5s ease-out both;
+}
+
+/* 4 · silenciado: avatar en gris y quieto, aro punteado e insignia negra con el micrófono tachado */
+.sk-voz-silenciado .sk-voz-avatar {
+	filter: grayscale(0.55) brightness(0.98);
+	opacity: 0.85;
+	box-shadow: 0 0 0 5px var(--sk-surface, #ffffff), 0 12px 30px rgba(24, 24, 27, 0.14);
+}
+
+.sk-voz-silenciado .sk-voz-punteado {
+	display: block;
+	width: 222px;
+	height: 222px;
+	border-radius: 9999px;
+	border: 2px dashed var(--sk-border-strong, #d4d4d8);
+}
+
+.sk-voz-silenciado .sk-voz-mudo {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	z-index: 3;
+	place-self: end end;
+	margin: 0 44px 44px 0;
+	width: 52px;
+	height: 52px;
+	border-radius: 9999px;
+	background: var(--sk-primary);
+	color: var(--sk-on-primary);
+	box-shadow: 0 0 0 4px var(--sk-surface, #ffffff), 0 8px 18px rgba(24, 24, 27, 0.25);
+}
+
+.sk-voz-mudo svg {
+	width: 24px;
+	height: 24px;
+}
+
+/* estado: píldora con ícono y el texto del lienzo; medidor de 9 barras azules al escuchar (planas y grises en silencio) */
+[role='status'][aria-live][data-sk-voz] {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 10px;
+}
+
+[role='status'][aria-live][data-sk-voz] > button {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	height: 36px;
+	padding: 0 16px;
+	border-radius: 9999px;
+	background: color-mix(in srgb, var(--sk-ink) 7%, transparent);
+	box-shadow: none;
+	font-size: 0 !important;
+	line-height: 0 !important;
+	color: var(--sk-ink) !important;
+}
+
+[role='status'][aria-live][data-sk-voz] > button > * {
+	display: none;
+}
+
+[role='status'][aria-live][data-sk-voz] > button::before {
+	content: '';
+	width: 17px;
+	height: 17px;
+	border-radius: 0;
+	background-color: var(--sk-ink) !important;
+	-webkit-mask: var(--sk-voz-icono) center / contain no-repeat;
+	mask: var(--sk-voz-icono) center / contain no-repeat;
+}
+
+[role='status'][aria-live][data-sk-voz] > button::after {
+	font-size: 15px;
+	line-height: 20px;
+	font-weight: 600;
+}
+
+[role='status'][aria-live][data-sk-voz='escuchando'] > button,
+[role='status'][aria-live][data-sk-voz='respondiendo'] > button {
+	background: color-mix(in srgb, #2361c7 10%, transparent);
+}
+
+[role='status'][aria-live][data-sk-voz='escuchando'] > button::before,
+[role='status'][aria-live][data-sk-voz='respondiendo'] > button::before {
+	background-color: #2361c7 !important;
+}
+
+html.dark [role='status'][aria-live][data-sk-voz='escuchando'] > button::before,
+html.dark [role='status'][aria-live][data-sk-voz='respondiendo'] > button::before {
+	background-color: #8ab4ff !important;
+}
+
+[role='status'][aria-live][data-sk-voz='escuchando'] > button {
+	--sk-voz-icono: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='9' y='3' width='6' height='11' rx='3'/%3E%3Cpath d='M5 11a7 7 0 0 0 14 0M12 18v3'/%3E%3C/svg%3E");
+}
+
+[role='status'][aria-live][data-sk-voz='escuchando'] > button::after { content: 'Te escucho…'; }
+
+[role='status'][aria-live][data-sk-voz='pensando'] > button {
+	--sk-voz-icono: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Ccircle cx='6' cy='12' r='1.8'/%3E%3Ccircle cx='12' cy='12' r='1.8'/%3E%3Ccircle cx='18' cy='12' r='1.8'/%3E%3C/svg%3E");
+}
+
+[role='status'][aria-live][data-sk-voz='pensando'] > button::after { content: 'Pensando…'; }
+
+[role='status'][aria-live][data-sk-voz='respondiendo'] > button {
+	--sk-voz-icono: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linejoin='round'%3E%3Crect x='7' y='6' width='3.5' height='12' rx='1'/%3E%3Crect x='13.5' y='6' width='3.5' height='12' rx='1'/%3E%3C/svg%3E");
+}
+
+[role='status'][aria-live][data-sk-voz='respondiendo'] > button::after { content: 'Toca para interrumpir'; }
+
+[role='status'][aria-live][data-sk-voz='silenciado'] > button {
+	--sk-voz-icono: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='9' y='3' width='6' height='11' rx='3'/%3E%3Cpath d='M5 11a7 7 0 0 0 11.5 5.4M19 11a7 7 0 0 1-.6 2.8M12 18v3M3 3l18 18'/%3E%3C/svg%3E");
+}
+
+[role='status'][aria-live][data-sk-voz='silenciado'] > button::after { content: 'Micrófono silenciado'; }
+
+.sk-voz-medidor {
+	display: none;
+}
+
+[role='status'][aria-live]:is([data-sk-voz='escuchando'], [data-sk-voz='silenciado']) > .sk-voz-medidor {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	height: 30px;
+}
+
+.sk-voz-medidor i {
+	width: 5px;
+	height: calc(14px + var(--sk-voz-nivel, 0) * 4px);
+	border-radius: 3px;
+	background: #2361c7;
+	transform-origin: center;
+	animation: sk-vz-bar 0.7s ease-in-out infinite;
+	transition: height 0.15s;
+}
+
+html.dark .sk-voz-medidor i {
+	background: #8ab4ff;
+}
+
+[role='status'][aria-live][data-sk-voz='silenciado'] > .sk-voz-medidor i {
+	height: 4px;
+	background: #a1a1aa;
+	animation: none;
+}
+
+.sk-voz-medidor i:nth-child(4n + 2) { animation-duration: 0.83s; }
+.sk-voz-medidor i:nth-child(4n + 3) { animation-duration: 0.96s; }
+.sk-voz-medidor i:nth-child(4n) { animation-duration: 1.09s; }
+.sk-voz-medidor i:nth-child(2) { animation-delay: 0.07s; }
+.sk-voz-medidor i:nth-child(3) { animation-delay: 0.14s; }
+.sk-voz-medidor i:nth-child(4) { animation-delay: 0.21s; }
+.sk-voz-medidor i:nth-child(5) { animation-delay: 0.28s; }
+.sk-voz-medidor i:nth-child(6) { animation-delay: 0.35s; }
+.sk-voz-medidor i:nth-child(7) { animation-delay: 0.42s; }
+.sk-voz-medidor i:nth-child(8) { animation-delay: 0.49s; }
+.sk-voz-medidor i:nth-child(9) { animation-delay: 0.56s; }
+
+/* botones de abajo: Cámara blanco con borde; Silenciar y Finalizar en negro; Silenciar en rojo solo con el micrófono
+   silenciado ("Activar micrófono"); etiquetas en español */
+div.flex-col:has(> [role='status'][aria-live]:not([data-sonner-toast]) > button) > div:last-child button.rounded-full:is([aria-label='Camera'], [aria-label='Cámara']) {
+	background-color: color-mix(in srgb, var(--sk-surface, #ffffff) 85%, transparent) !important;
+	box-shadow: inset 0 0 0 1px var(--sk-border);
+	color: var(--sk-ink) !important;
+}
+
+div.flex-col:has(> [role='status'][aria-live]:not([data-sonner-toast]) > button) > div:last-child button.rounded-full:is([aria-label='Mute'], [aria-label='Silenciar'], [aria-label='Finalizar llamada'], [aria-label='End call']) {
+	background-color: var(--sk-primary) !important;
+	color: var(--sk-on-primary) !important;
+	box-shadow: 0 6px 16px rgba(24, 24, 27, 0.25);
+}
+
+div.flex-col:has(> [role='status'][aria-live]:not([data-sonner-toast]) > button) > div:last-child button.rounded-full:is([aria-label='Unmute'], [aria-label='Activar micrófono']) {
+	background-color: #d9363e !important;
+	color: #ffffff !important;
+	box-shadow: 0 6px 16px rgba(217, 54, 62, 0.3);
+}
+
+div.flex-col:has(> [role='status'][aria-live]:not([data-sonner-toast]) > button) > div:last-child button.rounded-full[aria-label='Camera']::after { content: 'Cámara'; }
+div.flex-col:has(> [role='status'][aria-live]:not([data-sonner-toast]) > button) > div:last-child button.rounded-full[aria-label='Mute']::after { content: 'Silenciar'; }
+div.flex-col:has(> [role='status'][aria-live]:not([data-sonner-toast]) > button) > div:last-child button.rounded-full[aria-label='Unmute']::after { content: 'Activar micrófono'; }
+div.flex-col:has(> [role='status'][aria-live]:not([data-sonner-toast]) > button) > div:last-child button.rounded-full[aria-label='Finalizar llamada']::after { content: 'Finalizar'; }
+
+/* pestaña del modo voz: subrayado azul (carbono.js marca .sk-pestana-voz) */
+#controls-container .sk-pestana-voz,
+.sk-pestana-voz {
+	--sk-pestana: #2361c7;
+}
+
+/* quien prefiere menos movimiento ve la escena quieta */
+@media (prefers-reduced-motion: reduce) {
+	.sk-voz-escena *,
+	.sk-voz-medidor i {
+		animation: none !important;
+	}
+}
+
+/* escuchando: sin saltos. El avatar no late con un ciclo fijo: su tamaño sigue el volumen de tu voz con una transición
+   suave (quieto en silencio); las ondas se desvanecen y las barras bajan poco a poco al dejar de hablar
+   (carbono.js pone --sk-voz-nivel 0…3 y .sk-voz-con-sonido) */
+.sk-voz-escuchando .sk-voz-avatar {
+	animation: none;
+	transform: scale(calc(1 + var(--sk-voz-nivel, 0) * 0.02));
+	transition: transform 0.35s ease-out, filter 0.3s, opacity 0.3s;
+}
+
+.sk-voz-escuchando .sk-voz-ondas {
+	opacity: 0;
+	transition: opacity 0.9s ease-out;
+}
+
+.sk-voz-escuchando.sk-voz-con-sonido .sk-voz-ondas {
+	opacity: 1;
+	transition-duration: 0.25s;
+}
+
+[role='status'][aria-live][data-sk-voz] > .sk-voz-medidor {
+	transform: scaleY(1);
+	opacity: 1;
+	transition: transform 0.9s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.9s ease-out;
+}
+
+[role='status'][aria-live][data-sk-voz='escuchando'][data-sk-sonido='no'] > .sk-voz-medidor {
+	transform: scaleY(0.3);
+	opacity: 0.55;
+}
+
+/* la pestaña del modo voz (ícono de micrófono) con subrayado azul en lugar del amarillo de las notas de voz */
+#controls-container .panel-tab.panel-tab:has([role='tab'] path[d^='M12 1C10.34']) {
+	--sk-pestana: #2361c7;
 }

@@ -1,5 +1,5 @@
 /*
- * Carbono 0.90 — comportamiento del tema. El lanzador lo sirve en /static/loader.js
+ * Carbono 0.94 — comportamiento del tema. El lanzador lo sirve en /static/loader.js
  * (que Open WebUI carga en cada página) mientras exista carbono/ACTIVO.
  *
  * Barras de desplazamiento que solo aparecen mientras haces scroll: carbono.css las deja
@@ -1938,4 +1938,132 @@ function skVisible(selector) {
 		pendiente = true;
 		requestAnimationFrame(actualizar);
 	}).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['aria-selected'] });
+})();
+
+/*
+ * Modo voz animado (lienzo "Móvil · Modo voz animado", versión 2 "Azul y negro, rojo solo al silenciar"). Open WebUI
+ * cambia el avatar por un ícono de carga al pensar y
+ * al responder, y por el emoji en las reacciones; aquí se monta una escena propia que se queda en los tres estados:
+ *   escuchando   → el avatar late, salen 3 ondas y un medidor de 9 barras sigue tu voz
+ *   pensando     → el avatar respira, un aro gira y una burbuja con 3 bolitas aparece arriba a la derecha
+ *   respondiendo → el avatar "habla" y salen ondas; la reacción sale en un círculo abajo a la derecha
+ *   silenciado   → el avatar queda en gris y quieto, con aro punteado e insignia del micrófono tachado
+ * Azul para lo que pasa, negro para los botones y rojo solo para el micrófono silenciado.
+ */
+(() => {
+	const BOTON = [
+		"button[aria-label='Llamada de voz']",
+		"button[aria-label='Interrumpir al asistente']",
+		"button[aria-label='Voice call']",
+		"button[aria-label='Stop speaking']"
+	].join(',');
+	let pendiente = false;
+	// solo se escribe si cambia (escribir el mismo valor dispara el observador y haría un ciclo sin fin)
+	const poner = (el, prop, valor) => {
+		if (el.style.getPropertyValue(prop) !== valor) el.style.setProperty(prop, valor);
+	};
+
+	const estadoDe = (texto, mudo) => {
+		const t = (texto || '').toLowerCase();
+		if (mudo || /muted|silenciad/.test(t)) return 'silenciado';
+		if (/pensando|thinking/.test(t)) return 'pensando';
+		if (/interrump|interrupt/.test(t)) return 'respondiendo';
+		return 'escuchando';
+	};
+
+	const montar = (boton) => {
+		let escena = boton.querySelector(':scope > .sk-voz-escena');
+		if (escena) return escena;
+		escena = document.createElement('span');
+		escena.className = 'sk-voz-escena';
+		escena.setAttribute('aria-hidden', 'true');
+		escena.innerHTML = `
+			<span class="sk-voz-ondas"><i></i><i></i><i></i></span>
+			<span class="sk-voz-aro"></span>
+			<img class="sk-voz-avatar" alt="">
+			<span class="sk-voz-burbuja"><i></i><i></i><i></i></span>
+			<span class="sk-voz-reaccion"></span>
+			<span class="sk-voz-punteado"></span>
+			<span class="sk-voz-mudo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 11.5 5.4M19 11a7 7 0 0 1-.6 2.8M12 18v3M3 3l18 18"/></svg></span>`;
+		boton.appendChild(escena);
+		return escena;
+	};
+
+	const actualizar = () => {
+		pendiente = false;
+		document.querySelectorAll(BOTON).forEach((boton) => {
+			// con un avatar animado propio (video/Live2D) se deja el de Open WebUI
+			if (boton.classList.contains('min-h-64')) return;
+			const escena = montar(boton);
+			if (!boton.classList.contains('sk-voz-boton')) boton.classList.add('sk-voz-boton');
+
+			// avatar: se toma de la imagen de fondo que pone Open WebUI mientras escucha
+			const fondo = boton.querySelector(":scope > div.bg-cover[style*='voice=true']");
+			const url = fondo?.getAttribute('style')?.match(/url\(['"]?([^'")]+)['"]?\)/)?.[1];
+			const img = escena.querySelector('.sk-voz-avatar');
+			if (url && img.getAttribute('src') !== url) img.src = url;
+			// nivel de tu voz: Open WebUI agranda su avatar con el volumen (size-40 … size-52)
+			const nivel = fondo ? ['size-40', 'size-44', 'size-48', 'size-52'].findIndex((c) => fondo.classList.contains(c)) : 0;
+
+			// reacción: Open WebUI pone el emoji en lugar del avatar
+			const emoji = [...boton.querySelectorAll(':scope > div.rounded-full:not(.bg-cover)')].find((d) => d.textContent.trim());
+			const reaccion = escena.querySelector('.sk-voz-reaccion');
+			// cada reacción nueva sale con su rebote, aunque sea el mismo emoji que la anterior
+			if (emoji && (emoji !== escena.skEmoji || reaccion.textContent !== emoji.textContent.trim())) {
+				escena.skEmoji = emoji;
+				reaccion.textContent = emoji.textContent.trim();
+				reaccion.classList.remove('sk-voz-salta');
+				void reaccion.offsetWidth;
+				reaccion.classList.add('sk-voz-salta');
+			}
+			if (!emoji) escena.skEmoji = null;
+
+			// estado: del texto de abajo ("Escuchando...", "Pensando...", "Toca para interrumpir")
+			const raiz = boton.closest('.flex-col')?.parentElement ?? document;
+			const estadoBoton = raiz.querySelector("[role='status'][aria-live]:not([data-sonner-toast]) > button") ??
+				document.querySelector("[role='status'][aria-live]:not([data-sonner-toast]) > button");
+			const mudo = Boolean(raiz.querySelector("button[aria-label='Unmute'], button[aria-label='Activar micrófono']"));
+			const estado = estadoDe(estadoBoton?.textContent, mudo);
+			if (estado !== 'respondiendo' && reaccion.textContent && !emoji) reaccion.textContent = '';
+			for (const e of ['escuchando', 'pensando', 'respondiendo', 'silenciado']) if (boton.classList.contains(`sk-voz-${e}`) !== (e === estado)) boton.classList.toggle(`sk-voz-${e}`, e === estado);
+			poner(escena, '--sk-voz-nivel', String(Math.max(0, nivel)));
+			// al escuchar, las ondas y el latido solo van mientras se detecta tu voz (se sostienen 400 ms para no parpadear)
+			if (nivel > 0) escena.skSonido = Date.now();
+			const conSonido = estado === 'escuchando' && Date.now() - (escena.skSonido || 0) < 400;
+			if (boton.classList.contains('sk-voz-con-sonido') !== conSonido) boton.classList.toggle('sk-voz-con-sonido', conSonido);
+			clearTimeout(escena.skApagar);
+			if (conSonido) escena.skApagar = setTimeout(() => requestAnimationFrame(actualizar), 450);
+
+			// medidor de 9 barras junto al estado (solo al escuchar) y color del punto del estado
+			const caja = estadoBoton?.parentElement;
+			if (caja) {
+				if (caja.dataset.skVoz !== estado) caja.dataset.skVoz = estado;
+				const sonido = boton.classList.contains('sk-voz-con-sonido') ? 'si' : 'no';
+				if (caja.dataset.skSonido !== sonido) caja.dataset.skSonido = sonido;
+				if (!caja.querySelector(':scope > .sk-voz-medidor')) {
+					const medidor = document.createElement('span');
+					medidor.className = 'sk-voz-medidor';
+					medidor.setAttribute('aria-hidden', 'true');
+					medidor.innerHTML = '<i></i>'.repeat(9);
+					caja.insertBefore(medidor, estadoBoton);
+				}
+				poner(caja.querySelector(':scope > .sk-voz-medidor'), '--sk-voz-nivel', String(Math.max(0, nivel)));
+			}
+
+			// la pestaña del modo voz lleva el subrayado del color del modelo
+			const panel = boton.closest('[role="tabpanel"]');
+			const pestana = panel?.id && document.querySelector(`[aria-controls="${panel.id}"]`);
+			const tab = pestana?.closest('.panel-tab') ?? pestana;
+			if (tab && !tab.classList.contains('sk-pestana-voz')) {
+				document.querySelectorAll('.sk-pestana-voz').forEach((t) => t.classList.remove('sk-pestana-voz'));
+				tab.classList.add('sk-pestana-voz');
+			}
+		});
+	};
+
+	new MutationObserver(() => {
+		if (pendiente) return;
+		pendiente = true;
+		requestAnimationFrame(actualizar);
+	}).observe(document.documentElement, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['class', 'style', 'aria-label'] });
 })();

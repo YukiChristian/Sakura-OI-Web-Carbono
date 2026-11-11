@@ -1,6 +1,6 @@
 # Carbono para Open WebUI
 
-**Versión 0.90** · probado con Open WebUI **0.13.3**
+**Versión 0.94** · probado con Open WebUI **0.13.3**
 
 Carbono es el tema recomendado para [Sakura OI Web](https://github.com/YukiChristian/Sakura-OI-Web). Deja la interfaz de Open WebUI neutra (superficies en tonos carbón y zinc, acción principal en negro), con más jerarquía en el texto, tipografía Atkinson Hyperlegible, menús de vidrio esmerilado y un composer pensado para el teléfono.
 
@@ -30,6 +30,10 @@ La guía de estilo (principios, colores, tipografía y componentes) está en [do
 | --- | --- |
 | ![Bienvenida en el teléfono con el + y las bolitas de las opciones activas](docs/capturas/movil-inicio.jpg) | ![Menú «+» en el teléfono con Imagen, Razonamiento y Trabajo](docs/capturas/movil-menu-mas.jpg) |
 
+| Modo voz |
+| --- |
+| ![Modo voz respondiendo, con la reacción de la persona en su círculo](docs/capturas/movil-voz.jpg) |
+
 ## Qué cambia
 
 - **Tipografía:** Atkinson Hyperlegible Next para la interfaz y Atkinson Hyperlegible Mono para código (Google Fonts).
@@ -44,6 +48,16 @@ La guía de estilo (principios, colores, tipografía y componentes) está en [do
 - **Rendimiento:** los selectores evitan buscar por el atributo `class` dentro de `:has()`, que obliga al navegador a recalcular toda la página en cada hover.
 
 ## Cambios
+
+### 0.94
+
+- **Modo voz animado (azul y negro):** el avatar se queda a la vista en todos los estados (Open WebUI lo cambiaba por un ícono de carga al pensar y responder, y por el emoji en las reacciones).
+  - **Escuchando:** el avatar crece un poco con tu voz y salen ondas azules; 9 barras azules siguen el volumen. Solo se anima mientras detecta sonido y vuelve a la calma con una transición suave.
+  - **Pensando:** el avatar respira, un aro azul gira y una burbuja con tres bolitas aparece arriba a la derecha.
+  - **Respondiendo:** el avatar habla y salen ondas suaves; cada reacción de la persona (😊…) sale con un rebote en un círculo blanco abajo a la derecha.
+  - **Silenciado:** el avatar queda en gris y quieto, con aro punteado, insignia del micrófono tachado y barras planas.
+  - Píldora de estado con ícono y texto («Te escucho…», «Pensando…», «Toca para interrumpir», «Micrófono silenciado»); botones de 64 px con etiqueta en español: Cámara en blanco, Silenciar y Finalizar en negro, y Silenciar en rojo solo cuando el micrófono está silenciado. La pestaña del modo voz lleva el subrayado azul. Con «reducir movimiento» del sistema la escena queda quieta.
+- **Nueva captura** del modo voz en el teléfono.
 
 ### 0.90
 
