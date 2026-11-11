@@ -12,23 +12,23 @@ La guía de estilo (principios, colores, tipografía y componentes) está en [do
 
 ### Escritorio
 
-| Inicio | Conversación |
+| Bienvenida con pétalos | Conversación |
 | --- | --- |
-| ![Pantalla de inicio en escritorio](docs/capturas/escritorio-inicio.jpg) | ![Conversación en escritorio](docs/capturas/escritorio-conversacion.jpg) |
+| ![Bienvenida con el avatar del modelo y pétalos en sus colores](docs/capturas/escritorio-inicio.jpg) | ![Conversación con una imagen generada y el medidor de rendimiento](docs/capturas/escritorio-conversacion.jpg) |
 
-| Barra contraída con chats | Panel lateral de pestañas |
+| Barra contraída con chats | Vista dividida con Archivos |
 | --- | --- |
-| ![Panel de chats desde la barra contraída](docs/capturas/escritorio-chats.jpg) | ![Panel lateral con la pestaña Archivos](docs/capturas/escritorio-panel.jpg) |
+| ![Panel de chats desde la barra contraída](docs/capturas/escritorio-chats.jpg) | ![Vista dividida con la pestaña Archivos y los chips en bolitas](docs/capturas/escritorio-panel.jpg) |
 
-| Integraciones | Selector de modelo |
+| Menú «+» | Selector de modelo |
 | --- | --- |
-| ![Menú de integraciones](docs/capturas/escritorio-integraciones.jpg) | ![Selector de modelo](docs/capturas/escritorio-selector-modelo.jpg) |
+| ![Menú «+» reorganizado](docs/capturas/escritorio-menu-mas.jpg) | ![Selector de modelo](docs/capturas/escritorio-selector-modelo.jpg) |
 
 ### Móvil
 
-| Composer | Herramientas y opciones |
+| Bienvenida | Menú «+» |
 | --- | --- |
-| ![Composer en el teléfono](docs/capturas/movil-inicio.jpg) | ![Hoja de herramientas y opciones](docs/capturas/movil-opciones.jpg) |
+| ![Bienvenida en el teléfono con el + y las bolitas de las opciones activas](docs/capturas/movil-inicio.jpg) | ![Menú «+» en el teléfono con Imagen, Razonamiento y Trabajo](docs/capturas/movil-menu-mas.jpg) |
 
 ## Qué cambia
 
