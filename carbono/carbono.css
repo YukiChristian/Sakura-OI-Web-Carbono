@@ -1,5 +1,5 @@
 /*
- * Carbono 0.94 — tema para Open WebUI (probado con 0.13.3).
+ * Carbono 0.95 — tema para Open WebUI (probado con 0.13.3).
  * https://github.com/YukiChristian/Sakura-OI-Web-Carbono
  *
  * El lanzador lo sirve en /static/custom.css mientras exista carbono/ACTIVO (ver README).
@@ -8957,5 +8957,2837 @@ html.dark [role='tabpanel']:has(.sk-voz-boton) {
 
 	html.dark div[data-sk-voz-junto] [data-panel-tab-bar]:has(.panel-tab [role='tab'] path[d^='M12 1C10.34'])::after {
 		background: rgba(255, 255, 255, 0.08);
+	}
+}
+
+/* ---------- Pestaña Navegador (lienzo "Escritorio · Pestaña Navegador rediseñada") ----------
+   Barra de 56 px en vidrio con botones de 38 px y la dirección en una píldora blanca de 40 px (candado, "Nueva
+   pestaña", "Abrir en ventana nueva" fuera de la píldora). Sin página abierta, una tarjeta de 560 px: insignia verde,
+   campo "Escribe una dirección o busca" con Abrir, "Puertos locales" con "Buscar de nuevo" y cada puerto en una fila
+   de 60 px con punto verde. carbono.js marca las piezas (.sk-navegador, .sk-nav-*) y agrega el campo de dirección. */
+.sk-navegador {
+	--sk-nav-verde: #2b8a5a;
+	--sk-nav-filo: #d4d4d8;
+	--sk-nav-candado: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='5' y='11' width='14' height='10' rx='2'/%3E%3Cpath d='M8 11V7a4 4 0 0 1 8 0v4'/%3E%3C/svg%3E");
+	--sk-nav-afuera: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M14 4h6v6M20 4l-9 9'/%3E%3Cpath d='M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5'/%3E%3C/svg%3E");
+}
+
+html.dark .sk-navegador {
+	--sk-nav-verde: #3fae78;
+	--sk-nav-filo: #3f3f46;
+}
+
+/* barra: 56 px en vidrio */
+.sk-nav-barra {
+	gap: 6px !important;
+	height: 56px;
+	padding: 0 12px !important;
+	background: rgba(255, 255, 255, 0.55);
+	-webkit-backdrop-filter: blur(18px) saturate(1.5);
+	backdrop-filter: blur(18px) saturate(1.5);
+	border-bottom: 1px solid var(--sk-border);
+}
+
+html.dark .sk-nav-barra {
+	background: rgba(28, 28, 30, 0.55);
+}
+
+.sk-nav-barra button[aria-label='Volver'],
+.sk-nav-barra button[aria-label='Reenviar'],
+.sk-nav-barra button[aria-label='Refrescar'],
+.sk-nav-barra button[aria-label='Opciones del navegador'],
+.sk-nav-url > div button,
+.sk-nav-url > button {
+	width: 38px !important;
+	height: 38px !important;
+	border-radius: 9999px !important;
+	color: var(--sk-ink) !important;
+}
+
+.sk-nav-barra button[aria-label]:disabled {
+	color: #a1a1aa !important;
+	opacity: 1 !important;
+}
+
+html.dark .sk-nav-barra button[aria-label]:disabled {
+	color: #52525b !important;
+}
+
+.sk-nav-barra button[aria-label]:not(:disabled):hover {
+	background: rgba(120, 120, 128, 0.14) !important;
+}
+
+.sk-nav-barra button[aria-label] svg {
+	width: 18px;
+	height: 18px;
+	stroke-width: 1.9;
+}
+
+/* dirección: píldora blanca de 40 px con candado; "Abrir en ventana nueva" queda fuera, a la derecha */
+.sk-nav-url {
+	margin-right: 44px;
+}
+
+.sk-nav-url::before {
+	content: '';
+	position: absolute;
+	top: 50%;
+	left: 14px;
+	z-index: 1;
+	width: 15px;
+	height: 15px;
+	transform: translateY(-50%);
+	background: var(--sk-ink-muted);
+	-webkit-mask: var(--sk-nav-candado) center / contain no-repeat;
+	mask: var(--sk-nav-candado) center / contain no-repeat;
+	pointer-events: none;
+}
+
+.sk-nav-url input[aria-label='URL'] {
+	height: 40px !important;
+	padding: 0 14px 0 37px !important;
+	border: 0 !important;
+	border-radius: 9999px !important;
+	background: var(--sk-surface) !important;
+	box-shadow: inset 0 0 0 1px var(--sk-nav-filo);
+	color: var(--sk-ink) !important;
+	font-size: 15px !important;
+	line-height: 20px !important;
+	font-weight: 500;
+	text-align: left !important;
+}
+
+.sk-nav-url input[aria-label='URL']::placeholder {
+	color: var(--sk-ink);
+	opacity: 1;
+}
+
+.sk-nav-url input[aria-label='URL']:focus {
+	outline: none !important;
+	box-shadow: inset 0 0 0 1.5px var(--sk-nav-verde), 0 0 0 3px color-mix(in srgb, var(--sk-nav-verde) 18%, transparent);
+}
+
+.sk-nav-url input[aria-label='URL']:focus::placeholder {
+	color: var(--sk-ink-muted);
+}
+
+.sk-nav-url button[aria-label='Abrir en pestaña nueva'] {
+	right: -44px !important;
+	font-size: 0 !important;
+}
+
+.sk-nav-url button[aria-label='Abrir en pestaña nueva']::before {
+	content: '';
+	width: 18px;
+	height: 18px;
+	background: currentColor;
+	-webkit-mask: var(--sk-nav-afuera) center / contain no-repeat;
+	mask: var(--sk-nav-afuera) center / contain no-repeat;
+}
+
+.sk-nav-url button[aria-label='Abrir en pestaña nueva']:disabled {
+	color: #a1a1aa !important;
+	opacity: 1 !important;
+}
+
+/* cuerpo: vidrio claro detrás de la tarjeta */
+.sk-navegador > div > div:last-child:has(.sk-nav-tarjeta) {
+	background: rgba(255, 255, 255, 0.3);
+	-webkit-backdrop-filter: blur(18px) saturate(1.5);
+	backdrop-filter: blur(18px) saturate(1.5);
+}
+
+html.dark .sk-navegador > div > div:last-child:has(.sk-nav-tarjeta) {
+	background: rgba(28, 28, 30, 0.3);
+}
+
+/* tarjeta de 560 px */
+.sk-nav-tarjeta {
+	max-width: 560px !important;
+	padding: 28px;
+	border-radius: 28px;
+	background: rgba(255, 255, 255, 0.86);
+	box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 18px 40px rgba(24, 24, 27, 0.12);
+	color: var(--sk-ink);
+}
+
+html.dark .sk-nav-tarjeta {
+	background: rgba(36, 36, 38, 0.86);
+	box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06), 0 18px 40px rgba(0, 0, 0, 0.4);
+}
+
+/* cabecera: insignia verde de 48 px, "Navegador" y el subtítulo */
+.sk-nav-cabeza {
+	display: grid !important;
+	grid-template-columns: 48px 1fr;
+	column-gap: 14px !important;
+	align-items: center;
+	color: var(--sk-ink) !important;
+	font-size: 22px !important;
+	line-height: 28px !important;
+	font-weight: 700;
+}
+
+.sk-nav-cabeza > svg {
+	grid-row: 1 / span 2;
+	box-sizing: border-box;
+	width: 48px !important;
+	height: 48px !important;
+	padding: 12px;
+	border-radius: 9999px;
+	background: var(--sk-nav-verde);
+	color: #ffffff !important;
+	stroke-width: 1.8;
+}
+
+.sk-nav-cabeza::after {
+	content: 'Abre una página o un servidor de tu Workspace';
+	color: var(--sk-ink-muted);
+	font-size: 15px;
+	line-height: 20px;
+	font-weight: 400;
+}
+
+/* campo de dirección de la tarjeta (lo agrega carbono.js) */
+.sk-nav-ir {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	height: 52px;
+	margin-top: 22px;
+	padding: 0 7px 0 18px;
+	border-radius: 9999px;
+	background: var(--sk-surface);
+	box-shadow: inset 0 0 0 1.5px var(--sk-nav-filo);
+}
+
+.sk-nav-ir:focus-within {
+	box-shadow: inset 0 0 0 1.5px var(--sk-nav-verde), 0 0 0 3px color-mix(in srgb, var(--sk-nav-verde) 18%, transparent);
+}
+
+.sk-nav-ir > svg {
+	flex: none;
+	width: 19px;
+	height: 19px;
+	color: var(--sk-ink-muted);
+}
+
+.sk-nav-ir input {
+	flex: 1;
+	min-width: 0;
+	height: 100%;
+	border: 0;
+	outline: none;
+	background: transparent;
+	color: var(--sk-ink);
+	font-size: 15px;
+}
+
+.sk-nav-ir input::placeholder {
+	color: var(--sk-ink-muted);
+}
+
+.sk-nav-ir button {
+	flex: none;
+	height: 38px;
+	padding: 0 18px;
+	border: 0;
+	border-radius: 9999px;
+	background: var(--sk-ink);
+	color: var(--sk-surface);
+	font-size: 14px;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.sk-nav-ir button:disabled {
+	opacity: 0.35;
+	cursor: default;
+}
+
+/* puertos locales */
+.sk-nav-puertos {
+	margin-top: 26px !important;
+}
+
+.sk-nav-puertos-cabeza {
+	height: 34px !important;
+	margin-bottom: 10px;
+}
+
+.sk-nav-puertos-cabeza > div:first-child {
+	font-size: 0 !important;
+	gap: 8px !important;
+}
+
+.sk-nav-puertos-cabeza > div:first-child::before {
+	content: 'Puertos locales';
+	color: var(--sk-ink-muted);
+	font-size: 12.5px;
+	line-height: 16px;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
+.sk-nav-puertos-cabeza > div:first-child > span {
+	min-width: 20px;
+	height: 20px;
+	padding: 0 6px;
+	border-radius: 9999px;
+	background: color-mix(in srgb, var(--sk-nav-verde) 14%, transparent);
+	color: var(--sk-nav-verde) !important;
+	font-size: 11.5px !important;
+	line-height: 20px;
+	font-weight: 700;
+	text-align: center;
+}
+
+.sk-nav-rebuscar {
+	width: auto !important;
+	height: 34px !important;
+	gap: 7px;
+	padding: 0 14px 0 12px;
+	border-radius: 9999px !important;
+	background: rgba(120, 120, 128, 0.12);
+	color: var(--sk-ink) !important;
+}
+
+.sk-nav-rebuscar:hover {
+	background: rgba(120, 120, 128, 0.2);
+}
+
+.sk-nav-rebuscar svg {
+	width: 15px;
+	height: 15px;
+	stroke-width: 1.9;
+}
+
+.sk-nav-rebuscar::after {
+	content: 'Buscar de nuevo';
+	font-size: 13.5px;
+	line-height: 18px;
+	font-weight: 600;
+}
+
+.sk-nav-puertos .max-h-60 {
+	max-height: 344px !important;
+	margin-top: 0 !important;
+}
+
+/* sin servidores: caja gris con el ícono y una ayuda */
+.sk-nav-vacio {
+	display: grid;
+	justify-items: center;
+	gap: 6px;
+	padding: 24px 22px 22px !important;
+	border-radius: 18px;
+	background: #fafafa;
+	box-shadow: inset 0 0 0 1px var(--sk-border);
+	color: var(--sk-ink) !important;
+	font-size: 16px !important;
+	line-height: 22px !important;
+	font-weight: 600;
+	text-align: center;
+}
+
+html.dark .sk-nav-vacio {
+	background: rgba(255, 255, 255, 0.04);
+}
+
+.sk-nav-vacio::before {
+	content: '';
+	width: 44px;
+	height: 44px;
+	margin-bottom: 6px;
+	border-radius: 9999px;
+	background: rgba(120, 120, 128, 0.12)
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4' width='18' height='7' rx='2'/%3E%3Crect x='3' y='13' width='18' height='7' rx='2'/%3E%3Cpath d='M7 7.5h.01M7 16.5h.01'/%3E%3C/svg%3E")
+		center / 22px no-repeat;
+}
+
+.sk-nav-vacio::after {
+	content: 'Inicia uno desde la Terminal (por ejemplo, en el puerto 3000) y aparecerá aquí para abrirlo.';
+	max-width: 340px;
+	color: var(--sk-ink-muted);
+	font-size: 13.5px;
+	line-height: 19px;
+	font-weight: 400;
+}
+
+/* cada puerto: fila de 60 px con punto verde, "localhost:3000", el proceso, Abrir y ventana nueva */
+.sk-nav-puerto {
+	height: 60px !important;
+	gap: 6px !important;
+	margin-bottom: 8px;
+	padding: 0 10px 0 16px;
+	border-radius: 14px;
+	background: var(--sk-surface);
+	box-shadow: inset 0 0 0 1px var(--sk-border);
+}
+
+.sk-nav-puerto:hover {
+	box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--sk-nav-verde) 45%, var(--sk-border));
+}
+
+.sk-nav-puerto > button:first-child {
+	gap: 14px !important;
+}
+
+.sk-nav-puerto > button:first-child::before {
+	content: '';
+	flex: none;
+	width: 10px;
+	height: 10px;
+	border-radius: 9999px;
+	background: #2f9e44;
+	box-shadow: 0 0 0 4px color-mix(in srgb, #2f9e44 20%, transparent);
+}
+
+.sk-nav-puerto > button:first-child > span:first-of-type {
+	width: auto !important;
+	color: var(--sk-ink) !important;
+	font-size: 16px;
+	line-height: 22px;
+	font-weight: 600;
+}
+
+.sk-nav-puerto > button:first-child > span:first-of-type::before {
+	content: 'localhost';
+}
+
+.sk-nav-puerto > button:first-child > span:last-of-type {
+	color: var(--sk-ink-muted) !important;
+	font-size: 13.5px;
+	line-height: 19px;
+}
+
+.sk-nav-puerto > button:first-child::after {
+	content: 'Abrir';
+	flex: none;
+	height: 38px;
+	padding: 0 16px;
+	border-radius: 9999px;
+	background: var(--sk-ink);
+	color: var(--sk-surface);
+	font-size: 14px;
+	line-height: 38px;
+	font-weight: 600;
+}
+
+.sk-nav-puerto > :last-child:not(button:first-child) button,
+.sk-nav-puerto > button:last-child:not(:first-child) {
+	width: 38px !important;
+	height: 38px !important;
+	border-radius: 9999px !important;
+	color: var(--sk-ink) !important;
+}
+
+.sk-nav-puerto button[aria-label='Abrir en pestaña nueva']:hover {
+	background: rgba(120, 120, 128, 0.14);
+}
+
+.sk-nav-puerto button[aria-label='Abrir en pestaña nueva'] svg {
+	width: 17px;
+	height: 17px;
+	stroke-width: 1.9;
+}
+
+/* teléfono: tarjeta a lo ancho y con menos aire */
+@media (max-width: 640px) {
+	.sk-navegador > div > div:last-child > div.p-6:has(.sk-nav-tarjeta) {
+		padding: 14px !important;
+	}
+
+	.sk-nav-tarjeta {
+		padding: 20px;
+		border-radius: 24px;
+	}
+
+	.sk-nav-barra {
+		gap: 2px !important;
+		padding: 0 8px !important;
+	}
+}
+
+/* ---------- Selector con buscador del editor de modelos (Herramientas, Habilidades, Filtros…) ----------
+   Las filas viven en una columna flexible con altura máxima: se encogían hasta los 38 px de [role='menuitem'] y el
+   nombre y la descripción se enciman. Aquí no se encogen, el buscador va en una píldora sin el contorno azul y el pie
+   (Limpiar · Gestionar · Hecho) queda alineado, con Hecho como botón oscuro. Vidrio como los demás menús. */
+[role='menu'] div.w-96:has(> div:first-child > input) {
+	padding: 6px;
+	border-radius: 18px;
+	border-color: var(--sk-border);
+	background: rgba(255, 255, 255, 0.6);
+	-webkit-backdrop-filter: saturate(180%) blur(20px);
+	backdrop-filter: saturate(180%) blur(20px);
+	box-shadow: 0 12px 32px rgba(24, 24, 27, 0.16);
+}
+
+html.dark [role='menu'] div.w-96:has(> div:first-child > input) {
+	background: rgba(28, 28, 30, 0.6);
+}
+
+/* buscador */
+[role='menu'] div.w-96 > div:first-child:has(> input) {
+	gap: 10px;
+	height: 40px;
+	margin-bottom: 6px;
+	padding: 0 12px;
+	border-radius: 12px;
+	background: rgba(120, 120, 128, 0.1);
+}
+
+[role='menu'] div.w-96 > div:first-child:has(> input) > svg {
+	width: 16px;
+	height: 16px;
+	color: var(--sk-ink-muted);
+}
+
+[role='menu'] div.w-96 > div:first-child > input {
+	height: 100%;
+	padding: 0;
+	border: 0 !important;
+	outline: none !important;
+	box-shadow: none !important;
+	background: transparent !important;
+	color: var(--sk-ink);
+	font-size: 14.5px;
+	line-height: 20px;
+}
+
+[role='menu'] div.w-96 > div:first-child > input::placeholder {
+	color: var(--sk-ink-muted);
+}
+
+/* lista: filas que no se encogen, nombre arriba y descripción abajo */
+[role='menu'] div.w-96:has(> div:first-child > input) > div.overflow-y-auto {
+	max-height: 300px;
+	gap: 2px;
+}
+
+[role='menu'] div.w-96:has(> div:first-child > input) > div.overflow-y-auto > [role='menuitem'] {
+	flex-shrink: 0;
+	gap: 12px;
+	min-height: 40px;
+	padding: 7px 12px;
+	border-radius: 12px;
+	font-size: 14.5px;
+	line-height: 20px;
+}
+
+[role='menu'] div.w-96:has(> div:first-child > input) > div.overflow-y-auto > [role='menuitem'] > span:first-child > span:first-child {
+	font-weight: 500;
+}
+
+[role='menu'] div.w-96:has(> div:first-child > input) > div.overflow-y-auto > [role='menuitem'] > span:first-child > span + span {
+	margin-top: 1px;
+	color: var(--sk-ink-muted);
+	font-size: 12.5px;
+	line-height: 17px;
+}
+
+/* "Habilitar todo (6)": acción secundaria, en gris */
+[role='menu'] div.w-96:has(> div:first-child > input) > div.overflow-y-auto > [role='menuitem']:first-child:not(:has(> span > span)) {
+	color: var(--sk-ink-muted);
+	font-size: 13.5px;
+}
+
+/* elegida: fondo suave y palomita */
+[role='menu'] div.w-96:has(> div:first-child > input) > div.overflow-y-auto > [role='menuitem']:has(> svg) {
+	background: color-mix(in srgb, var(--sk-ink) 6%, transparent);
+}
+
+[role='menu'] div.w-96:has(> div:first-child > input) > div.overflow-y-auto > [role='menuitem']:has(> svg):hover {
+	background: color-mix(in srgb, var(--sk-ink) 9%, transparent);
+}
+
+[role='menu'] div.w-96:has(> div:first-child > input) > div.overflow-y-auto > [role='menuitem'] > svg {
+	width: 17px;
+	height: 17px;
+	color: var(--sk-ink);
+	stroke-width: 2.2;
+}
+
+/* pie: Limpiar · Gestionar · Hecho */
+[role='menu'] div.w-96:has(> div:first-child > input) > div:last-child:not(.overflow-y-auto) {
+	margin-top: 6px;
+	padding: 8px 2px 2px;
+	border-top: 1px solid var(--sk-border);
+}
+
+[role='menu'] div.w-96:has(> div:first-child > input) > div:last-child:not(.overflow-y-auto) [role='menuitem'] {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 36px;
+	padding: 0 14px;
+	border-radius: 9999px;
+	color: var(--sk-ink-muted);
+	font-size: 14px;
+	line-height: 20px;
+	font-weight: 600;
+	text-decoration: none;
+}
+
+[role='menu'] div.w-96:has(> div:first-child > input) > div:last-child:not(.overflow-y-auto) [role='menuitem']:hover {
+	background: rgba(120, 120, 128, 0.14);
+	color: var(--sk-ink);
+}
+
+[role='menu'] div.w-96:has(> div:first-child > input) > div:last-child:not(.overflow-y-auto) > div {
+	gap: 4px;
+}
+
+[role='menu'] div.w-96:has(> div:first-child > input) > div:last-child:not(.overflow-y-auto) > div > [role='menuitem']:last-child,
+[role='menu'] div.w-96:has(> div:first-child > input) > div:last-child:not(.overflow-y-auto) > div > [role='menuitem']:last-child:hover {
+	background: var(--sk-ink);
+	color: var(--sk-surface);
+}
+
+/* ---------- Revisión de menús (lineamientos Carbono) ----------
+   Sin aros azules dentro de los menús: el buscador no se enmarca al enfocarse y la opción enfocada con el teclado se
+   marca con el fondo gris de hover, como al pasar el ratón. */
+:is([role='menu'], .app-dropdown-menu, [data-menu-content]) input:focus-visible {
+	outline: none;
+}
+
+:is([role='menuitem'], [role='menuitemradio'], [role='menuitemcheckbox']):focus-visible,
+.app-dropdown-menu > button:not([role]):focus-visible {
+	outline: none !important;
+	background-color: var(--sk-hover);
+}
+
+/* Opciones de radio y casilla, y botones sueltos de los menús (filtros de Notas, Permisos de Herramientas, opciones
+   del navegador…): mismas medidas que [role='menuitem'] (38 px, 15 px); Open WebUI las deja en 27 px y 13 px */
+:is([role='menuitemradio'], [role='menuitemcheckbox']),
+.app-dropdown-menu > button:not([role]) {
+	min-height: 38px;
+	height: auto;
+	padding-inline: 10px;
+	gap: 10px;
+	border-radius: var(--sk-r-md);
+	font-size: 15px;
+	line-height: 22px;
+	color: var(--sk-ink);
+}
+
+:is([role='menuitemradio'], [role='menuitemcheckbox']):hover,
+.app-dropdown-menu > button:not([role]):hover {
+	background-color: var(--sk-hover);
+}
+
+:is([role='menuitemradio'], [role='menuitemcheckbox']) svg,
+.app-dropdown-menu > button:not([role]) svg {
+	width: 18px;
+	height: 18px;
+	color: var(--sk-ink-muted);
+}
+
+.app-dropdown-menu > button:not([role]) > span {
+	color: inherit;
+	font-size: inherit;
+}
+
+/* Menú del chat: el campo "Añadir una etiqueta…" (12 px) al tamaño de las opciones */
+.app-dropdown-menu div.max-h-28:has(input) {
+	padding: 6px 10px !important;
+}
+
+.app-dropdown-menu div.max-h-28 input {
+	min-height: 28px;
+	font-size: 14px;
+	line-height: 20px;
+}
+
+/* Selector con buscador (Herramientas, Conocimiento…): el [role=menu] que lo envuelve llevaba el vidrio y el borde de
+   los menús y se veía un marco doble alrededor de la tarjeta */
+[role='menu']:has(> div > div.w-96 > div:first-child > input) {
+	padding: 0;
+	border: 0;
+	box-shadow: none;
+	background: transparent !important;
+	-webkit-backdrop-filter: none;
+	backdrop-filter: none;
+}
+
+/* rótulos de sección ("Notas") en mayúsculas como los de la barra lateral */
+[role='menu'] div.w-96:has(> div:first-child > input) > div.overflow-y-auto > div[class~='text-[0.6875rem]'] {
+	padding: 8px 12px 4px;
+	color: var(--sk-ink-muted);
+	font-size: 12px;
+	line-height: 16px;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
+[role='menu'] div.w-96:has(> div:first-child > input) > div.overflow-y-auto > [role='menuitem'] > span.shrink-0 svg {
+	width: 18px;
+	height: 18px;
+	color: var(--sk-ink-muted);
+}
+
+/* sin resultados ("No se encontraron habilidades") */
+[role='menu'] div.w-96:has(> div:first-child > input) > div.overflow-y-auto > div.py-4 {
+	padding: 18px 14px !important;
+	color: var(--sk-ink);
+	font-size: 14.5px;
+	line-height: 20px;
+	font-weight: 600;
+	text-align: center;
+}
+
+[role='menu'] div.w-96:has(> div:first-child > input) > div.overflow-y-auto > div.py-4 p {
+	margin-top: 4px;
+	color: var(--sk-ink-muted);
+	font-size: 13px;
+	line-height: 18px;
+	font-weight: 400;
+}
+
+/* Hecho oscuro también cuando el pie trae una acción a la izquierda (Conocimiento: "Subir Archivos") */
+[role='menu'] div.w-96:has(> div:first-child > input) > div:last-child:not(.overflow-y-auto) div.ml-auto > [role='menuitem']:last-child,
+[role='menu'] div.w-96:has(> div:first-child > input) > div:last-child:not(.overflow-y-auto) div.ml-auto > [role='menuitem']:last-child:hover {
+	background: var(--sk-ink);
+	color: var(--sk-surface);
+}
+
+/* Versiones del modelo ("Producción" en el editor): filas de 44 px con avatar de 26 px, el identificador en 14 px,
+   la fecha en gris y "Producción" como insignia verde; Anterior · Siguiente como píldoras */
+.app-dropdown-menu:has(> div.group > button[role='menuitemradio'] time) {
+	width: 340px;
+}
+
+/* el identificador (7 caracteres) no se recorta: la fecha y la insignia ceden */
+.app-dropdown-menu:has(> div.group > button[role='menuitemradio'] time) > div.group > button > span:first-child {
+	flex: none;
+}
+
+.app-dropdown-menu:has(> div.group > button[role='menuitemradio'] time) > div.group > button > span:has(> time) {
+	flex: 1;
+	min-width: 0;
+	justify-content: flex-end;
+	overflow: hidden;
+}
+
+.app-dropdown-menu:has(> div.group > button[role='menuitemradio'] time) > div.group {
+	height: 44px !important;
+	border-radius: 12px;
+}
+
+.app-dropdown-menu:has(> div.group > button[role='menuitemradio'] time) > div.group:hover,
+.app-dropdown-menu:has(> div.group > button[role='menuitemradio'] time) > div.group:has(> button[aria-checked='true']) {
+	background-color: var(--sk-hover);
+}
+
+.app-dropdown-menu:has(> div.group > button[role='menuitemradio'] time) > div.group > div:first-child {
+	margin: 0 12px 0 10px;
+}
+
+.app-dropdown-menu:has(> div.group > button[role='menuitemradio'] time) > div.group img {
+	width: 26px;
+	height: 26px;
+}
+
+.app-dropdown-menu:has(> div.group > button[role='menuitemradio'] time) > div.group > button[role='menuitemradio'] {
+	height: 100%;
+	min-height: 0;
+	padding: 0 12px 0 0;
+	gap: 10px;
+	background: transparent !important;
+}
+
+.app-dropdown-menu:has(> div.group > button[role='menuitemradio'] time) > div.group > button span.text-xs {
+	color: var(--sk-ink);
+	font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+	font-size: 14px;
+	line-height: 20px;
+	font-weight: 600;
+}
+
+.app-dropdown-menu:has(> div.group > button[role='menuitemradio'] time) time {
+	color: var(--sk-ink-muted);
+	font-size: 12.5px;
+	line-height: 18px;
+}
+
+.app-dropdown-menu:has(> div.group > button[role='menuitemradio'] time) > div.group > button > span[class~='text-[0.625rem]'] {
+	height: 20px;
+	padding: 0 8px;
+	border-radius: 9999px;
+	background: color-mix(in srgb, #2f9e44 14%, transparent);
+	color: #2b8a3e;
+	font-size: 11.5px;
+	line-height: 20px;
+	font-weight: 700;
+}
+
+html.dark .app-dropdown-menu:has(> div.group > button[role='menuitemradio'] time) > div.group > button > span[class~='text-[0.625rem]'] {
+	color: #69db7c;
+}
+
+.app-dropdown-menu:has(> div.group > button[role='menuitemradio'] time) > hr {
+	margin: 4px 6px;
+	border-color: var(--sk-border);
+}
+
+.app-dropdown-menu:has(> div.group > button[role='menuitemradio'] time) > div.justify-between:last-child {
+	margin-top: 4px;
+	padding: 8px 4px 2px !important;
+	border-top: 1px solid var(--sk-border);
+}
+
+.app-dropdown-menu:has(> div.group > button[role='menuitemradio'] time) > div.justify-between:last-child > button {
+	min-height: 34px;
+	height: 34px;
+	padding: 0 14px;
+	border-radius: 9999px;
+	background: rgba(120, 120, 128, 0.12);
+	color: var(--sk-ink);
+	font-size: 13.5px;
+	font-weight: 600;
+}
+
+.app-dropdown-menu:has(> div.group > button[role='menuitemradio'] time) > div.justify-between:last-child > button:disabled {
+	opacity: 0.4;
+}
+
+/* ---------- Notificaciones de chat (la tarjeta con avatar que sale al terminar una respuesta) ----------
+   Vidrio como los menús, avatar de 36 px, título de 14.5 px y el texto en gris; la X es un círculo arriba a la
+   derecha. Las reglas del estado del modo voz ([role=status] > button) también le pegaban: se anulan aquí. */
+[data-sonner-toast] [role='status'][aria-live].group {
+	gap: 12px;
+	padding: 14px 16px;
+	border: 1px solid var(--sk-border);
+	border-radius: 18px;
+	background: rgba(255, 255, 255, 0.78);
+	-webkit-backdrop-filter: saturate(180%) blur(20px);
+	backdrop-filter: saturate(180%) blur(20px);
+	box-shadow: var(--sk-shadow-lg);
+	color: var(--sk-ink);
+	font-family: 'Atkinson Hyperlegible Next', 'Segoe UI', system-ui, sans-serif;
+}
+
+html.dark [data-sonner-toast] [role='status'][aria-live].group {
+	background: rgba(28, 28, 30, 0.78);
+}
+
+[data-sonner-toast] [role='status'][aria-live].group > div:has(> img) {
+	transform: none;
+}
+
+[data-sonner-toast] [role='status'][aria-live].group img {
+	width: 36px;
+	height: 36px;
+	object-fit: cover;
+}
+
+[data-sonner-toast] [role='status'][aria-live].group > div:last-child {
+	min-width: 0;
+	padding-right: 18px;
+}
+
+[data-sonner-toast] [role='status'][aria-live].group div[class~='text-[0.8125rem]'] {
+	margin-bottom: 2px;
+	color: var(--sk-ink);
+	font-size: 14.5px;
+	line-height: 20px;
+	font-weight: 600;
+}
+
+[data-sonner-toast] [role='status'][aria-live].group div.line-clamp-2 {
+	color: var(--sk-ink-muted);
+	font-size: 13.5px;
+	line-height: 19px;
+}
+
+[data-sonner-toast] [role='status'][aria-live].group > button {
+	top: 8px;
+	right: 8px;
+	left: auto;
+	display: grid;
+	place-items: center;
+	width: 24px;
+	height: 24px;
+	padding: 0;
+	gap: 0;
+	border-radius: 9999px;
+	background: rgba(120, 120, 128, 0.14);
+	color: var(--sk-ink-muted);
+	font-size: 0;
+	line-height: 0;
+}
+
+[data-sonner-toast] [role='status'][aria-live].group > button::before {
+	content: none;
+}
+
+[data-sonner-toast] [role='status'][aria-live].group > button:hover {
+	color: var(--sk-ink);
+}
+
+[data-sonner-toast] [role='status'][aria-live].group > button svg {
+	width: 12px;
+	height: 12px;
+}
+
+/* ---------- Panel de notificaciones de la campana (#sidebar-notifications) ----------
+   Rótulos en mayúsculas como los de la barra lateral, filas de 14.5 px con el ícono de 28 px y la hora en gris;
+   sin notificaciones, la campana en un círculo con el aviso debajo. */
+#sidebar-notifications div[class~='text-[0.6875rem]'].pt-3 {
+	padding: 14px 12px 6px;
+	color: var(--sk-ink-muted);
+	font-size: 12px;
+	line-height: 16px;
+	font-weight: 700;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
+#sidebar-notifications button.items-start {
+	gap: 12px;
+	margin: 2px 0;
+	padding: 10px 12px;
+	border-radius: 12px;
+}
+
+#sidebar-notifications button.items-start:hover {
+	background-color: var(--sk-hover);
+}
+
+#sidebar-notifications button.items-start > span.relative {
+	width: 28px;
+	height: 28px;
+	margin-top: 0;
+}
+
+#sidebar-notifications button.items-start > span.relative :is(img, svg) {
+	width: 28px;
+	height: 28px;
+	border-radius: 9999px;
+	object-fit: cover;
+}
+
+#sidebar-notifications button.items-start > span.relative svg {
+	box-sizing: border-box;
+	padding: 5px;
+	background: rgba(120, 120, 128, 0.12);
+	color: var(--sk-ink-muted);
+}
+
+#sidebar-notifications button.items-start span.line-clamp-2 {
+	color: var(--sk-ink);
+	font-size: 14.5px;
+	line-height: 20px;
+}
+
+#sidebar-notifications button.items-start time {
+	color: var(--sk-ink-muted);
+	font-size: 12px;
+	line-height: 20px;
+}
+
+#sidebar-notifications button.items-start div.truncate {
+	margin-top: 2px;
+	color: var(--sk-ink-muted);
+	font-size: 13px;
+	line-height: 18px;
+}
+
+#sidebar-notifications p.text-center.text-xs {
+	flex-direction: column;
+	gap: 12px;
+	padding: 40px 20px;
+	color: var(--sk-ink-muted);
+	font-size: 14.5px;
+	line-height: 20px;
+}
+
+#sidebar-notifications p.text-center.text-xs::before {
+	content: '';
+	width: 44px;
+	height: 44px;
+	border-radius: 9999px;
+	background: rgba(120, 120, 128, 0.12)
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9'/%3E%3Cpath d='M13.73 21a2 2 0 0 1-3.46 0'/%3E%3C/svg%3E")
+		center / 22px no-repeat;
+}
+
+#sidebar-notifications [role='status'],
+#sidebar-notifications [role='alert'],
+#sidebar-notifications p[class~='text-[0.6875rem]'] {
+	font-size: 13px;
+	line-height: 18px;
+}
+
+/* ---------- Ventana "Añadir control" / editar control (Controles del modelo, editor de modelos) ----------
+   Open WebUI la deja con campos sin borde de 13 px y etiquetas de 12 px. Aquí: tarjeta de 440 px con esquinas de
+   22 px, campos de 36 px con filo y aro al enfocarse, "Mostrar" como control segmentado (el del menú de
+   Razonamiento), cada opción en su propia tarjeta gris, "Añadir opción" con borde punteado y el pie con píldoras. Compacta: lo justo para leerse bien. */
+[role='dialog']:has(input[aria-label='Nombre del control']) {
+	--sk-campo-filo: #d4d4d8;
+}
+
+html.dark [role='dialog']:has(input[aria-label='Nombre del control']) {
+	--sk-campo-filo: #3f3f46;
+}
+
+[role='dialog']:has(input[aria-label='Nombre del control']) > div {
+	width: 440px;
+	border: 1px solid var(--sk-border);
+	border-radius: 22px;
+	background: var(--sk-surface);
+	box-shadow: 0 18px 44px rgba(24, 24, 27, 0.2);
+}
+
+[role='dialog']:has(input[aria-label='Nombre del control']) > div > div {
+	padding: 16px 18px;
+}
+
+/* cabecera: título de 17 px y cerrar en círculo */
+[role='dialog']:has(input[aria-label='Nombre del control']) > div > div > div:first-child {
+	margin-bottom: 12px;
+}
+
+[role='dialog']:has(input[aria-label='Nombre del control']) > div > div > div:first-child > div {
+	color: var(--sk-ink);
+	font-size: 17px;
+	line-height: 24px;
+	font-weight: 700;
+}
+
+[role='dialog']:has(input[aria-label='Nombre del control']) button[aria-label='Cerrar'] {
+	width: 30px;
+	height: 30px;
+	border-radius: 9999px;
+	background: rgba(120, 120, 128, 0.12);
+	color: var(--sk-ink);
+}
+
+[role='dialog']:has(input[aria-label='Nombre del control']) button[aria-label='Cerrar']:hover {
+	background: rgba(120, 120, 128, 0.2);
+}
+
+[role='dialog']:has(input[aria-label='Nombre del control']) button[aria-label='Cerrar'] svg {
+	width: 14px;
+	height: 14px;
+}
+
+/* formulario: 16 px entre bloques; Nombre y Opción predeterminada en dos columnas sin partir la etiqueta */
+[role='dialog']:has(input[aria-label='Nombre del control']) form > * + * {
+	margin-top: 11px !important;
+}
+
+[role='dialog']:has(input[aria-label='Nombre del control']) form > div.grid:first-child {
+	grid-template-columns: minmax(0, 1fr) minmax(0, 10rem);
+	gap: 10px;
+}
+
+/* etiquetas */
+[role='dialog']:has(input[aria-label='Nombre del control']) form span.text-xs.text-gray-600 {
+	display: block;
+	margin-bottom: 4px;
+	color: var(--sk-ink-muted);
+	font-size: 12.5px;
+	line-height: 16px;
+	font-weight: 600;
+}
+
+/* campos de 36 px con filo; 34 px los de cada parámetro */
+[role='dialog']:has(input[aria-label='Nombre del control']) form :is(input:not([type='checkbox'], [type='radio'], [type='range']), select) {
+	height: 36px;
+	padding: 0 12px;
+	border: 0;
+	border-radius: 10px;
+	background-color: var(--sk-surface);
+	box-shadow: inset 0 0 0 1px var(--sk-campo-filo);
+	color: var(--sk-ink);
+	font-size: 14px;
+	line-height: 20px;
+	outline: none !important;
+	transition: box-shadow 0.15s;
+}
+
+[role='dialog']:has(input[aria-label='Nombre del control']) form :is(input, select)::placeholder {
+	color: var(--sk-ink-subtle, #a1a1aa);
+}
+
+[role='dialog']:has(input[aria-label='Nombre del control']) form :is(input:not([type='checkbox'], [type='radio'], [type='range']), select):focus {
+	box-shadow: inset 0 0 0 1.5px var(--sk-ink), 0 0 0 3px color-mix(in srgb, var(--sk-ink) 12%, transparent);
+}
+
+[role='dialog']:has(input[aria-label='Nombre del control']) form select {
+	-webkit-appearance: none;
+	appearance: none;
+	padding-right: 32px;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+	background-position: right 10px center;
+	background-size: 14px;
+	background-repeat: no-repeat;
+	cursor: pointer;
+}
+
+/* el chevrón propio de Open WebUI junto al select sobra */
+[role='dialog']:has(input[aria-label='Nombre del control']) form select + svg,
+[role='dialog']:has(input[aria-label='Nombre del control']) form label:has(> select) svg {
+	display: none;
+}
+
+[role='dialog']:has(input[aria-label='Nombre del control']) form .pl-8 input {
+	height: 34px;
+	font-size: 13.5px;
+}
+
+/* "Mostrar": control segmentado */
+[role='dialog']:has(input[aria-label='Nombre del control']) form > div.justify-between:has(> div.gap-1 > button) > span {
+	margin-bottom: 0;
+}
+
+[role='dialog']:has(input[aria-label='Nombre del control']) form > div.justify-between > div.gap-1:has(> button) {
+	gap: 2px;
+	padding: 2px;
+	border-radius: 10px;
+	background: color-mix(in srgb, var(--sk-sidebar) 85%, transparent);
+	box-shadow: inset 0 0 0 1px var(--sk-border);
+}
+
+[role='dialog']:has(input[aria-label='Nombre del control']) form > div.justify-between > div.gap-1 > button {
+	height: 28px;
+	padding: 0 11px;
+	border-radius: 8px;
+	background: transparent;
+	color: var(--sk-ink-muted);
+	font-size: 12.5px;
+	line-height: 18px;
+	font-weight: 600;
+}
+
+[role='dialog']:has(input[aria-label='Nombre del control']) form > div.justify-between > div.gap-1 > button:hover {
+	color: var(--sk-ink);
+}
+
+[role='dialog']:has(input[aria-label='Nombre del control']) form > div.justify-between > div.gap-1 > button.bg-gray-100 {
+	background: var(--sk-surface);
+	color: var(--sk-ink);
+	box-shadow: 0 1px 3px rgba(24, 24, 27, 0.12), 0 0 0 1px var(--sk-border);
+}
+
+html.dark [role='dialog']:has(input[aria-label='Nombre del control']) form > div.justify-between > div.gap-1 > button.bg-gray-100 {
+	background: var(--sk-hover);
+}
+
+/* opciones: cada una en su tarjeta gris */
+[role='dialog']:has(input[aria-label='Nombre del control']) form div.divide-y {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+[role='dialog']:has(input[aria-label='Nombre del control']) form div.divide-y > div {
+	padding: 8px 8px 8px !important;
+	border: 0 !important;
+	border-radius: 13px;
+	background: rgba(120, 120, 128, 0.06);
+	box-shadow: inset 0 0 0 1px var(--sk-border);
+}
+
+[role='dialog']:has(input[aria-label='Nombre del control']) form div.divide-y > div > div.flex.items-center:first-child {
+	gap: 6px;
+}
+
+[role='dialog']:has(input[aria-label='Nombre del control']) form div.divide-y > div > div.pl-8 {
+	margin-top: 6px;
+	padding-left: 34px;
+}
+
+[role='dialog']:has(input[aria-label='Nombre del control']) form .pl-8 div.grid {
+	gap: 8px;
+	align-items: end;
+}
+
+/* reordenar, eliminar opción y eliminar parámetro: botones redondos de 28 px */
+[role='dialog']:has(input[aria-label='Nombre del control']) :is(button[aria-label='Reordenar opción'], button[aria-label='Eliminar opción'], button[aria-label='Eliminar parámetro']) {
+	flex: none;
+	width: 28px;
+	height: 28px;
+	margin: 0;
+	border-radius: 9999px;
+	color: var(--sk-ink-muted);
+}
+
+[role='dialog']:has(input[aria-label='Nombre del control']) button[aria-label='Eliminar parámetro'] {
+	margin-bottom: 3px;
+}
+
+[role='dialog']:has(input[aria-label='Nombre del control']) :is(button[aria-label='Reordenar opción'], button[aria-label='Eliminar opción'], button[aria-label='Eliminar parámetro']):hover {
+	background: rgba(120, 120, 128, 0.14);
+	color: var(--sk-ink);
+}
+
+[role='dialog']:has(input[aria-label='Nombre del control']) :is(button[aria-label='Reordenar opción'], button[aria-label='Eliminar opción'], button[aria-label='Eliminar parámetro']) svg {
+	width: 14px;
+	height: 14px;
+}
+
+/* "Añadir parámetro": píldora discreta */
+[role='dialog']:has(input[aria-label='Nombre del control']) button[aria-label='Añadir Parámetro Personalizado'] {
+	height: 26px;
+	margin-top: 6px;
+	padding: 0 10px 0 8px;
+	gap: 5px;
+	border-radius: 9999px;
+	background: rgba(120, 120, 128, 0.1);
+	color: var(--sk-ink);
+	font-size: 12.5px;
+	line-height: 16px;
+	font-weight: 600;
+}
+
+[role='dialog']:has(input[aria-label='Nombre del control']) button[aria-label='Añadir Parámetro Personalizado']:hover {
+	background: rgba(120, 120, 128, 0.18);
+}
+
+[role='dialog']:has(input[aria-label='Nombre del control']) button[aria-label='Añadir Parámetro Personalizado']:disabled {
+	opacity: 0.45;
+}
+
+[role='dialog']:has(input[aria-label='Nombre del control']) button[aria-label='Añadir Parámetro Personalizado'] svg {
+	width: 14px;
+	height: 14px;
+}
+
+/* "Añadir opción": a lo ancho con borde punteado */
+[role='dialog']:has(input[aria-label='Nombre del control']) form div.divide-y ~ button {
+	justify-content: center;
+	width: 100%;
+	height: 36px;
+	margin-top: 8px;
+	gap: 6px;
+	border: 1.5px dashed var(--sk-campo-filo);
+	border-radius: 11px;
+	background: transparent;
+	color: var(--sk-ink);
+	font-size: 13.5px;
+	line-height: 20px;
+	font-weight: 600;
+}
+
+[role='dialog']:has(input[aria-label='Nombre del control']) form div.divide-y ~ button:hover {
+	border-color: var(--sk-ink-muted);
+	background: rgba(120, 120, 128, 0.06);
+}
+
+[role='dialog']:has(input[aria-label='Nombre del control']) form div.divide-y ~ button svg {
+	width: 14px;
+	height: 14px;
+}
+
+/* aviso del control deslizante ("Añade al menos dos opciones…") */
+[role='dialog']:has(input[aria-label='Nombre del control']) form p {
+	color: var(--sk-ink-muted);
+	font-size: 13px;
+	line-height: 18px;
+}
+
+/* pie: Cancelar gris y Aplicar oscuro, píldoras de 34 px */
+[role='dialog']:has(input[aria-label='Nombre del control']) form > div.justify-end:last-child {
+	gap: 6px;
+	padding-top: 4px;
+}
+
+[role='dialog']:has(input[aria-label='Nombre del control']) form > div.justify-end:last-child > button {
+	height: 34px;
+	padding: 0 16px;
+	border-radius: 9999px;
+	font-size: 13.5px;
+	line-height: 20px;
+	font-weight: 600;
+}
+
+[role='dialog']:has(input[aria-label='Nombre del control']) form > div.justify-end:last-child > button[type='button'] {
+	background: rgba(120, 120, 128, 0.12);
+	color: var(--sk-ink);
+}
+
+[role='dialog']:has(input[aria-label='Nombre del control']) form > div.justify-end:last-child > button[type='button']:hover {
+	background: rgba(120, 120, 128, 0.2);
+}
+
+[role='dialog']:has(input[aria-label='Nombre del control']) form > div.justify-end:last-child > button[type='submit'] {
+	background: var(--sk-ink);
+	color: var(--sk-surface);
+}
+
+[role='dialog']:has(input[aria-label='Nombre del control']) form > div.justify-end:last-child > button[type='submit']:disabled {
+	opacity: 0.35;
+}
+
+/* teléfono: una sola columna y menos aire */
+@media (max-width: 560px) {
+	[role='dialog']:has(input[aria-label='Nombre del control']) > div > div {
+		padding: 18px 16px;
+	}
+
+	[role='dialog']:has(input[aria-label='Nombre del control']) form > div.grid:first-child {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	[role='dialog']:has(input[aria-label='Nombre del control']) form div.divide-y > div > div.pl-8 {
+		padding-left: 0;
+	}
+}
+
+/* la flecha de sugerencias de Chrome en "Parámetro" (datalist), tenue en lugar de negra */
+[role='dialog']:has(input[aria-label='Nombre del control']) input[list]::-webkit-calendar-picker-indicator {
+	opacity: 0.35;
+	cursor: pointer;
+}
+
+
+/* ---------- Editar un mensaje propio ----------
+   Open WebUI abre el editor a todo el ancho y pegado a la izquierda, aunque tus mensajes van a la derecha. Aquí queda
+   a la derecha, donde estaba el globo, como una tarjeta de hasta 720 px parecida a la caja de escribir: fondo blanco,
+   filo gris, texto de 16 px, aro suave al escribir (sin el contorno azul) y los botones como píldoras de 34 px:
+   Guardar (sin reenviar) gris a la izquierda, Cancelar y Enviar a la derecha. */
+#messages-container div.rounded-3xl:has(> div > textarea[id^='message-edit-']) {
+	width: min(100%, 720px);
+	margin-left: auto;
+	padding: 14px 16px 12px;
+	border: 1px solid var(--sk-border);
+	border-radius: 20px;
+	background-color: var(--sk-surface);
+	box-shadow: 0 6px 24px rgba(24, 24, 27, 0.08);
+	outline: none !important;
+	transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+#messages-container div.rounded-3xl:has(> div > textarea[id^='message-edit-']):focus-within {
+	border-color: color-mix(in srgb, var(--sk-ink) 35%, var(--sk-border));
+	box-shadow: 0 6px 24px rgba(24, 24, 27, 0.08), 0 0 0 3px color-mix(in srgb, var(--sk-ink) 8%, transparent);
+}
+
+#messages-container textarea[id^='message-edit-'] {
+	min-height: 52px;
+	color: var(--sk-ink);
+	font-size: 16px;
+	line-height: 26px;
+}
+
+#messages-container div.rounded-3xl:has(> div > textarea[id^='message-edit-']) > div:last-child {
+	align-items: center;
+	margin: 10px 0 0;
+}
+
+#messages-container div.rounded-3xl:has(> div > textarea[id^='message-edit-']) > div:last-child > div:last-child {
+	gap: 6px;
+}
+
+#messages-container div.rounded-3xl:has(> div > textarea[id^='message-edit-']) > div:last-child > div:last-child > * + * {
+	margin-left: 0 !important;
+}
+
+#messages-container :is(#save-edit-message-button, #close-edit-message-button, #confirm-edit-message-button) {
+	height: 34px;
+	padding: 0 16px;
+	border-radius: 9999px;
+	font-size: 13.5px;
+	line-height: 18px;
+	font-weight: 600;
+}
+
+#messages-container #save-edit-message-button {
+	background-color: rgba(120, 120, 128, 0.12);
+	color: var(--sk-ink);
+}
+
+#messages-container #save-edit-message-button:hover {
+	background-color: rgba(120, 120, 128, 0.2);
+}
+
+#messages-container #close-edit-message-button {
+	background-color: transparent;
+	color: var(--sk-ink-muted);
+}
+
+#messages-container #close-edit-message-button:hover {
+	background-color: rgba(120, 120, 128, 0.12);
+	color: var(--sk-ink);
+}
+
+#messages-container #confirm-edit-message-button {
+	background-color: var(--sk-ink);
+	color: var(--sk-surface);
+}
+
+#messages-container #confirm-edit-message-button:hover {
+	background-color: color-mix(in srgb, var(--sk-ink) 85%, var(--sk-surface));
+}
+
+#messages-container :is(#save-edit-message-button, #close-edit-message-button, #confirm-edit-message-button) * {
+	color: inherit;
+}
+
+/* ---------- Ajustes rediseñados (lienzo "Escritorio · Ajustes rediseñados": General, Documentos, Conexiones) ----------
+   En escritorio, para las 27 pestañas (personales y de administrador):
+   · ventana de vidrio con esquinas de 24 px sobre el fondo oscurecido y desenfocado;
+   · menú de 260 px en vidrio con rótulos en mayúsculas y la pestaña activa en azul;
+   · título de 26 px con una línea que explica la pestaña;
+   · cada sección es una tarjeta blanca de esquinas de 18 px con su título en mayúsculas encima; las filas miden
+     ~56 px con la etiqueta en 16 px, la descripción debajo en 14.5 px gris y una línea fina entre filas;
+   · selectores de 40 px, campos de 42 px con fondo gris claro, interruptores de 44 × 26 y botones de texto como píldoras;
+   · Guardar en una barra de vidrio pegada abajo, con píldora oscura. */
+@media (min-width: 768px) {
+	/* fondo y ventana */
+	.modal[role='dialog']:has(#settings-tabs-container) {
+		background-color: rgba(24, 24, 27, 0.32);
+		-webkit-backdrop-filter: blur(6px);
+		backdrop-filter: blur(6px);
+	}
+
+	.modal[role='dialog']:has(#settings-tabs-container) > div {
+		overflow: hidden;
+		border: 0;
+		border-radius: 24px;
+		background-color: rgba(255, 255, 255, 0.6);
+		-webkit-backdrop-filter: saturate(180%) blur(20px);
+		backdrop-filter: saturate(180%) blur(20px);
+		box-shadow: 0 30px 80px rgba(24, 24, 27, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.5);
+	}
+
+	html.dark .modal[role='dialog']:has(#settings-tabs-container) > div {
+		background-color: rgba(28, 28, 30, 0.6);
+		box-shadow: 0 30px 80px rgba(0, 0, 0, 0.55), 0 0 0 1px rgba(255, 255, 255, 0.08);
+	}
+
+	/* menú de pestañas */
+	#settings-tabs-container {
+		width: 260px;
+		padding: 10px 6px;
+		background-color: rgba(255, 255, 255, 0.55);
+		-webkit-backdrop-filter: blur(18px) saturate(1.5);
+		backdrop-filter: blur(18px) saturate(1.5);
+		border-color: rgba(24, 24, 27, 0.08);
+	}
+
+	html.dark #settings-tabs-container {
+		background-color: rgba(28, 28, 30, 0.55);
+		border-color: rgba(255, 255, 255, 0.08);
+	}
+
+	#settings-tabs-container [role='tab'],
+	#settings-tabs-container > div:first-child button {
+		min-height: 40px;
+		padding-inline: 12px;
+		gap: 12px;
+		border-radius: 10px;
+		font-size: 15px;
+		line-height: 20px;
+		font-weight: 500;
+	}
+
+	#settings-tabs-container > div:first-child button {
+		color: var(--sk-ink);
+		font-weight: 600;
+	}
+
+	#settings-tabs-container div:has(> input#search-input-settings-modal) {
+		height: 40px;
+		border: 0;
+		border-radius: 12px;
+		background-color: rgba(255, 255, 255, 0.85);
+		box-shadow: inset 0 0 0 1px var(--sk-border);
+	}
+
+	html.dark #settings-tabs-container div:has(> input#search-input-settings-modal) {
+		background-color: rgba(255, 255, 255, 0.06);
+	}
+
+	#settings-tabs-container div:has(> input#search-input-settings-modal:focus) {
+		box-shadow: inset 0 0 0 1.5px var(--sk-azul), 0 0 0 3px color-mix(in srgb, var(--sk-azul) 15%, transparent);
+	}
+
+	#settings-tabs-container [class*='text-[0.625rem]'] {
+		padding-top: 10px;
+		color: var(--sk-ink-muted);
+		font-size: 11.5px;
+		line-height: 16px;
+		font-weight: 700;
+		letter-spacing: 0.07em;
+	}
+
+	#settings-tabs-container [role='tab'][aria-selected='false'] {
+		color: var(--sk-ink);
+	}
+
+	#settings-tabs-container [role='tab'][aria-selected='false'] svg {
+		color: color-mix(in srgb, var(--sk-ink) 80%, transparent);
+	}
+
+	#settings-tabs-container [role='tab'][aria-selected='false']:hover {
+		background-color: rgba(120, 120, 128, 0.12);
+	}
+
+	#settings-tabs-container [role='tab'][aria-selected='true'] {
+		background-color: #e6eefb;
+		color: #1d4fa3;
+		font-weight: 600;
+	}
+
+	#settings-tabs-container [role='tab'][aria-selected='true'] svg {
+		color: #2361c7;
+	}
+
+	html.dark #settings-tabs-container [role='tab'][aria-selected='true'] {
+		background-color: rgba(35, 97, 199, 0.22);
+		color: #a9c6f5;
+	}
+
+	html.dark #settings-tabs-container [role='tab'][aria-selected='true'] svg {
+		color: #8ab4ff;
+	}
+
+	/* área de contenido */
+	/* el margen va dentro de cada pestaña (no en el contenedor, que recorta) para que la barra de Guardar llegue de
+	   orilla a orilla */
+	#settings-tabs-container + div {
+		padding: 22px 0 0 !important;
+		background-color: #fbfbfc;
+	}
+
+	#settings-tabs-container + div [id^='tab-'] {
+		--sk-aj-margen: 28px;
+		padding-inline: var(--sk-aj-margen);
+	}
+
+	html.dark #settings-tabs-container + div {
+		background-color: var(--sk-bg);
+	}
+
+}
+
+/* desde aquí, común a escritorio y teléfono (el margen lateral cambia con --sk-aj-margen) */
+	/* título de la pestaña con su explicación debajo */
+	#settings-tabs-container + div [id^='tab-'] h2 {
+		margin-bottom: 16px;
+		color: var(--sk-ink);
+		font-size: 26px;
+		line-height: 32px;
+		font-weight: 700;
+	}
+
+	#settings-tabs-container + div [id^='tab-'] h2::after {
+		display: block;
+		margin-top: 2px;
+		color: var(--sk-ink-muted);
+		font-size: 15px;
+		line-height: 22px;
+		font-weight: 400;
+	}
+
+	#tab-general h2::after { content: 'Apariencia, idioma y comportamiento por defecto de tus chats'; }
+	#tab-interface h2::after { content: 'Cómo se ven y se comportan los chats, los mensajes y la caja de escribir'; }
+	#tab-notifications h2::after { content: 'Avisos y sonidos cuando llega una respuesta'; }
+	#tab-shortcuts h2::after { content: 'Atajos de teclado para moverte más rápido'; }
+	#tab-tools h2::after { content: 'Servidores de herramientas y servicios conectados a tu cuenta'; }
+	#tab-audio h2::after { content: 'Voz para dictar y para escuchar las respuestas'; }
+	#tab-data-controls h2::after { content: 'Importa, exporta y administra tus chats y archivos'; }
+	#tab-usage h2::after { content: 'Cuánto has usado los modelos'; }
+	#tab-archived-chats h2::after { content: 'Chats que guardaste fuera de la lista'; }
+	#tab-account h2::after { content: 'Tu perfil, contraseña y claves de acceso'; }
+	#tab-about h2::after { content: 'Versión, actualizaciones y créditos'; }
+	#tab-admin-general h2::after { content: 'Opciones generales del servidor y de los usuarios'; }
+	#tab-admin-authentication h2::after { content: 'Inicio de sesión, registros y claves de API'; }
+	#tab-admin-interface h2::after { content: 'Tareas automáticas, banners y sugerencias de inicio'; }
+	#tab-admin-connections h2::after { content: 'Servidores de modelos conectados'; }
+	#tab-admin-models h2::after { content: 'Modelos disponibles y su configuración'; }
+	#tab-admin-subagents h2::after { content: 'Modelos que otros modelos pueden llamar como ayudantes'; }
+	#tab-admin-integrations h2::after { content: 'Servidores de herramientas para todos los usuarios'; }
+	#tab-admin-documents h2::after { content: 'Cómo se leen, dividen e indexan los archivos que subes'; }
+	#tab-admin-audio h2::after { content: 'Motores de voz a texto y de texto a voz'; }
+	#tab-admin-images h2::after { content: 'Motor y modelo para crear y editar imágenes'; }
+	#tab-admin-web h2::after { content: 'Motor de búsqueda y cómo se leen las páginas'; }
+	#tab-admin-code-execution h2::after { content: 'Dónde y cómo se ejecuta el código'; }
+	#tab-admin-pipelines h2::after { content: 'Filtros y canalizaciones del servidor de pipelines'; }
+	#tab-admin-analytics h2::after { content: 'Uso de los modelos por usuario y por día'; }
+	#tab-admin-evaluations h2::after { content: 'Comparaciones y valoraciones de las respuestas'; }
+	#tab-admin-db h2::after { content: 'Copias de seguridad, importación y exportación de datos'; }
+
+	/* títulos de sección en mayúsculas sobre la tarjeta */
+	#settings-tabs-container + div [id^='tab-'] section > h3 {
+		margin: 0 0 10px 4px;
+		color: var(--sk-ink-muted);
+		font-size: 13px;
+		line-height: 18px;
+		font-weight: 700;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+	}
+
+	#settings-tabs-container + div [id^='tab-'] section + section {
+		margin-top: 22px;
+	}
+
+	/* tarjeta: cualquier contenedor que tenga filas de ajustes */
+	#settings-tabs-container + div [id^='tab-'] div:has(> [class~='group/setting-row']) {
+		gap: 0 !important;
+		padding: 2px 0;
+		border-radius: 18px;
+		background-color: var(--sk-surface);
+		box-shadow: inset 0 0 0 1px var(--sk-border);
+	}
+
+	/* secciones sin filas (Prompt del sistema; Versión/Ayuda/Licencia de General…): también en tarjeta */
+	#settings-tabs-container + div [id^='tab-'] section > div.flex-col:only-child:not(:has(> [class~='group/setting-row'])),
+	#settings-tabs-container + div [id^='tab-'] section > h3 + div:not(:has(> [class~='group/setting-row'])) {
+		padding: 16px 20px;
+		border-radius: 18px;
+		background-color: var(--sk-surface);
+		box-shadow: inset 0 0 0 1px var(--sk-border);
+	}
+
+	#settings-tabs-container + div [id^='tab-'] section > h3 + div:not(:has(> [class~='group/setting-row'])) > p {
+		margin-top: 8px;
+		color: var(--sk-ink-muted);
+		font-size: 14.5px;
+		line-height: 21px;
+	}
+
+	#settings-tabs-container + div [id^='tab-'] div:has(> [class~='group/setting-row']) + div:has(> [class~='group/setting-row']) {
+		margin-top: 14px;
+	}
+
+	/* grupos con título dentro de la lista (Interfaz: "IU", "Chat"…): cada fila viene en su propia caja; se juntan en
+	   una sola tarjeta por grupo (esquinas solo arriba en la primera y abajo en la última) */
+	#settings-tabs-container + div [id^='tab-'] div.flex-col:has(> h3 + div > [class~='group/setting-row']) {
+		gap: 0 !important;
+	}
+
+	#settings-tabs-container + div [id^='tab-'] div.flex-col:has(> h3 + div > [class~='group/setting-row']) > :is(h3, div.mt-4:not(:has(*))) {
+		margin: 22px 0 10px 4px;
+		color: var(--sk-ink-muted);
+		font-size: 13px;
+		line-height: 18px;
+		font-weight: 700;
+		letter-spacing: 0.05em;
+		text-transform: uppercase;
+	}
+
+	#settings-tabs-container + div [id^='tab-'] div.flex-col:has(> h3 + div > [class~='group/setting-row']) > :is(h3, div.mt-4:not(:has(*))):first-child {
+		margin-top: 0;
+	}
+
+	#settings-tabs-container + div [id^='tab-'] div.flex-col:has(> h3 + div > [class~='group/setting-row']) > div:has(> [class~='group/setting-row']) {
+		margin-top: -1px !important;
+		border-radius: 0;
+	}
+
+	#settings-tabs-container + div [id^='tab-'] div.flex-col:has(> h3 + div > [class~='group/setting-row']) > :is(h3, div.mt-4:not(:has(*))) + div:has(> [class~='group/setting-row']) {
+		margin-top: 0 !important;
+		border-top-left-radius: 18px;
+		border-top-right-radius: 18px;
+	}
+
+	#settings-tabs-container + div [id^='tab-'] div.flex-col:has(> h3 + div > [class~='group/setting-row']) > div:has(> [class~='group/setting-row']):is(:last-child, :has(+ :is(h3, div.mt-4:not(:has(*)))), :has(+ :not(div))) {
+		border-bottom-left-radius: 18px;
+		border-bottom-right-radius: 18px;
+	}
+
+	/* filas */
+	#settings-tabs-container + div [id^='tab-'] div:has(> [class~='group/setting-row']) > [class~='group/setting-row'] {
+		min-height: 56px;
+		gap: 24px;
+		padding: 14px 20px;
+	}
+
+	#settings-tabs-container + div [id^='tab-'] div:has(> [class~='group/setting-row']) > [class~='group/setting-row']:has(+ p) {
+		min-height: 0;
+		padding-bottom: 2px;
+	}
+
+	/* descripción debajo de la etiqueta */
+	#settings-tabs-container + div [id^='tab-'] div:has(> [class~='group/setting-row']) > p {
+		margin: 0 !important;
+		padding: 0 20px 14px;
+		color: var(--sk-ink-muted);
+		font-size: 14.5px;
+		line-height: 21px;
+	}
+
+	/* línea fina entre filas (y entre bloques sueltos dentro de la tarjeta) */
+	#settings-tabs-container + div [id^='tab-'] div:has(> [class~='group/setting-row']) > :not(p):not(:first-child) {
+		border-top: 1px solid #f0f0f2;
+	}
+
+	html.dark #settings-tabs-container + div [id^='tab-'] div:has(> [class~='group/setting-row']) > :not(p):not(:first-child) {
+		border-top-color: rgba(255, 255, 255, 0.06);
+	}
+
+	/* bloques que no son filas (campos sueltos, cuadrículas, listas) con el mismo margen interior */
+	#settings-tabs-container + div [id^='tab-'] div:has(> [class~='group/setting-row']) > :not([class~='group/setting-row']):not(p):not(hr) {
+		padding: 12px 20px;
+	}
+
+	#settings-tabs-container + div [id^='tab-'] div:has(> [class~='group/setting-row']) > :empty {
+		display: none;
+	}
+
+	/* etiqueta de la fila */
+	#settings-tabs-container + div [id^='tab-'] [class~='group/setting-row'] > label,
+	#settings-tabs-container + div [id^='tab-'] [class~='group/setting-row'] > div:first-child:not(:has(select, input, button)) {
+		color: var(--sk-ink);
+		font-size: 16px;
+		line-height: 22px;
+		font-weight: 600;
+	}
+
+	/* selectores de 40 px */
+	#settings-tabs-container + div [id^='tab-'] select {
+		height: 40px;
+		padding: 0 34px 0 14px;
+		border: 0;
+		border-radius: 12px;
+		background-color: var(--sk-surface);
+		box-shadow: inset 0 0 0 1px #d4d4d8;
+		color: var(--sk-ink);
+		font-size: 15px;
+		line-height: 20px;
+		font-weight: 500;
+	}
+
+	html.dark #settings-tabs-container + div [id^='tab-'] select {
+		box-shadow: inset 0 0 0 1px #3f3f46;
+	}
+
+	/* campos y áreas de texto: fondo gris claro con filo */
+	#settings-tabs-container + div [id^='tab-'] input:is([type='text'], [type='url'], [type='number'], [type='password'], [type='email'], [type='search'], :not([type])),
+	#settings-tabs-container + div [id^='tab-'] textarea {
+		border: 0;
+		border-radius: 12px;
+		background-color: #fafafa;
+		box-shadow: inset 0 0 0 1px #d4d4d8;
+		color: var(--sk-ink);
+		font-size: 15px;
+		line-height: 20px;
+	}
+
+	#settings-tabs-container + div [id^='tab-'] input:is([type='text'], [type='url'], [type='number'], [type='password'], [type='email'], [type='search'], :not([type])) {
+		height: 42px;
+		padding: 0 14px;
+	}
+
+	#settings-tabs-container + div [id^='tab-'] textarea {
+		min-height: 96px;
+		padding: 12px 14px;
+	}
+
+	html.dark #settings-tabs-container + div [id^='tab-'] :is(input, textarea) {
+		background-color: rgba(255, 255, 255, 0.04);
+		box-shadow: inset 0 0 0 1px #3f3f46;
+	}
+
+	#settings-tabs-container + div [id^='tab-'] :is(input:not([type='checkbox'], [type='radio'], [type='range']), textarea, select):focus {
+		outline: none;
+		box-shadow: inset 0 0 0 1.5px var(--sk-ink), 0 0 0 3px color-mix(in srgb, var(--sk-ink) 10%, transparent);
+	}
+
+	/* interruptores de 44 × 26 */
+	#settings-tabs-container + div [id^='tab-'] button[role='switch'] {
+		width: 44px;
+		height: 26px;
+		min-height: 26px;
+		margin: 0;
+	}
+
+	#settings-tabs-container + div [id^='tab-'] button[role='switch'] > span {
+		top: 3px;
+		width: 20px;
+		height: 20px;
+		box-shadow: 0 1px 2px rgba(0, 0, 0, 0.2);
+	}
+
+	#settings-tabs-container + div [id^='tab-'] button[role='switch'][data-state='checked'] > span {
+		left: 21px;
+	}
+
+	#settings-tabs-container + div [id^='tab-'] button[role='switch'][data-state='unchecked'] > span {
+		left: 3px;
+	}
+
+	#settings-tabs-container + div [id^='tab-'] button[role='switch'][data-state='unchecked'] {
+		background-color: #d4d4d8;
+	}
+
+	html.dark #settings-tabs-container + div [id^='tab-'] button[role='switch'][data-state='unchecked'] {
+		background-color: #3f3f46;
+	}
+
+	/* botones de texto de las filas ("Mostrar", "Predeterminado"…) como píldoras; no los que ocupan la fila entera
+	   (cada modelo en Modelos es un botón a lo ancho) */
+	#settings-tabs-container + div [id^='tab-'] [class~='group/setting-row'] button:not([role='switch']):not([class*='size-']):not(.w-full):not(.flex-1) {
+		min-height: 36px;
+		padding: 0 14px;
+		border-radius: 9999px;
+		background-color: #f4f4f5;
+		box-shadow: inset 0 0 0 1px #d4d4d8;
+		color: var(--sk-ink);
+		font-size: 14px;
+		line-height: 20px;
+		font-weight: 600;
+	}
+
+	#settings-tabs-container + div [id^='tab-'] [class~='group/setting-row'] button:not([role='switch']):not([class*='size-']):not(.w-full):not(.flex-1):hover {
+		background-color: #ebebec;
+	}
+
+	html.dark #settings-tabs-container + div [id^='tab-'] [class~='group/setting-row'] button:not([role='switch']):not([class*='size-']):not(.w-full):not(.flex-1) {
+		background-color: rgba(255, 255, 255, 0.06);
+		box-shadow: inset 0 0 0 1px #3f3f46;
+	}
+
+	/* botones redondos de ícono (engranes de cada conexión…) */
+	#settings-tabs-container + div [id^='tab-'] [class~='group/setting-row'] button:not([role='switch'])[class*='size-'] {
+		width: 36px;
+		height: 36px;
+		border-radius: 9999px;
+		background-color: #f4f4f5;
+		color: var(--sk-ink);
+	}
+
+	html.dark #settings-tabs-container + div [id^='tab-'] [class~='group/setting-row'] button:not([role='switch'])[class*='size-'] {
+		background-color: rgba(255, 255, 255, 0.06);
+	}
+
+	/* barra de Guardar pegada abajo, en vidrio */
+	:is(#settings-tabs-container + div [id^='tab-'], #settings-tabs-container + div [id^='tab-'] > form) > div.justify-end:last-child:has(> button:last-child) {
+		align-items: center;
+		gap: 10px;
+		width: auto !important;
+		margin: 14px calc(var(--sk-aj-margen, 28px) * -1) 0;
+		padding: 15px 24px !important;
+		background-color: rgba(255, 255, 255, 0.75);
+		-webkit-backdrop-filter: blur(18px) saturate(1.5);
+		backdrop-filter: blur(18px) saturate(1.5);
+		border-top: 1px solid rgba(24, 24, 27, 0.08);
+	}
+
+	html.dark :is(#settings-tabs-container + div [id^='tab-'], #settings-tabs-container + div [id^='tab-'] > form) > div.justify-end:last-child:has(> button:last-child) {
+		background-color: rgba(28, 28, 30, 0.75);
+		border-top-color: rgba(255, 255, 255, 0.08);
+	}
+
+	:is(#settings-tabs-container + div [id^='tab-'], #settings-tabs-container + div [id^='tab-'] > form) > div.justify-end:last-child > button:last-child {
+		height: 42px;
+		padding: 0 22px;
+		border-radius: 9999px;
+		background-color: var(--sk-ink);
+		color: var(--sk-surface);
+		font-size: 15px;
+		line-height: 20px;
+		font-weight: 600;
+	}
+
+	:is(#settings-tabs-container + div [id^='tab-'], #settings-tabs-container + div [id^='tab-'] > form) > div.justify-end:last-child > button:last-child:disabled {
+		opacity: 0.35;
+	}
+
+/* ---------- Generación de imagen en el chat (lienzo "Generación de imagen en el chat · escritorio y móvil") ----------
+   carbono.js pone la tarjeta .sk-img-gen mientras corre generate_image y decora cada imagen generada (.sk-img-hecha):
+   pasos Cargando modelo → Generando → Lista, lienzo cuadrado de 400 px (a lo ancho en el teléfono) con brillo, giro
+   o porcentaje y barra azul, Cancelar en píldora; la imagen lista en marco de 20 px con sombra, Ampliar, insignia
+   verde "Lista", tamaño y modelo, cuatro botones redondos de 38 px y "Prompt usado". */
+@keyframes sk-img-brillo {
+	0% { background-position: -460px 0; }
+	100% { background-position: 460px 0; }
+}
+
+@keyframes sk-img-corre {
+	0% { transform: translateX(-100%); }
+	100% { transform: translateX(250%); }
+}
+
+@keyframes sk-img-gira {
+	to { transform: rotate(360deg); }
+}
+
+@keyframes sk-img-late {
+	0%, 100% { opacity: 0.55; }
+	50% { opacity: 1; }
+}
+
+.sk-img-gen {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	width: min(400px, 100%);
+	margin: 10px 0 6px;
+	font-family: inherit;
+}
+
+/* pasos */
+.sk-img-pasos {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	flex-wrap: wrap;
+}
+
+.sk-img-pasos > b {
+	width: 16px;
+	height: 2px;
+	background: var(--sk-border);
+}
+
+.sk-img-paso {
+	display: inline-flex;
+	align-items: center;
+	gap: 7px;
+	color: #8a8a93;
+	font-size: 13.5px;
+	line-height: 18px;
+	font-weight: 600;
+	white-space: nowrap;
+}
+
+.sk-img-paso > i {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 18px;
+	height: 18px;
+	border-radius: 9999px;
+	box-shadow: inset 0 0 0 2px #d4d4d8;
+	background: var(--sk-surface);
+}
+
+/* paso activo: aro azul que late; pasos hechos: círculo azul con palomita */
+.sk-img-gen[data-fase='cargando'] [data-paso='cargando'],
+.sk-img-gen[data-fase='generando'] [data-paso='generando'],
+.sk-img-gen[data-fase='generando'] [data-paso='cargando'] {
+	color: var(--sk-ink);
+}
+
+.sk-img-gen[data-fase='cargando'] [data-paso='cargando'] > i,
+.sk-img-gen[data-fase='generando'] [data-paso='generando'] > i {
+	box-shadow: inset 0 0 0 5px #2361c7;
+	animation: sk-img-late 1.4s ease-in-out infinite;
+}
+
+.sk-img-gen[data-fase='generando'] [data-paso='cargando'] > i {
+	box-shadow: none;
+	background: #2361c7
+		url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M5 12l5 5 9-10'/%3E%3C/svg%3E")
+		center / 12px no-repeat;
+}
+
+/* lienzo con brillo */
+.sk-img-lienzo {
+	box-sizing: border-box;
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 12px;
+	width: 100%;
+	aspect-ratio: 1;
+	padding: 0 16%;
+	border-radius: 20px;
+	background: linear-gradient(90deg, #ececee 0%, #f7f7f8 40%, #ececee 80%);
+	background-size: 920px 100%;
+	box-shadow: inset 0 0 0 1px rgba(24, 24, 27, 0.06);
+	animation: sk-img-brillo 1.6s linear infinite;
+	text-align: center;
+}
+
+html.dark .sk-img-lienzo {
+	background-image: linear-gradient(90deg, #232326 0%, #2e2e32 40%, #232326 80%);
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.06);
+}
+
+.sk-img-giro {
+	box-sizing: border-box;
+	width: 40px;
+	height: 40px;
+	border: 4px solid #d4d4d8;
+	border-top-color: #2361c7;
+	border-radius: 9999px;
+	animation: sk-img-gira 0.9s linear infinite;
+}
+
+.sk-img-titulo {
+	color: #3f3f46;
+	font-size: 15px;
+	line-height: 20px;
+	font-weight: 600;
+}
+
+html.dark .sk-img-titulo {
+	color: var(--sk-ink);
+}
+
+.sk-img-nota {
+	color: #6b6b73;
+	font-size: 13px;
+	line-height: 18px;
+}
+
+html.dark .sk-img-nota {
+	color: var(--sk-ink-muted);
+}
+
+/* barra: corre de lado a lado sin porcentaje; llena al paso cuando ComfyUI lo dice */
+.sk-img-barra {
+	position: relative;
+	width: 100%;
+	height: 8px;
+	overflow: hidden;
+	border-radius: 9999px;
+	background: rgba(35, 97, 199, 0.18);
+}
+
+.sk-img-barra > i {
+	position: absolute;
+	inset: 0 auto 0 0;
+	width: 40%;
+	border-radius: 9999px;
+	background: #2361c7;
+	animation: sk-img-corre 1.3s ease-in-out infinite;
+}
+
+.sk-img-gen[data-fase='cargando'] .sk-img-barra {
+	display: none;
+}
+
+.sk-img-gen[data-fase='generando'] .sk-img-giro {
+	display: none;
+}
+
+.sk-img-gen.sk-img-con-pct .sk-img-barra > i {
+	animation: none;
+	transition: width 0.4s ease;
+}
+
+.sk-img-gen.sk-img-con-pct .sk-img-titulo {
+	color: var(--sk-ink);
+	font-size: 40px;
+	line-height: 44px;
+	font-weight: 800;
+}
+
+.sk-img-gen.sk-img-con-pct .sk-img-titulo small {
+	font-size: 24px;
+}
+
+.sk-img-gen.sk-img-con-pct .sk-img-nota {
+	color: #52525b;
+	font-size: 13.5px;
+	font-weight: 500;
+}
+
+/* Cancelar */
+.sk-img-acciones {
+	display: flex;
+	justify-content: flex-end;
+}
+
+.sk-img-cancelar {
+	height: 34px;
+	padding: 0 14px;
+	border: 0;
+	border-radius: 9999px;
+	background: #f4f4f5;
+	box-shadow: inset 0 0 0 1px #d4d4d8;
+	color: var(--sk-ink);
+	font-size: 13.5px;
+	line-height: 18px;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+.sk-img-cancelar:hover {
+	background: #ebebec;
+}
+
+.sk-img-cancelar:disabled {
+	opacity: 0.6;
+	cursor: default;
+}
+
+html.dark .sk-img-cancelar {
+	background: rgba(255, 255, 255, 0.06);
+	box-shadow: inset 0 0 0 1px #3f3f46;
+}
+
+/* imagen lista: marco de 20 px con sombra y Ampliar */
+.sk-img-hecha {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+	width: min(400px, 100%);
+}
+
+#messages-container .sk-img-marco {
+	position: relative;
+	width: 100%;
+	overflow: hidden;
+	border-radius: 20px;
+	box-shadow: 0 10px 30px rgba(24, 24, 27, 0.14);
+}
+
+#messages-container .sk-img-marco > button:first-child {
+	display: block;
+	width: 100%;
+}
+
+#messages-container .sk-img-marco img {
+	display: block;
+	width: 100%;
+	height: auto;
+	border-radius: 0;
+}
+
+.sk-img-ampliar {
+	position: absolute;
+	top: 10px;
+	right: 10px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+	border: 0;
+	border-radius: 9999px;
+	background: rgba(24, 24, 27, 0.55);
+	color: #ffffff;
+	cursor: pointer;
+	-webkit-backdrop-filter: blur(6px);
+	backdrop-filter: blur(6px);
+}
+
+.sk-img-ampliar:hover {
+	background: rgba(24, 24, 27, 0.72);
+}
+
+.sk-img-ampliar svg,
+.sk-img-btn svg {
+	width: 17px;
+	height: 17px;
+}
+
+/* fila: Lista · tamaño · modelo y los cuatro botones */
+.sk-img-fila {
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	gap: 8px;
+}
+
+.sk-img-meta {
+	display: inline-flex;
+	align-items: center;
+	gap: 8px;
+	min-width: 0;
+	color: var(--sk-ink-muted);
+	font-size: 13px;
+	line-height: 18px;
+	font-weight: 500;
+	white-space: nowrap;
+}
+
+.sk-img-datos {
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.sk-img-lista {
+	display: inline-flex;
+	align-items: center;
+	gap: 5px;
+	height: 24px;
+	padding: 0 9px;
+	border-radius: 9999px;
+	background: #e5f3e7;
+	color: #1f6b45;
+	font-weight: 600;
+}
+
+.sk-img-lista svg {
+	width: 13px;
+	height: 13px;
+	stroke-width: 2.6;
+}
+
+html.dark .sk-img-lista {
+	background: rgba(47, 158, 68, 0.18);
+	color: #69db7c;
+}
+
+.sk-img-botones {
+	display: inline-flex;
+	flex: none;
+	gap: 4px;
+}
+
+.sk-img-btn {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 38px;
+	height: 38px;
+	border: 0;
+	border-radius: 9999px;
+	background: #f4f4f5;
+	box-shadow: inset 0 0 0 1px #e4e4e7;
+	color: var(--sk-ink);
+	cursor: pointer;
+}
+
+.sk-img-btn:hover {
+	background: #ebebec;
+}
+
+.sk-img-btn.sk-img-fallo {
+	box-shadow: inset 0 0 0 1.5px #d9363e;
+	color: #d9363e;
+}
+
+html.dark .sk-img-btn {
+	background: rgba(255, 255, 255, 0.06);
+	box-shadow: inset 0 0 0 1px #3f3f46;
+}
+
+/* Prompt usado */
+.sk-img-prompt > summary {
+	width: fit-content;
+	color: #3f3f46;
+	font-size: 14px;
+	line-height: 20px;
+	font-weight: 600;
+	cursor: pointer;
+}
+
+html.dark .sk-img-prompt > summary {
+	color: var(--sk-ink-muted);
+}
+
+.sk-img-prompt > div {
+	margin-top: 6px;
+	padding: 10px 14px;
+	border-radius: 14px;
+	background: rgba(250, 250, 250, 0.9);
+	box-shadow: inset 0 0 0 1px #ececee;
+	color: #3f3f46;
+	font-family: var(--sk-mono, ui-monospace, monospace);
+	font-size: 13.5px;
+	line-height: 20px;
+	white-space: pre-wrap;
+	word-break: break-word;
+}
+
+html.dark .sk-img-prompt > div {
+	background: rgba(255, 255, 255, 0.04);
+	box-shadow: inset 0 0 0 1px #3f3f46;
+	color: var(--sk-ink);
+}
+
+/* teléfono: tarjeta e imagen a lo ancho (358 px en el lienzo) */
+@media (max-width: 767px) {
+	.sk-img-gen,
+	.sk-img-hecha {
+		width: 100%;
+	}
+
+	.sk-img-paso {
+		font-size: 13px;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.sk-img-lienzo,
+	.sk-img-giro,
+	.sk-img-barra > i,
+	.sk-img-paso > i {
+		animation: none !important;
+	}
+}
+
+/* ---------- Ajustes en el teléfono (lienzo "Ajustes rediseñados · escritorio y móvil": Móvil · Ajustes, General,
+   Documentos, Conexiones) ----------
+   Pantalla completa sobre el fondo desenfocado. carbono.js agrega el encabezado de vidrio (‹ Ajustes · lupa · cerrar)
+   y el índice: título "Ajustes", buscador, tarjeta de la cuenta y las secciones en listas agrupadas con flecha. Al
+   tocar una, se abre su pantalla: pestañas deslizables en una pista gris (la activa blanca con texto azul), título de
+   28 px, tarjetas con el selector a lo ancho debajo de la etiqueta e interruptores de 48 × 28, y Guardar abajo en una
+   barra de vidrio. Las tarjetas y filas son las mismas del escritorio (bloque anterior). */
+@media (max-width: 767px) {
+	.modal[role='dialog']:has(#settings-tabs-container) {
+		padding: 0 !important;
+		background-color: rgba(24, 24, 27, 0.32);
+	}
+
+	.modal[role='dialog']:has(#settings-tabs-container) > div {
+		position: fixed;
+		inset: 0;
+		display: flex !important;
+		flex-direction: column;
+		/* Open WebUI fija el ancho y el alto con !important de Tailwind (gana a cualquier !important sin capa):
+		   min-width/min-height lo estiran igual a pantalla completa */
+		width: 100vw !important;
+		min-width: 100vw;
+		max-width: 100vw !important;
+		height: 100dvh !important;
+		min-height: 100dvh;
+		max-height: 100dvh !important;
+		margin: 0 !important;
+		overflow: hidden;
+		border: 0 !important;
+		border-radius: 0 !important;
+		background-color: rgba(244, 244, 245, 0.86) !important;
+		-webkit-backdrop-filter: blur(24px);
+		backdrop-filter: blur(24px);
+		box-shadow: none;
+	}
+
+	html.dark .modal[role='dialog']:has(#settings-tabs-container) > div {
+		background-color: rgba(20, 20, 22, 0.86) !important;
+	}
+
+	/* encabezado de vidrio (lo pone carbono.js) */
+	.sk-aj-cabeza {
+		position: relative;
+		z-index: 3;
+		display: flex;
+		flex: none;
+		align-items: center;
+		height: 56px;
+		padding: 0 8px;
+		background: rgba(255, 255, 255, 0.72);
+		-webkit-backdrop-filter: blur(20px) saturate(1.5);
+		backdrop-filter: blur(20px) saturate(1.5);
+		border-bottom: 1px solid rgba(24, 24, 27, 0.06);
+	}
+
+	html.dark .sk-aj-cabeza {
+		background: rgba(28, 28, 30, 0.72);
+		border-bottom-color: rgba(255, 255, 255, 0.08);
+	}
+
+	.sk-aj-cabeza button {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		height: 44px;
+		border: 0;
+		background: transparent;
+		color: var(--sk-ink);
+		cursor: pointer;
+	}
+
+	.sk-aj-cabeza button svg {
+		width: 21px;
+		height: 21px;
+	}
+
+	.sk-aj-atras {
+		gap: 2px;
+		padding: 0 10px 0 4px;
+		font-size: 16px;
+		line-height: 22px;
+		font-weight: 600;
+	}
+
+	.sk-aj-atras svg {
+		width: 22px !important;
+		height: 22px !important;
+	}
+
+	.sk-aj-buscar {
+		width: 44px;
+		margin-left: auto;
+		border-radius: 9999px;
+	}
+
+	.sk-aj-cerrar {
+		width: 44px;
+		border-radius: 9999px;
+	}
+
+	.sk-aj-en-indice .sk-aj-atras,
+	.sk-aj-en-indice .sk-aj-buscar {
+		visibility: hidden;
+	}
+
+	/* índice: oculta las pestañas y el contenido de Open WebUI */
+	.sk-aj-en-indice > #settings-tabs-container,
+	.sk-aj-en-indice > #settings-tabs-container + div {
+		display: none !important;
+	}
+
+	.sk-aj-indice {
+		display: none;
+		flex: 1;
+		min-height: 0;
+		overflow-y: auto;
+		padding: 16px 14px 30px;
+		color: var(--sk-ink);
+	}
+
+	.sk-aj-en-indice .sk-aj-indice {
+		display: block;
+	}
+
+	.sk-aj-indice-titulo {
+		padding: 4px 6px 16px;
+		font-size: 28px;
+		line-height: 34px;
+		font-weight: 700;
+	}
+
+	.sk-aj-indice-buscar {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		height: 46px;
+		margin-bottom: 18px;
+		padding: 0 14px;
+		border-radius: 14px;
+		background: var(--sk-surface);
+		box-shadow: inset 0 0 0 1px var(--sk-border);
+	}
+
+	.sk-aj-indice-buscar svg {
+		flex: none;
+		width: 18px;
+		height: 18px;
+		color: var(--sk-ink-muted);
+	}
+
+	.sk-aj-indice-buscar input {
+		flex: 1;
+		min-width: 0;
+		height: 100%;
+		border: 0;
+		outline: none;
+		background: transparent;
+		color: var(--sk-ink);
+		font-size: 16px;
+	}
+
+	.sk-aj-cuenta {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		width: 100%;
+		margin-bottom: 18px;
+		padding: 14px;
+		border: 0;
+		border-radius: 18px;
+		background: var(--sk-surface);
+		box-shadow: inset 0 0 0 1px var(--sk-border);
+		color: var(--sk-ink);
+		text-align: left;
+		cursor: pointer;
+	}
+
+	.sk-aj-cuenta img,
+	.sk-aj-cuenta .sk-aj-iniciales {
+		flex: none;
+		width: 48px;
+		height: 48px;
+		border-radius: 9999px;
+		object-fit: cover;
+	}
+
+	.sk-aj-cuenta .sk-aj-iniciales {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		background: #2361c7;
+		color: #ffffff;
+		font-size: 18px;
+		font-weight: 700;
+	}
+
+	.sk-aj-cuenta b {
+		display: block;
+		font-size: 17px;
+		line-height: 22px;
+		font-weight: 700;
+	}
+
+	.sk-aj-cuenta small {
+		display: block;
+		color: var(--sk-ink-muted);
+		font-size: 14px;
+		line-height: 20px;
+	}
+
+	.sk-aj-cuenta > span:nth-child(2) {
+		flex: 1;
+		min-width: 0;
+	}
+
+	.sk-aj-flecha {
+		flex: none;
+		width: 18px;
+		height: 18px;
+		color: #a1a1aa;
+	}
+
+	.sk-aj-grupo-mayor {
+		margin: 22px 6px 10px;
+		font-size: 17px;
+		line-height: 22px;
+		font-weight: 700;
+	}
+
+	.sk-aj-seccion {
+		margin-bottom: 18px;
+	}
+
+	.sk-aj-seccion h3 {
+		margin: 0 0 8px 6px;
+		color: var(--sk-ink-muted);
+		font-size: 12.5px;
+		line-height: 18px;
+		font-weight: 700;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+	}
+
+	.sk-aj-lista {
+		overflow: hidden;
+		border-radius: 18px;
+		background: var(--sk-surface);
+		box-shadow: 0 1px 2px rgba(24, 24, 27, 0.05), inset 0 0 0 1px var(--sk-border);
+	}
+
+	.sk-aj-item {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		width: 100%;
+		height: 50px;
+		padding: 0 14px;
+		border: 0;
+		border-bottom: 1px solid #f0f0f2;
+		background: transparent;
+		color: var(--sk-ink);
+		text-align: left;
+		cursor: pointer;
+	}
+
+	html.dark .sk-aj-item {
+		border-bottom-color: rgba(255, 255, 255, 0.06);
+	}
+
+	.sk-aj-item:last-child {
+		border-bottom: 0;
+	}
+
+	.sk-aj-item:active {
+		background: var(--sk-hover);
+	}
+
+	.sk-aj-item > span:nth-child(2) {
+		flex: 1;
+		min-width: 0;
+		font-size: 16px;
+		line-height: 22px;
+		font-weight: 500;
+	}
+
+	.sk-aj-icono {
+		display: inline-flex;
+		flex: none;
+		align-items: center;
+		justify-content: center;
+		width: 32px;
+		height: 32px;
+		border-radius: 9px;
+		background: #f4f4f5;
+		color: #3f3f46;
+	}
+
+	html.dark .sk-aj-icono {
+		background: rgba(255, 255, 255, 0.08);
+		color: var(--sk-ink);
+	}
+
+	.sk-aj-icono svg {
+		width: 18px;
+		height: 18px;
+	}
+
+	.sk-aj-indice [hidden] {
+		display: none !important;
+	}
+
+	/* pantalla de una sección: pestañas en pista gris */
+	#settings-tabs-container {
+		flex: none;
+		width: auto;
+		padding: 6px 12px 8px;
+		background: rgba(255, 255, 255, 0.72);
+		-webkit-backdrop-filter: blur(20px) saturate(1.5);
+		backdrop-filter: blur(20px) saturate(1.5);
+		border-bottom: 1px solid rgba(24, 24, 27, 0.08) !important;
+	}
+
+	html.dark #settings-tabs-container {
+		background: rgba(28, 28, 30, 0.72);
+	}
+
+	.sk-aj-movil #settings-tabs-container > div:not(.tabs) {
+		display: none !important;
+	}
+
+	#settings-tabs-container .tabs {
+		align-items: center;
+		gap: 2px;
+		height: 42px;
+		max-height: 42px;
+		margin: 0;
+		padding: 0 3px;
+		border-radius: 13px;
+		background: #e9e9ec;
+	}
+
+	html.dark #settings-tabs-container .tabs {
+		background: rgba(255, 255, 255, 0.08);
+	}
+
+	#settings-tabs-container .tabs [role='tab'] {
+		flex: none;
+		gap: 7px;
+		height: 36px;
+		min-height: 36px;
+		padding: 0 14px 0 12px;
+		border-radius: 10px;
+		background: transparent;
+		color: #3f3f46;
+		font-size: 15px;
+		line-height: 20px;
+		font-weight: 500;
+		white-space: nowrap;
+	}
+
+	#settings-tabs-container .tabs [role='tab'] svg {
+		width: 17px;
+		height: 17px;
+	}
+
+	#settings-tabs-container .tabs [role='tab'][aria-selected='true'] {
+		background: #ffffff;
+		color: #1d4fa3;
+		font-weight: 600;
+		box-shadow: 0 1px 3px rgba(24, 24, 27, 0.12), 0 0 0 1px rgba(24, 24, 27, 0.04);
+	}
+
+	#settings-tabs-container .tabs [role='tab'][aria-selected='true'] svg {
+		color: #2361c7;
+	}
+
+	html.dark #settings-tabs-container .tabs [role='tab'] {
+		color: var(--sk-ink-muted);
+	}
+
+	html.dark #settings-tabs-container .tabs [role='tab'][aria-selected='true'] {
+		background: var(--sk-hover);
+		color: #a9c6f5;
+	}
+
+	/* contenido */
+	#settings-tabs-container + div {
+		flex: 1;
+		min-height: 0;
+		padding: 10px 0 0 !important;
+		background: transparent;
+	}
+
+	#settings-tabs-container + div [id^='tab-'] {
+		--sk-aj-margen: 14px;
+		padding-inline: var(--sk-aj-margen);
+	}
+
+	#settings-tabs-container + div [id^='tab-'] h2 {
+		margin: 4px 6px 16px;
+		font-size: 28px;
+		line-height: 34px;
+	}
+
+	#settings-tabs-container + div [id^='tab-'] section > h3,
+	#settings-tabs-container + div [id^='tab-'] div.flex-col:has(> h3 + div > [class~='group/setting-row']) > :is(h3, div.mt-4:not(:has(*))) {
+		margin-left: 6px;
+		font-size: 12.5px;
+		letter-spacing: 0.06em;
+	}
+
+	#settings-tabs-container + div [id^='tab-'] div:has(> [class~='group/setting-row']) {
+		box-shadow: 0 1px 2px rgba(24, 24, 27, 0.05), inset 0 0 0 1px var(--sk-border);
+	}
+
+	/* filas: 16 px de margen; el selector o campo pasa a lo ancho debajo de la etiqueta */
+	#settings-tabs-container + div [id^='tab-'] div:has(> [class~='group/setting-row']) > [class~='group/setting-row'] {
+		gap: 14px;
+		padding: 14px 16px;
+	}
+
+	#settings-tabs-container + div [id^='tab-'] [class~='group/setting-row']:has(> :last-child:is(select, :has(select, input:not([type='checkbox'], [type='radio'], [type='range'])))) {
+		flex-wrap: wrap;
+		gap: 10px;
+	}
+
+	#settings-tabs-container + div [id^='tab-'] [class~='group/setting-row']:has(> :last-child:is(select, :has(select, input:not([type='checkbox'], [type='radio'], [type='range'])))) > :last-child {
+		flex: 1 1 100%;
+		min-width: 0;
+	}
+
+	#settings-tabs-container + div [id^='tab-'] [class~='group/setting-row'] :is(select, div:has(> select)) {
+		width: 100% !important;
+		max-width: 100% !important;
+	}
+
+	#settings-tabs-container + div [id^='tab-'] select {
+		height: 44px;
+		background-color: #fafafa;
+	}
+
+	html.dark #settings-tabs-container + div [id^='tab-'] select {
+		background-color: rgba(255, 255, 255, 0.04);
+	}
+
+	#settings-tabs-container + div [id^='tab-'] div:has(> [class~='group/setting-row']) > p {
+		padding: 0 16px 14px;
+		font-size: 14px;
+		line-height: 20px;
+	}
+
+	#settings-tabs-container + div [id^='tab-'] div:has(> [class~='group/setting-row']) > :not([class~='group/setting-row']):not(p):not(hr) {
+		padding: 12px 16px;
+	}
+
+	#settings-tabs-container + div [id^='tab-'] section > h3 + div:not(:has(> [class~='group/setting-row'])),
+	#settings-tabs-container + div [id^='tab-'] section > div.flex-col:only-child:not(:has(> [class~='group/setting-row'])) {
+		padding: 14px 16px;
+	}
+
+	/* interruptores de 48 × 28 */
+	#settings-tabs-container + div [id^='tab-'] button[role='switch'] {
+		width: 48px;
+		height: 28px;
+		min-height: 28px;
+	}
+
+	#settings-tabs-container + div [id^='tab-'] button[role='switch'] > span {
+		width: 22px;
+		height: 22px;
+	}
+
+	#settings-tabs-container + div [id^='tab-'] button[role='switch'][data-state='checked'] > span {
+		left: 23px;
+	}
+
+	/* Guardar: barra de vidrio abajo, píldora de 48 px a lo ancho */
+	:is(#settings-tabs-container + div [id^='tab-'], #settings-tabs-container + div [id^='tab-'] > form) > div.justify-end:last-child:has(> button:last-child) {
+		padding: 12px 16px calc(16px + env(safe-area-inset-bottom)) !important;
+		background-color: rgba(255, 255, 255, 0.72);
+		-webkit-backdrop-filter: blur(20px) saturate(1.5);
+		backdrop-filter: blur(20px) saturate(1.5);
+	}
+
+	:is(#settings-tabs-container + div [id^='tab-'], #settings-tabs-container + div [id^='tab-'] > form) > div.justify-end:last-child > button:last-child {
+		flex: 1;
+		height: 48px;
+	}
+}
+
+/* ---------- Teléfono: menú de usuario (lienzo "Móvil · Menú de usuario", estirado al ancho de la barra) ----------
+   Open WebUI lo pega a la derecha; aquí queda sobre la barra lateral con 10 px a cada lado (carbono.js copia el ancho de
+   la barra en --sk-barra-ancho), esquinas de 20 px, el vidrio de nuestros menús, la fila del perfil de 52 px con el
+   avatar de 30 px, opciones de 44 px a 16 px con íconos de 19 px y divisores finos. */
+@media (max-width: 767px) {
+	[role='menu']:has(.user-menu-status) {
+		left: 10px !important;
+		right: auto !important;
+		width: calc(var(--sk-barra-ancho, 300px) - 20px) !important;
+		max-width: calc(100vw - 20px);
+	}
+
+	[role='menu']:has(.user-menu-status) .app-dropdown-menu {
+		width: 100% !important;
+		min-width: 0 !important;
+		padding: 6px !important;
+		border: 0 !important;
+		outline: 0 !important;
+		border-radius: 20px !important;
+		box-shadow: 0 20px 50px rgba(24, 24, 27, 0.25), inset 0 0 0 1px rgba(255, 255, 255, 0.55), 0 0 0 0.5px rgba(24, 24, 27, 0.12) !important;
+	}
+
+	html.dark [role='menu']:has(.user-menu-status) .app-dropdown-menu {
+		box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.08) !important;
+	}
+
+	[role='menu']:has(.user-menu-status) [role='menuitem'] {
+		min-height: 44px !important;
+		height: 44px;
+		gap: 12px;
+		padding-inline: 12px;
+		border-radius: 10px;
+		font-size: 16px !important;
+		line-height: 22px !important;
+		font-weight: 500;
+		color: var(--sk-ink);
+	}
+
+	[role='menu']:has(.user-menu-status) [role='menuitem'] :is(div, span):not(:has(*)) {
+		font-size: 16px !important;
+		line-height: 22px !important;
+	}
+
+	[role='menu']:has(.user-menu-status) [role='menuitem'] svg {
+		width: 19px !important;
+		height: 19px !important;
+		color: #3f3f46;
+		stroke-width: 1.8;
+	}
+
+	html.dark [role='menu']:has(.user-menu-status) [role='menuitem'] svg {
+		color: var(--sk-ink-muted);
+	}
+
+	/* fila del perfil: 52 px, avatar de 30 px, nombre en 16/600 y el punto verde con el número de usuarios activos */
+	[role='menu']:has(.user-menu-status) .app-dropdown-menu > div:first-child > [role='menuitem'] {
+		height: 52px;
+		min-height: 52px !important;
+		font-weight: 600;
+	}
+
+	[role='menu']:has(.user-menu-status) .app-dropdown-menu > div:first-child [role='menuitem'] div:has(> img) {
+		width: 30px !important;
+		height: 30px !important;
+	}
+
+	[role='menu']:has(.user-menu-status) .app-dropdown-menu > div:first-child [role='menuitem'] img {
+		width: 30px !important;
+		height: 30px !important;
+	}
+
+	[role='menu']:has(.user-menu-status) .app-dropdown-menu > div:first-child [role='menuitem'] > div:last-child {
+		color: #1f6b45;
+		font-size: 13px !important;
+		font-weight: 500;
+	}
+
+	[role='menu']:has(.user-menu-status) .app-dropdown-menu > div:first-child [role='menuitem'] > div:last-child * {
+		font-size: 13px !important;
+	}
+
+	[role='menu']:has(.user-menu-status) hr {
+		margin: 6px 8px !important;
+		border-color: rgba(60, 60, 67, 0.16) !important;
+	}
+
+	html.dark [role='menu']:has(.user-menu-status) hr {
+		border-color: rgba(255, 255, 255, 0.1) !important;
 	}
 }

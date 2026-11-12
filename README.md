@@ -1,6 +1,6 @@
 # Carbono para Open WebUI
 
-**Versión 0.94** · probado con Open WebUI **0.13.3**
+**Versión 0.95** · probado con Open WebUI **0.13.3**
 
 Carbono es el tema recomendado para [Sakura OI Web](https://github.com/YukiChristian/Sakura-OI-Web). Deja la interfaz de Open WebUI neutra (superficies en tonos carbón y zinc, acción principal en negro), con más jerarquía en el texto, tipografía Atkinson Hyperlegible, menús de vidrio esmerilado y un composer pensado para el teléfono.
 
@@ -47,11 +47,30 @@ La guía de estilo (principios, colores, tipografía y componentes) está en [do
 - **Composer en el teléfono:** texto arriba; abajo `+`, Integraciones, un botón de opciones con las insignias de color de las opciones activas encimadas y un contador «4/4», el modelo con su avatar, el micrófono y la voz. El botón abre la hoja de vidrio **Herramientas y opciones**, donde cada opción tiene su ícono, su descripción y su interruptor encendido o apagado.
 - **Menús:** vidrio esmerilado (blanco al 60 % con desenfoque) en todos los menús flotantes y en el selector de modelo; nunca se salen de la ventana y muestran todas sus opciones.
 - **Administración y Zona de Pruebas:** pestañas en control segmentado, tabla de usuarios en tarjeta con el rol en píldora, buscador y botones de 46 px, instrucciones del sistema en tarjeta, un recuadro punteado que explica qué hacer cuando no hay mensajes y botón **Ejecutar** en negro.
-- **Ajustes, Notas, Espacio de Trabajo, Calendario y Automatizaciones:** jerarquía título › sección › ajuste › descripción y botón **Crear** en negro.
+- **Ajustes:** ventana de vidrio con el menú de pestañas en vidrio y la activa en azul; cada sección es una tarjeta blanca con filas, selectores de 40 px, campos de 42 px, interruptores de 44 × 26 y **Guardar** en una barra de vidrio. En el teléfono abre en un índice (cuenta y secciones agrupadas) y cada sección tiene pestañas en una pista gris.
+- **Notas, Espacio de Trabajo, Calendario y Automatizaciones:** jerarquía título › sección › ajuste › descripción y botón **Crear** en negro.
+- **Navegador del panel:** barra de vidrio con la dirección en una píldora y, sin página abierta, una tarjeta con un campo para abrir direcciones o buscar y los puertos locales en filas.
+- **Generación de imagen:** mientras se genera, una tarjeta con los pasos (Cargando modelo → Generando → Lista) y **Cancelar**; la imagen lista va en un marco con Ampliar, «Lista · tamaño · modelo», botones para descargar, copiar, pedir una variación o regenerar, y el prompt usado.
 - **Notificaciones, inicio de sesión y modo voz:** colores de estado del sistema, campos de 44 px y botones de voz de 64 px con su etiqueta.
 - **Rendimiento:** los selectores evitan buscar por el atributo `class` dentro de `:has()`, que obliga al navegador a recalcular toda la página en cada hover.
 
 ## Cambios
+
+### 0.95
+
+- **Pestaña Navegador:** barra de 56 px en vidrio con botones de 38 px y la dirección en una píldora blanca con candado; «Abrir en ventana nueva» fuera de la píldora. Sin página abierta, una tarjeta de 560 px con insignia verde, el campo «Escribe una dirección o busca» con **Abrir** (acepta `localhost:3000`, `:3000`, dominios o texto para buscar), «Puertos locales» con **Buscar de nuevo** y cada puerto en una fila con punto verde, `localhost:puerto`, el proceso y **Abrir**. La pestaña se llama «Navegador» en lugar de «Browser».
+- **Revisión de menús:**
+  - Selectores con buscador del editor de modelos (Herramientas, Conocimiento, Habilidades, Filtros): las filas ya no se enciman, buscador en píldora, rótulos de sección en mayúsculas, «sin resultados» centrado, sin marco doble y pie con Limpiar · Gestionar · **Hecho** como píldoras.
+  - Versiones del modelo («Producción»): filas de 44 px con avatar, identificador en monoespaciada, fecha en gris e insignia verde; Anterior y Siguiente como píldoras.
+  - Opciones de radio y casilla, y botones sueltos (Permisos de Herramientas, filtros de Notas, opciones del navegador) a 38 px y 15 px; el campo de etiquetas del menú del chat a 14 px.
+  - Sin aros azules dentro de los menús: la opción enfocada con el teclado se marca en gris.
+- **Ventana «Añadir control»** (controles del modelo): tarjeta de 440 px, campos de 36 px con filo, «Mostrar» como control segmentado, cada opción en su propia tarjeta, «Añadir opción» con borde punteado y pie con píldoras.
+- **Notificaciones:** el aviso de «respondió» de un chat es de vidrio, con avatar de 36 px, título de 14.5 px y la X en un círculo (las reglas del modo voz ya no le ponen un punto verde). El panel de la campana usa rótulos en mayúsculas, filas más grandes y, sin notificaciones, una campana en círculo.
+- **Editar un mensaje propio:** el editor queda a la derecha, donde estaba el globo, como una tarjeta de hasta 720 px parecida a la caja de escribir; Guardar, Cancelar y Enviar como píldoras.
+- **Ajustes rediseñados (escritorio):** las 27 pestañas, personales y de administrador, con ventana de vidrio, menú de 260 px en vidrio con la pestaña activa en azul, título de 26 px con una línea que explica la pestaña, tarjetas por sección (en Interfaz, una por grupo), selectores de 40 px, campos de 42 px, interruptores de 44 × 26, botones de texto en píldora y **Guardar** en una barra de vidrio de orilla a orilla.
+- **Ajustes rediseñados (teléfono):** pantalla completa; primero un índice con título, buscador, tu tarjeta de cuenta y las secciones agrupadas como en el menú de Open WebUI; cada sección con «‹ Ajustes», pestañas deslizables en una pista gris, selector o campo a lo ancho debajo de la etiqueta, interruptores de 48 × 28 y **Guardar** de 48 px en una barra de vidrio.
+- **Generación de imagen en el chat:** mientras corre `generate_image` o `edit_image`, una tarjeta con los pasos Cargando modelo → Generando → Lista, un lienzo con brillo y **Cancelar**; con el bloque opcional del lanzador (ver «Instalar») muestra si ComfyUI está cargando el modelo y el porcentaje con «Paso n de m». La imagen lista va en un marco de 20 px con sombra, Ampliar, «Lista · 1024×1024 · modelo», Descargar, Copiar, Variaciones (escribe la petición en la caja, sin enviarla), Regenerar y «Prompt usado».
+- **Teléfono, menú de usuario:** alineado con la barra lateral (10 px a cada lado), esquinas de 20 px, fila del perfil de 52 px y opciones de 44 px a 16 px.
 
 ### 0.94
 
@@ -256,6 +275,97 @@ async def terminal_event_handler_sin_visor(nombre, parametros, resultado, emisor
 
 
 owui_middleware.terminal_event_handler = terminal_event_handler_sin_visor
+```
+
+Opcional (solo con ComfyUI): para que la tarjeta de generación de imagen muestre si se está cargando el modelo y el porcentaje con «Paso n de m», y para que **Cancelar** detenga ComfyUI, agrega esto antes del `@open_webui.main.app.middleware` (con `import json` arriba). Solo mira los mensajes que ComfyUI le manda a Open WebUI, sin cambiarlos; las dos direcciones piden la sesión de Open WebUI. Sin este bloque la tarjeta muestra «Generando imagen…» con una barra que corre.
+
+```python
+import time
+import aiohttp
+import open_webui.utils.images.comfyui as owui_comfyui
+from open_webui.models.config import Config as OwuiConfig
+from open_webui.utils.auth import decode_token
+
+imagen_estado = {"estado": None}
+ws_get_images_original = owui_comfyui._ws_get_images
+
+
+def imagen_observar(mensaje, flujo):
+    tipo, datos = mensaje.get("type"), mensaje.get("data") or {}
+    if tipo == "executing" and datos.get("node") is not None:
+        clase = str((flujo.get(str(datos["node"])) or {}).get("class_type", ""))
+        if "Loader" in clase and imagen_estado.get("estado") in ("iniciando", "cargando"):
+            imagen_estado["estado"] = "cargando"
+    elif tipo == "progress":
+        imagen_estado.update(estado="generando", paso=datos.get("value", 0), pasos=datos.get("max", 0))
+
+
+class WsEspia:
+    def __init__(self, ws, flujo):
+        self._ws, self._flujo = ws, flujo
+
+    def __getattr__(self, nombre):
+        return getattr(self._ws, nombre)
+
+    def __aiter__(self):
+        return self._leer()
+
+    async def _leer(self):
+        async for msg in self._ws:
+            if msg.type == aiohttp.WSMsgType.TEXT:
+                try:
+                    imagen_observar(json.loads(msg.data), self._flujo)
+                except Exception:
+                    pass
+            yield msg
+
+
+async def ws_get_images_espia(ws, workflow, client_id, base_url, api_key):
+    imagen_estado.clear()
+    imagen_estado.update(estado="iniciando", inicio=time.time(), paso=0, pasos=0, _base=base_url, _clave=api_key)
+    try:
+        resultado = await ws_get_images_original(WsEspia(ws, workflow), workflow, client_id, base_url, api_key)
+    except Exception:
+        imagen_estado.update(estado="error", fin=time.time())
+        raise
+    imagen_estado.update(estado="lista", fin=time.time())
+    return resultado
+
+
+owui_comfyui._ws_get_images = ws_get_images_espia
+
+
+def sesion_valida(request):
+    token = request.cookies.get("token") or ""
+    autorizacion = request.headers.get("authorization", "")
+    if autorizacion.lower().startswith("bearer "):
+        token = autorizacion[7:]
+    return bool(token) and decode_token(token) is not None
+
+
+async def imagen_respuesta(request):
+    if not sesion_valida(request):
+        return Response(status_code=401)
+    if request.url.path.endswith("-cancelar"):
+        if request.method != "POST":
+            return Response(status_code=405)
+        base = imagen_estado.get("_base")
+        if base and imagen_estado.get("estado") in ("iniciando", "cargando", "generando"):
+            async with aiohttp.ClientSession() as sesion:
+                await sesion.post(f"{base}/interrupt", headers={"Authorization": f"Bearer {imagen_estado.get('_clave') or ''}"})
+            imagen_estado.update(estado="cancelada", fin=time.time())
+        return Response(status_code=204)
+    datos = {k: v for k, v in imagen_estado.items() if not k.startswith("_")}
+    datos["ahora"] = time.time()
+    datos["modelo"] = await OwuiConfig.get("image_generation.model", "") or ""
+    return Response(json.dumps(datos), media_type="application/json", headers={"Cache-Control": "no-cache"})
+```
+
+y esto al inicio de `tema_carbono`, después de `activo = ...`:
+
+```python
+    if activo and request.url.path in ("/static/carbono-imagen.json", "/static/carbono-imagen-cancelar"):
+        return await imagen_respuesta(request)
 ```
 
 Opcional: define la variable de entorno `WEBUI_THEME_NAME` (por ejemplo, `Sakura OI Web`) para cambiar el nombre que se ve en la barra lateral, el inicio de sesión y la pestaña mientras el tema está activo. Revisa la [licencia de Open WebUI](https://docs.openwebui.com/license) antes de cambiar su marca.

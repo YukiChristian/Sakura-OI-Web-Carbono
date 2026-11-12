@@ -1,5 +1,5 @@
 /*
- * Carbono 0.94 — comportamiento del tema. El lanzador lo sirve en /static/loader.js
+ * Carbono 0.95 — comportamiento del tema. El lanzador lo sirve en /static/loader.js
  * (que Open WebUI carga en cada página) mientras exista carbono/ACTIVO.
  *
  * Barras de desplazamiento que solo aparecen mientras haces scroll: carbono.css las deja
@@ -2300,4 +2300,550 @@ function skVisible(selector) {
 			vigilarVoz();
 		});
 	}).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-sk-nivel', 'data-sk-voz'] });
+})();
+
+/*
+ * Pestaña Navegador (lienzo "Escritorio · Pestaña Navegador rediseñada"): marca las piezas del panel para el CSS
+ * (.sk-navegador, .sk-nav-*) y agrega a la tarjeta vacía el campo "Escribe una dirección o busca", que escribe en la
+ * barra de dirección de Open WebUI y la envía. Una búsqueda (texto sin forma de dirección) se abre en DuckDuckGo.
+ */
+(() => {
+	const LUPA =
+		'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>';
+	let pendiente = false;
+	const marcar = (el, clase) => {
+		if (el && !el.classList.contains(clase)) el.classList.add(clase);
+	};
+
+	const direccion = (texto) => {
+		const t = texto.trim();
+		if (!t) return '';
+		if (/^[a-z][a-z0-9+.-]*:\/\//i.test(t)) return t;
+		if (/^(localhost|127\.0\.0\.1|\[::1\]|\d{1,3}(\.\d{1,3}){3})(:\d+)?(\/.*)?$/i.test(t) || /^:\d+/.test(t))
+			return `http://${t.startsWith(':') ? `localhost${t}` : t}`;
+		if (!/\s/.test(t) && /^[^/]+\.[a-z]{2,}(:\d+)?(\/.*)?$/i.test(t)) return `https://${t}`;
+		return `https://duckduckgo.com/?q=${encodeURIComponent(t)}`;
+	};
+
+	const abrir = (barraInput, texto) => {
+		const url = direccion(texto);
+		if (!url) return;
+		const asignar = Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value').set;
+		asignar.call(barraInput, url);
+		barraInput.dispatchEvent(new Event('input', { bubbles: true }));
+		barraInput.form?.requestSubmit();
+	};
+
+	const campo = (barraInput) => {
+		const ir = document.createElement('form');
+		ir.className = 'sk-nav-ir';
+		ir.innerHTML = `${LUPA}<input type="text" placeholder="Escribe una dirección o busca" aria-label="Dirección o búsqueda" autocomplete="off" spellcheck="false"><button type="submit" disabled>Abrir</button>`;
+		const entrada = ir.querySelector('input');
+		const boton = ir.querySelector('button');
+		entrada.addEventListener('input', () => (boton.disabled = !entrada.value.trim()));
+		ir.addEventListener('submit', (e) => {
+			e.preventDefault();
+			abrir(barraInput, entrada.value);
+		});
+		return ir;
+	};
+
+	const actualizar = () => {
+		pendiente = false;
+		document.querySelectorAll("input[aria-label='URL']").forEach((inp) => {
+			const form = inp.closest('form');
+			const barra = form?.parentElement;
+			const panel = barra?.closest('[role="tabpanel"]');
+			if (!panel) return;
+			marcar(panel, 'sk-navegador');
+			marcar(barra, 'sk-nav-barra');
+			marcar(form, 'sk-nav-url');
+			if (inp.placeholder !== 'Nueva pestaña') inp.placeholder = 'Nueva pestaña';
+			// sin página abierta Open WebUI titula la pestaña "Browser" (sin traducir)
+			const titulo = panel.id && document.querySelector(`[aria-controls="${panel.id}"] span.text-ellipsis`);
+			if (titulo?.textContent === 'Browser') titulo.textContent = 'Navegador';
+
+			const tarjeta = panel.querySelector('div.m-auto.max-w-xs');
+			if (!tarjeta) return;
+			marcar(tarjeta, 'sk-nav-tarjeta');
+			const cabeza = tarjeta.firstElementChild;
+			marcar(cabeza, 'sk-nav-cabeza');
+			if (cabeza && !tarjeta.querySelector(':scope > .sk-nav-ir')) cabeza.after(campo(inp));
+
+			const puertos = tarjeta.querySelector(':scope > .mt-3');
+			marcar(puertos, 'sk-nav-puertos');
+			const cabezaPuertos = puertos?.querySelector('div.h-7');
+			marcar(cabezaPuertos, 'sk-nav-puertos-cabeza');
+			marcar(cabezaPuertos?.querySelector(':scope > span button'), 'sk-nav-rebuscar');
+			marcar(puertos?.querySelector('div.text-xs.py-2'), 'sk-nav-vacio');
+			puertos?.querySelectorAll('div.h-8.group').forEach((fila) => marcar(fila, 'sk-nav-puerto'));
+		});
+	};
+
+	new MutationObserver(() => {
+		if (pendiente) return;
+		pendiente = true;
+		requestAnimationFrame(actualizar);
+	}).observe(document.documentElement, { childList: true, subtree: true });
+	actualizar();
+})();
+
+/*
+ * Generación de imagen en el chat (lienzo "Generación de imagen en el chat · escritorio y móvil" y "· móvil").
+ * Mientras la herramienta generate_image/edit_image corre ("Explorando generate_image"), debajo aparece una tarjeta con
+ * los pasos Cargando modelo → Generando → Lista, un lienzo con brillo y Cancelar. El lanzador
+ * (el lanzador) dice en qué va ComfyUI en /static/carbono-imagen.json: si está cargando el modelo, o el paso
+ * n de m (se ve el % y "Paso 6 de 8"). Sin ese dato la tarjeta muestra "Generando imagen…" con una barra que corre.
+ * Al terminar, cada imagen generada queda en un marco de esquinas de 20 px con sombra, Ampliar arriba a la derecha,
+ * debajo "Lista · 1024×1024 · modelo" con Descargar, Copiar, Variaciones y Regenerar, y "Prompt usado" desplegable.
+ */
+(() => {
+	const HERRAMIENTA = /\b(generate_image|edit_image)\b/;
+	const CORRIENDO = /^(Explorando|Exploring)/;
+	const ICONOS = {
+		ampliar: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
+		descargar: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
+		copiar: '<path d="M8 8h12v12H8zM16 8V4H4v12h4"/>',
+		variaciones: '<path d="M4 7h4l2-3h4l2 3h4v12H4z"/><circle cx="12" cy="13" r="3.5"/>',
+		regenerar: '<path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5"/>',
+		listo: '<path d="M5 12l5 5 9-10"/>'
+	};
+	const svg = (nombre) =>
+		`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONOS[nombre]}</svg>`;
+
+	let pendiente = false;
+	let estado = null; // último /static/carbono-imagen.json
+	let sondeo = null;
+	let sinServidor = false;
+
+	const autorizacion = () => ({ Authorization: `Bearer ${localStorage.token || ''}` });
+
+	const consultar = async () => {
+		if (sinServidor) return;
+		try {
+			const r = await fetch('/static/carbono-imagen.json', { headers: autorizacion(), cache: 'no-store' });
+			if (!r.ok || !(r.headers.get('content-type') || '').includes('json')) {
+				sinServidor = true;
+				return;
+			}
+			estado = await r.json();
+		} catch {
+			// sin conexión: se intenta en la siguiente vuelta
+		}
+	};
+
+	const modeloCorto = (nombre) =>
+		String(nombre || '')
+			.split(/[\\/]/)
+			.pop()
+			.replace(/\.(gguf|safetensors|ckpt|pt|bin)$/i, '')
+			.replace(/[-_.](Q\d\w*|fp\d+|bf16|f16)$/i, '');
+
+	/* ---------- tarjeta mientras se genera ---------- */
+	const tarjeta = () => {
+		const t = document.createElement('div');
+		t.className = 'sk-img-gen';
+		t.innerHTML = `
+			<div class="sk-img-pasos" aria-hidden="true">
+				<span class="sk-img-paso" data-paso="cargando"><i></i>Cargando modelo</span><b></b>
+				<span class="sk-img-paso" data-paso="generando"><i></i>Generando</span><b></b>
+				<span class="sk-img-paso" data-paso="lista"><i></i>Lista</span>
+			</div>
+			<div class="sk-img-lienzo" role="status" aria-live="polite">
+				<span class="sk-img-giro" aria-hidden="true"></span>
+				<strong class="sk-img-titulo"></strong>
+				<div class="sk-img-barra" aria-hidden="true"><i></i></div>
+				<small class="sk-img-nota"></small>
+			</div>
+			<div class="sk-img-acciones"><button type="button" class="sk-img-cancelar">Cancelar</button></div>`;
+		t.querySelector('.sk-img-cancelar').addEventListener('click', async (e) => {
+			const b = e.currentTarget;
+			b.disabled = true;
+			b.textContent = 'Cancelando…';
+			try {
+				await fetch('/static/carbono-imagen-cancelar', { method: 'POST', headers: autorizacion() });
+			} catch {
+				// si falla, el botón vuelve
+			}
+			setTimeout(() => {
+				b.disabled = false;
+				b.textContent = 'Cancelar';
+			}, 4000);
+		});
+		return t;
+	};
+
+	const pintar = (t) => {
+		const reciente = estado && estado.inicio && estado.ahora - estado.inicio < 900;
+		let fase = 'generando';
+		let titulo = 'Generando imagen…';
+		let nota = 'Puede tardar unos segundos';
+		let pct = null;
+		if (reciente && estado.estado === 'iniciando') {
+			fase = 'cargando';
+			titulo = 'Preparando…';
+			nota = 'Enviando a ComfyUI';
+		} else if (reciente && estado.estado === 'cargando') {
+			fase = 'cargando';
+			titulo = 'Cargando modelo…';
+			nota = 'Solo pasa la primera vez';
+		} else if (reciente && estado.estado === 'generando' && estado.pasos > 0) {
+			pct = Math.min(100, Math.round((estado.paso / estado.pasos) * 100));
+			nota = `Paso ${estado.paso} de ${estado.pasos}`;
+		} else if (reciente && estado.estado === 'cancelada') {
+			titulo = 'Cancelando…';
+			nota = 'Se detiene en un momento';
+		}
+		if (t.dataset.fase !== fase) t.dataset.fase = fase;
+		const conPct = pct !== null;
+		if (t.classList.contains('sk-img-con-pct') !== conPct) t.classList.toggle('sk-img-con-pct', conPct);
+		const tit = t.querySelector('.sk-img-titulo');
+		const html = conPct ? `${pct}<small>%</small>` : titulo;
+		if (tit.innerHTML !== html) tit.innerHTML = html;
+		const n = t.querySelector('.sk-img-nota');
+		if (n.textContent !== nota) n.textContent = nota;
+		const barra = t.querySelector('.sk-img-barra > i');
+		const ancho = conPct ? `${pct}%` : '';
+		if (barra.style.width !== ancho) barra.style.width = ancho;
+	};
+
+	/* ---------- imagen terminada ---------- */
+	const promptDe = async (mensajeId) => {
+		const chatId = (location.pathname.match(/\/c\/([^/?#]+)/) || [])[1];
+		if (!chatId || !mensajeId) return '';
+		const r = await fetch(`/api/v1/chats/${chatId}`, { headers: autorizacion() });
+		if (!r.ok) return '';
+		const chat = await r.json();
+		const m = chat?.chat?.history?.messages?.[mensajeId];
+		const llamadas = (m?.output || []).filter((o) => o?.type === 'function_call' && HERRAMIENTA.test(o.name || ''));
+		for (const l of llamadas.reverse()) {
+			try {
+				const args = JSON.parse(l.arguments || '{}');
+				if (args.prompt) return String(args.prompt);
+			} catch {
+				// argumentos que no son JSON
+			}
+		}
+		return '';
+	};
+
+	const copiar = async (img, boton) => {
+		try {
+			const blob = await (await fetch(img.src)).blob();
+			const png = blob.type === 'image/png' ? blob : await new Promise((ok) => {
+				const c = document.createElement('canvas');
+				c.width = img.naturalWidth;
+				c.height = img.naturalHeight;
+				c.getContext('2d').drawImage(img, 0, 0);
+				c.toBlob(ok, 'image/png');
+			});
+			await navigator.clipboard.write([new ClipboardItem({ 'image/png': png })]);
+			boton.innerHTML = svg('listo');
+			setTimeout(() => (boton.innerHTML = svg('copiar')), 1500);
+		} catch {
+			boton.classList.add('sk-img-fallo');
+			setTimeout(() => boton.classList.remove('sk-img-fallo'), 1500);
+		}
+	};
+
+	const variacion = () => {
+		const caja = document.querySelector('#chat-input');
+		if (!caja) return;
+		caja.focus();
+		document.execCommand('insertText', false, 'Haz una variación de esta imagen');
+	};
+
+	const decorar = (img) => {
+		const grupo = img.closest('.group');
+		const envoltura = grupo?.parentElement;
+		if (!grupo || !envoltura || envoltura.querySelector(':scope > .sk-img-pie')) return;
+		grupo.classList.add('sk-img-marco');
+		envoltura.classList.add('sk-img-hecha');
+		const preview = grupo.querySelector('button');
+
+		const ampliar = document.createElement('button');
+		ampliar.type = 'button';
+		ampliar.className = 'sk-img-ampliar';
+		ampliar.setAttribute('aria-label', 'Ampliar');
+		ampliar.innerHTML = svg('ampliar');
+		ampliar.addEventListener('click', (e) => {
+			e.stopPropagation();
+			preview?.click();
+		});
+		grupo.appendChild(ampliar);
+
+		const mensaje = img.closest('[id^="message-"]');
+		const pie = document.createElement('div');
+		pie.className = 'sk-img-pie';
+		pie.innerHTML = `
+			<div class="sk-img-fila">
+				<span class="sk-img-meta"><span class="sk-img-lista">${svg('listo')}Lista</span><span class="sk-img-datos"></span></span>
+				<span class="sk-img-botones">
+					<a class="sk-img-btn" aria-label="Descargar" title="Descargar" download="imagen.png">${svg('descargar')}</a>
+					<button type="button" class="sk-img-btn" data-accion="copiar" aria-label="Copiar" title="Copiar">${svg('copiar')}</button>
+					<button type="button" class="sk-img-btn" data-accion="variaciones" aria-label="Variaciones" title="Variaciones">${svg('variaciones')}</button>
+					<button type="button" class="sk-img-btn" data-accion="regenerar" aria-label="Regenerar" title="Regenerar">${svg('regenerar')}</button>
+				</span>
+			</div>
+			<details class="sk-img-prompt"><summary>Prompt usado</summary><div>Cargando…</div></details>`;
+		pie.querySelector('a').href = img.src;
+		pie.querySelector('[data-accion="copiar"]').addEventListener('click', (e) => copiar(img, e.currentTarget));
+		pie.querySelector('[data-accion="variaciones"]').addEventListener('click', variacion);
+		pie.querySelector('[data-accion="regenerar"]').addEventListener('click', () =>
+			mensaje?.querySelector("button[aria-label='Regenerar'], button[aria-label='Regenerate']")?.click()
+		);
+		const detalles = pie.querySelector('details');
+		detalles.addEventListener('toggle', async () => {
+			if (!detalles.open || detalles.dataset.cargado) return;
+			detalles.dataset.cargado = '1';
+			const texto = await promptDe(mensaje?.id.replace(/^message-/, '')).catch(() => '');
+			detalles.querySelector('div').textContent = texto || 'No se encontró el prompt de esta imagen.';
+		});
+		const datos = () => {
+			if (!img.naturalWidth) return;
+			const modelo = modeloCorto(estado?.modelo);
+			pie.querySelector('.sk-img-datos').textContent = `${img.naturalWidth}×${img.naturalHeight}${modelo ? ` · ${modelo}` : ''}`;
+		};
+		img.complete ? datos() : img.addEventListener('load', datos, { once: true });
+		envoltura.appendChild(pie);
+	};
+
+	/* ---------- ciclo ---------- */
+	const actualizar = () => {
+		pendiente = false;
+		let generando = false;
+		document.querySelectorAll('.chat-assistant [id*="detail-group"]').forEach((grupo) => {
+			const texto = grupo.textContent.trim();
+			const corre = CORRIENDO.test(texto) && HERRAMIENTA.test(texto);
+			let t = grupo.nextElementSibling?.classList.contains('sk-img-gen') ? grupo.nextElementSibling : null;
+			if (corre) {
+				generando = true;
+				if (!t) {
+					t = tarjeta();
+					grupo.after(t);
+				}
+				pintar(t);
+			} else if (t) {
+				t.remove();
+			}
+		});
+		document.querySelectorAll(".chat-assistant img[alt='generated-image.png']").forEach(decorar);
+
+		if (generando && !sondeo) {
+			const vuelta = async () => {
+				await consultar();
+				document.querySelectorAll('.sk-img-gen').forEach(pintar);
+				sondeo = document.querySelector('.sk-img-gen') ? setTimeout(vuelta, 700) : null;
+			};
+			sondeo = setTimeout(vuelta, 0);
+		}
+	};
+
+	new MutationObserver(() => {
+		if (pendiente) return;
+		pendiente = true;
+		requestAnimationFrame(actualizar);
+	}).observe(document.documentElement, { childList: true, subtree: true, characterData: true });
+	consultar();
+})();
+
+/*
+ * Ajustes en el teléfono (lienzo "Ajustes rediseñados · escritorio y móvil"): al abrir Ajustes primero se ve un índice
+ * (título, buscador, tarjeta de la cuenta y las pestañas de Open WebUI agrupadas como en su menú) y, al tocar una, su
+ * pantalla con "‹ Ajustes" para volver. El índice se arma con las pestañas reales (mismos nombres, íconos y grupos),
+ * así que tocar una es tocar la pestaña de Open WebUI. Cerrar usa el "Volver" de Open WebUI.
+ */
+(() => {
+	const TELEFONO = window.matchMedia('(max-width: 767px)');
+	const SVG = {
+		atras: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>',
+		lupa: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>',
+		cerrar: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg>',
+		flecha: '<svg class="sk-aj-flecha" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg>'
+	};
+	let pendiente = false;
+
+	const etiqueta = (el) => el.textContent.trim();
+
+	const elemento = (html) => {
+		const t = document.createElement('template');
+		t.innerHTML = html.trim();
+		return t.content.firstElementChild;
+	};
+
+	const abrirPestana = (panel, id) => {
+		panel.querySelector(`#settings-tabs-container [aria-controls='${id}']`)?.click();
+		panel.classList.remove('sk-aj-en-indice');
+		requestAnimationFrame(() => {
+			const activa = panel.querySelector(`#settings-tabs-container [aria-controls='${id}']`);
+			activa?.scrollIntoView({ block: 'nearest', inline: 'center' });
+		});
+	};
+
+	// nombre, foto y rol de la sesión (la barra lateral puede estar cerrada en el teléfono)
+	let sesion = null;
+	const usuario = async () => {
+		if (sesion) return sesion;
+		try {
+			const r = await fetch('/api/v1/auths/', { headers: { Authorization: `Bearer ${localStorage.token || ''}` } });
+			sesion = r.ok ? await r.json() : {};
+		} catch {
+			sesion = {};
+		}
+		return sesion;
+	};
+
+	const armarIndice = (panel, nav) => {
+		const indice = document.createElement('div');
+		indice.className = 'sk-aj-indice';
+		indice.innerHTML = `
+			<div class="sk-aj-indice-titulo">Ajustes</div>
+			<label class="sk-aj-indice-buscar">${SVG.lupa}<input type="search" placeholder="Buscar ajustes" aria-label="Buscar ajustes"></label>`;
+
+		// cuenta
+		const cuenta = nav.querySelector("[aria-controls='tab-account']");
+		const admin = !!nav.querySelector("[aria-controls^='tab-admin-']");
+		if (cuenta) {
+			const tarjeta = elemento(`<button type="button" class="sk-aj-cuenta" data-tab="tab-account">
+				<span class="sk-aj-iniciales">?</span><span><b>Cuenta</b><small>${admin ? 'Administrador · ' : ''}Cuenta y perfil</small></span>${SVG.flecha}</button>`);
+			indice.appendChild(tarjeta);
+			usuario().then(({ name, profile_image_url }) => {
+				if (name) {
+					tarjeta.querySelector('b').textContent = name;
+					tarjeta.querySelector('.sk-aj-iniciales').textContent = name.split(/\s+/).filter(Boolean).slice(0, 2).map((p) => p[0].toUpperCase()).join('');
+				}
+				if (profile_image_url) {
+					const img = document.createElement('img');
+					img.alt = '';
+					img.src = profile_image_url;
+					img.addEventListener('load', () => tarjeta.querySelector('.sk-aj-iniciales')?.replaceWith(img), { once: true });
+				}
+			});
+		}
+
+		// grupos tal como vienen en el menú de Open WebUI: rótulo mayor (Personal, Administrador) y sub-rótulos
+		let seccion = null;
+		const nuevaSeccion = (titulo) => {
+			seccion = elemento('<section class="sk-aj-seccion"><h3></h3><div class="sk-aj-lista"></div></section>');
+			seccion.querySelector('h3').textContent = titulo;
+			indice.appendChild(seccion);
+		};
+		const recorrer = (nodo) => {
+			for (const hijo of nodo.children) {
+				if (hijo.getAttribute('role') === 'tablist' || getComputedStyle(hijo).display === 'contents') {
+					recorrer(hijo);
+				} else if (hijo.matches("[role='tab']")) {
+					const id = hijo.getAttribute('aria-controls');
+					if (!id || id === 'tab-account') continue;
+					if (!seccion) nuevaSeccion('');
+					const item = elemento(`<button type="button" class="sk-aj-item" data-tab="${id}"><span class="sk-aj-icono"></span><span></span>${SVG.flecha}</button>`);
+					const icono = hijo.querySelector('svg');
+					if (icono) item.querySelector('.sk-aj-icono').appendChild(icono.cloneNode(true));
+					item.querySelector('span:nth-child(2)').textContent = etiqueta(hijo);
+					seccion.querySelector('.sk-aj-lista').appendChild(item);
+				} else if (hijo.matches('span') && etiqueta(hijo)) {
+					// rótulo: si el siguiente hermano es un tablist, es un rótulo mayor
+					const siguiente = hijo.nextElementSibling;
+					if (siguiente?.getAttribute('role') === 'tablist') {
+						const mayor = elemento('<div class="sk-aj-grupo-mayor"></div>');
+						mayor.textContent = etiqueta(hijo);
+						indice.appendChild(mayor);
+						seccion = null;
+					} else {
+						nuevaSeccion(etiqueta(hijo));
+					}
+				}
+			}
+		};
+		const tabs = nav.querySelector('.tabs');
+		if (tabs) recorrer(tabs);
+		indice.querySelectorAll('.sk-aj-seccion').forEach((s) => {
+			if (!s.querySelector('.sk-aj-item')) s.remove();
+		});
+
+		indice.addEventListener('click', (e) => {
+			const b = e.target.closest('[data-tab]');
+			if (b) abrirPestana(panel, b.dataset.tab);
+		});
+		const buscar = indice.querySelector('input');
+		buscar.addEventListener('input', () => {
+			const q = buscar.value.trim().toLowerCase();
+			indice.querySelectorAll('.sk-aj-item').forEach((i) => (i.hidden = !!q && !i.textContent.toLowerCase().includes(q)));
+			indice.querySelectorAll('.sk-aj-seccion').forEach((s) => (s.hidden = !s.querySelector('.sk-aj-item:not([hidden])')));
+			indice.querySelectorAll('.sk-aj-grupo-mayor').forEach((g) => (g.hidden = !!q));
+			const c = indice.querySelector('.sk-aj-cuenta');
+			if (c) c.hidden = !!q && !'cuenta perfil'.includes(q) && !c.textContent.toLowerCase().includes(q);
+		});
+		return indice;
+	};
+
+	const montar = (panel) => {
+		const nav = panel.querySelector(':scope > #settings-tabs-container');
+		if (!nav) return;
+		panel.classList.add('sk-aj-movil', 'sk-aj-en-indice');
+		const cabeza = elemento(`<div class="sk-aj-cabeza">
+			<button type="button" class="sk-aj-atras">${SVG.atras}Ajustes</button>
+			<button type="button" class="sk-aj-buscar" aria-label="Buscar ajustes">${SVG.lupa}</button>
+			<button type="button" class="sk-aj-cerrar" aria-label="Cerrar">${SVG.cerrar}</button></div>`);
+		const indice = armarIndice(panel, nav);
+		cabeza.querySelector('.sk-aj-atras').addEventListener('click', () => {
+			panel.classList.add('sk-aj-en-indice');
+			indice.scrollTop = 0;
+		});
+		cabeza.querySelector('.sk-aj-buscar').addEventListener('click', () => {
+			panel.classList.add('sk-aj-en-indice');
+			indice.querySelector('input').focus();
+		});
+		cabeza.querySelector('.sk-aj-cerrar').addEventListener('click', () => {
+			nav.querySelector(':scope > div:first-child > button')?.click();
+		});
+		panel.prepend(cabeza);
+		panel.appendChild(indice);
+	};
+
+	const desmontar = (panel) => {
+		panel.classList.remove('sk-aj-movil', 'sk-aj-en-indice');
+		panel.querySelector(':scope > .sk-aj-cabeza')?.remove();
+		panel.querySelector(':scope > .sk-aj-indice')?.remove();
+	};
+
+	const actualizar = () => {
+		pendiente = false;
+		const nav = document.querySelector('.modal[role="dialog"] #settings-tabs-container');
+		const panel = nav?.parentElement;
+		if (!panel) return;
+		const montado = panel.classList.contains('sk-aj-movil');
+		if (TELEFONO.matches && !montado) montar(panel);
+		else if (!TELEFONO.matches && montado) desmontar(panel);
+	};
+
+	TELEFONO.addEventListener('change', actualizar);
+	new MutationObserver(() => {
+		if (pendiente) return;
+		pendiente = true;
+		requestAnimationFrame(actualizar);
+	}).observe(document.body, { childList: true, subtree: true });
+})();
+
+/*
+ * Teléfono: el menú de usuario va fuera de la barra lateral (Open WebUI lo pone en el body). Para alinearlo con la barra
+ * se copia su ancho (--sidebar-width de #sidebar) en --sk-barra-ancho del documento; solo se escribe si cambia.
+ */
+(() => {
+	let pendiente = false;
+	const actualizar = () => {
+		pendiente = false;
+		const barra = document.querySelector('#sidebar');
+		if (!barra) return;
+		const ancho = `${Math.round(barra.getBoundingClientRect().width)}px`;
+		if (ancho !== '0px' && document.documentElement.style.getPropertyValue('--sk-barra-ancho') !== ancho) {
+			document.documentElement.style.setProperty('--sk-barra-ancho', ancho);
+		}
+	};
+	new MutationObserver(() => {
+		if (pendiente) return;
+		pendiente = true;
+		requestAnimationFrame(actualizar);
+	}).observe(document.body, { childList: true, subtree: true });
+	window.addEventListener('resize', actualizar);
 })();
