@@ -1,6 +1,6 @@
 # Carbono para Open WebUI
 
-**Versión 0.95** · probado con Open WebUI **0.13.3**
+**Versión 0.95.1** · probado con Open WebUI **0.13.3**
 
 Carbono es el tema recomendado para [Sakura OI Web](https://github.com/YukiChristian/Sakura-OI-Web). Deja la interfaz de Open WebUI neutra (superficies en tonos carbón y zinc, acción principal en negro), con más jerarquía en el texto, tipografía Atkinson Hyperlegible, menús de vidrio esmerilado y un composer pensado para el teléfono.
 
@@ -12,36 +12,32 @@ La guía de estilo (principios, colores, tipografía y componentes) está en [do
 
 ### Escritorio
 
-| Bienvenida con pétalos | Conversación |
+| Bienvenida con pétalos | Imagen generada y medidor de rendimiento |
 | --- | --- |
-| ![Bienvenida con el avatar del modelo y pétalos en sus colores](docs/capturas/escritorio-inicio.jpg) | ![Conversación con una imagen generada y el medidor de rendimiento](docs/capturas/escritorio-conversacion.jpg) |
+| ![Bienvenida con el avatar del modelo, la barra lateral rediseñada y pétalos en sus colores](docs/capturas/escritorio-inicio.jpg) | ![Cuadrícula de variaciones de una imagen generada con la barra de métricas](docs/capturas/escritorio-conversacion.jpg) |
 
-| Barra contraída con chats | Vista dividida con Archivos |
+| Selector de modelo de la barra | Menú «+» |
 | --- | --- |
-| ![Panel de chats desde la barra contraída](docs/capturas/escritorio-chats.jpg) | ![Vista dividida con la pestaña Archivos y los chips en bolitas](docs/capturas/escritorio-panel.jpg) |
+| ![Selector de modelo abierto desde la tarjeta Modelo activo, con buscador, fijados y todos los modelos](docs/capturas/escritorio-selector-modelo.jpg) | ![Menú «+» con Archivos, Captura, Contexto y herramientas](docs/capturas/escritorio-menu-mas.jpg) |
 
-| Menú «+» | Selector de modelo |
+| Tema oscuro con el detalle de métricas | Modo voz en escritorio |
 | --- | --- |
-| ![Menú «+» reorganizado](docs/capturas/escritorio-menu-mas.jpg) | ![Selector de modelo](docs/capturas/escritorio-selector-modelo.jpg) |
-
-| Modo voz en escritorio |
-| --- |
-| ![Modo voz en escritorio con vista dividida: chat, panel de voz y columna de archivos](docs/capturas/escritorio-voz.jpg) |
+| ![Tema oscuro con la tarjeta de detalle del medidor de rendimiento](docs/capturas/escritorio-oscuro.jpg) | ![Modo voz en escritorio: el chat a la izquierda y el panel de voz a la derecha](docs/capturas/escritorio-voz.jpg) |
 
 ### Móvil
 
-| Bienvenida | Menú «+» |
+| Bienvenida | Barra lateral |
 | --- | --- |
-| ![Bienvenida en el teléfono con el + y las bolitas de las opciones activas](docs/capturas/movil-inicio.jpg) | ![Menú «+» en el teléfono con Imagen, Razonamiento y Trabajo](docs/capturas/movil-menu-mas.jpg) |
+| ![Bienvenida en el teléfono con el + y las bolitas de las opciones activas](docs/capturas/movil-inicio.jpg) | ![Barra lateral flotante en el teléfono con modelo activo, fijados, Notas, Espacio y Agenda](docs/capturas/movil-barra.jpg) |
 
-| Modo voz |
-| --- |
-| ![Modo voz respondiendo, con la reacción de la persona en su círculo](docs/capturas/movil-voz.jpg) |
+| Menú «+» | Modo voz |
+| --- | --- |
+| ![Menú «+» en el teléfono con Imagen, Razonamiento y Trabajo](docs/capturas/movil-menu-mas.jpg) | ![Modo voz en el teléfono con el título, el nombre del modelo y Colgar](docs/capturas/movil-voz.jpg) |
 
 ## Qué cambia
 
 - **Tipografía:** Atkinson Hyperlegible Next para la interfaz y Atkinson Hyperlegible Mono para código (Google Fonts).
-- **Barra lateral:** filas del mismo tamaño, chat activo con fondo gris y barra de 3 px, etiquetas de sección en mayúsculas.
+- **Barra lateral:** vidrio claro con el color del modelo activo (tomado de su avatar, como los pétalos), tarjeta «Modelo activo» con su selector, modelos fijados, **Nuevo Chat** en negro con Buscar al lado, píldoras Notas · Espacio · Agenda y chats compactos con el avatar del modelo de cada uno.
 - **Chat:** globo de tus mensajes en gris neutro, fondo de cada modelo con un velo blanco degradado y desenfocado para que el texto se lea primero, y barra de título de vidrio esmerilado.
 - **Composer en escritorio:** chips neutros con una insignia redonda de color (Herramientas naranja, Web verde, Open Terminal violeta, Razonamiento rosa), una línea que los separa de `+` e Integraciones y, a la derecha, el modelo con su avatar, el micrófono y la voz. Si la caja es angosta, los chips se quedan solo con su insignia.
 - **Composer en el teléfono:** texto arriba; abajo `+`, Integraciones, un botón de opciones con las insignias de color de las opciones activas encimadas y un contador «4/4», el modelo con su avatar, el micrófono y la voz. El botón abre la hoja de vidrio **Herramientas y opciones**, donde cada opción tiene su ícono, su descripción y su interruptor encendido o apagado.
@@ -55,6 +51,21 @@ La guía de estilo (principios, colores, tipografía y componentes) está en [do
 - **Rendimiento:** los selectores evitan buscar por el atributo `class` dentro de `:has()`, que obliga al navegador a recalcular toda la página en cada hover.
 
 ## Cambios
+
+### 0.95.1
+
+- **Barra lateral rediseñada:** cada chat lleva el avatar y el color del modelo con el que se habló (tomado del avatar, como los pétalos); aro mientras genera, punto si hay respuesta sin leer y barra del color en el chat abierto. Filas compactas (32 px en escritorio, 40 px en el teléfono) para que quepan más chats.
+- **Encabezado de la barra:** «Sakura OI Web» más grande con la versión debajo; campana y contraer del mismo tamaño y alineados.
+- **Tarjeta «Modelo activo» y selector:** al tocarla se abre un panel con buscador, fijados y todos los modelos (tipo, chincheta para fijar o quitar y palomita en el activo); elegir y fijar usan el selector de Open WebUI, así que todo se guarda igual.
+- **Buscar** junto a **Nuevo Chat** en gris oscuro; **Notas · Espacio · Agenda** como píldoras (Agenda abre el Calendario de Open WebUI, si lo fijas en la barra).
+- **Tarjeta del usuario:** el engrane abre Ajustes directo; el resto de la tarjeta abre el menú, que ahora va alineado con la tarjeta y con todas sus opciones a la misma altura.
+- **Chat en pantalla ancha:** interruptor Compacta / Ampliada en la barra de pestañas (solo íconos si hay poco espacio), pestañas deslizables con flechas, hora y nombre en el encabezado de cada mensaje.
+- **Medidor de rendimiento:** barra con borde gris y botón que abre debajo el detalle en lista (tiempo total, primera palabra, velocidad, contexto, memoria, imagen y desglose del tiempo); en el teléfono, barra corta con lo principal.
+- **Generación de imagen:** imagen sin sombra ni redondeo, encuadrada según su proporción, con la barra de acciones unida abajo; las variaciones se muestran en cuadrícula mientras se generan.
+- **Modo voz (azul y negro):** encabezado «Modo voz» con «● Escuchando · 0:42», nombre del modelo bajo el avatar, «Colgar» en el teléfono, aparece con un fundido y sin esquinas redondeadas; se acomoda en pantallas altas y bajas.
+- **Accesibilidad (tres rondas, claro y oscuro):** en el teléfono los botones miden de 40 a 44 px (barra, encabezado, mensajes, imágenes, métricas y «Pensando durante…»), mejor contraste en horas, rótulos y textos secundarios, y márgenes iguales a los dos lados de la barra.
+- **Más fluido:** los 26 observadores de cambios del tema son ahora uno solo compartido que avisa a cada parte solo de lo que le toca; mientras la respuesta se escribe se agrupan los avisos (cada 120 ms) y con la pestaña oculta no trabaja. Sin cambios en animaciones ni imágenes.
+- **Correcciones:** ya no se abre una pestaña «Inicio» al empezar el modo voz en el teléfono ni al cambiar el ancho de la ventana, y la barra del teléfono cerrada no deja una orilla a la vista.
 
 ### 0.95
 

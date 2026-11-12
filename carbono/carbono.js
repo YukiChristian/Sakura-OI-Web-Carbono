@@ -1,10 +1,101 @@
 /*
- * Carbono 0.95 — comportamiento del tema. El lanzador lo sirve en /static/loader.js
+ * Carbono 0.95.1 — comportamiento del tema. El lanzador lo sirve en /static/loader.js
  * (que Open WebUI carga en cada página) mientras exista carbono/ACTIVO.
  *
  * Barras de desplazamiento que solo aparecen mientras haces scroll: carbono.css las deja
  * transparentes y aquí se marca con .sk-scrolling el elemento que se está desplazando.
  */
+/*
+ * Observador compartido (optimización): antes cada módulo tenía su propio MutationObserver sobre toda la página (26),
+ * así que cada cambio de Open WebUI —por ejemplo, cada trozo de texto mientras responde— generaba 26 registros y
+ * despertaba 26 funciones. Ahora hay uno solo que reparte: cada módulo recibe aviso solo de lo que le interesa
+ * (nodos que entran o salen, texto o ciertos atributos). Los cambios que son solo de texto (la respuesta que se escribe)
+ * se juntan y se avisan como mucho cada 120 ms, imperceptible a la vista; con la pestaña oculta no se trabaja y al
+ * volver se avisa una vez.
+ */
+const skVigilar = (() => {
+	const suscritos = [];
+	const atributos = new Set();
+	let observador = null;
+	let textoPendiente = false;
+	let temporizador = 0;
+	let ocultoPendiente = false;
+
+	const avisar = (hijos, texto, attrs) => {
+		for (const s of suscritos) {
+			if ((hijos && s.hijos) || (texto && s.texto) || (attrs.size && s.atributos && [...attrs].some((a) => s.atributos.has(a)))) {
+				try {
+					s.fn();
+				} catch (e) {
+					console.error('[sakura] módulo', e);
+				}
+			}
+		}
+	};
+
+	const repartir = (registros) => {
+		if (document.hidden) {
+			ocultoPendiente = true;
+			return;
+		}
+		let hijos = false;
+		let texto = false;
+		const attrs = new Set();
+		for (const r of registros) {
+			if (r.type === 'childList') hijos = true;
+			else if (r.type === 'characterData') texto = true;
+			else attrs.add(r.attributeName);
+		}
+		if (hijos || attrs.size) avisar(hijos, hijos && texto, attrs);
+		// solo texto: se junta y se avisa con un pequeño retraso
+		if (texto && !hijos) {
+			textoPendiente = true;
+			if (!temporizador) {
+				temporizador = setTimeout(() => {
+					temporizador = 0;
+					if (!textoPendiente) return;
+					textoPendiente = false;
+					avisar(false, true, new Set());
+				}, 120);
+			}
+		}
+	};
+
+	const observar = () => {
+		if (observador) {
+			const quedan = observador.takeRecords();
+			observador.disconnect();
+			if (quedan.length) repartir(quedan);
+		}
+		observador = new MutationObserver(repartir);
+		observador.observe(document.documentElement, {
+			childList: true,
+			subtree: true,
+			characterData: true,
+			...(atributos.size ? { attributes: true, attributeFilter: [...atributos] } : {})
+		});
+	};
+
+	document.addEventListener('visibilitychange', () => {
+		if (!document.hidden && ocultoPendiente) {
+			ocultoPendiente = false;
+			avisar(true, true, new Set(atributos));
+		}
+	});
+
+	return (fn, opciones = {}) => {
+		const filtro = opciones.attributeFilter || null;
+		if (filtro) filtro.forEach((a) => atributos.add(a));
+		suscritos.push({
+			fn,
+			hijos: opciones.childList !== false,
+			texto: Boolean(opciones.characterData),
+			atributos: filtro ? new Set(filtro) : null
+		});
+		observar();
+	};
+})();
+
 /* Open WebUI 0.13.2 abre chats en pestañas ("chat lateral") con su propia caja de mensaje y repite ids
    como #model-selector-model-button; la pestaña oculta sigue en la página. skVisible() devuelve el elemento
    que se ve (o el primero si ninguno se ve) para que cada módulo trabaje sobre la caja activa. */
@@ -77,7 +168,7 @@ function skVisible(selector) {
 			});
 
 	/*
-	 * Carga rápida: /api/v1/models/list (modelos guardados en Espacio de Trabajo, como tus personas, con su
+	 * Carga rápida: /api/v1/models/list (modelos guardados en Espacio de Trabajo, como Sakura, Lain y Yoko, con su
 	 * nivel de razonamiento) responde en milisegundos; /api/models consulta a cada servidor de modelos y tarda
 	 * segundos. Se usa primero la rápida para pintar el avatar y el chip de Razonamiento, y la completa se completa
 	 * después en segundo plano (para los modelos que no son personas). Sin caché: siempre datos al día.
@@ -195,11 +286,11 @@ function skVisible(selector) {
 		return fetchOriginal.apply(this, arguments);
 	};
 
-	new MutationObserver(() => {
+	skVigilar(() => {
 		if (pendiente) return;
 		pendiente = true;
 		requestAnimationFrame(mover);
-	}).observe(document.documentElement, {
+	}, {
 		childList: true,
 		subtree: true,
 		// al cambiar de modelo Open WebUI a veces solo cambia el texto del nombre (sin agregar nodos)
@@ -504,11 +595,11 @@ function skVisible(selector) {
 		if (e.key === 'Escape') cerrar();
 	});
 
-	new MutationObserver(() => {
+	skVigilar(() => {
 		if (pendiente) return;
 		pendiente = true;
 		requestAnimationFrame(actualizar);
-	}).observe(document.documentElement, {
+	}, {
 		childList: true,
 		subtree: true,
 		// encender o apagar una opción solo cambia aria-pressed o la clase del chip
@@ -835,11 +926,11 @@ function skVisible(selector) {
 		if (e.key === 'Escape' && document.querySelector('.sk-chats-panel')) cerrar();
 	});
 
-	new MutationObserver(() => {
+	skVigilar(() => {
 		if (pendiente) return;
 		pendiente = true;
 		requestAnimationFrame(asegurarBoton);
-	}).observe(document.documentElement, { childList: true, subtree: true });
+	}, { childList: true, subtree: true });
 })();
 
 /* Textos del selector de carpeta y del menú "+" (lienzos "Composer · Dirección de trabajo" y "Menú +"):
@@ -896,11 +987,11 @@ function skVisible(selector) {
 		});
 	};
 
-	new MutationObserver(() => {
+	skVigilar(() => {
 		if (pendiente) return;
 		pendiente = true;
 		requestAnimationFrame(traducir);
-	}).observe(document.documentElement, { childList: true, subtree: true });
+	}, { childList: true, subtree: true });
 })();
 
 /* Al achicar la ventana de escritorio a teléfono con la vista dividida abierta, Open WebUI pasa el otro
@@ -1108,11 +1199,11 @@ function skVisible(selector) {
 		setTimeout(() => document.documentElement.classList.remove('sk-encendiendo'), 300);
 	};
 
-	new MutationObserver(() => {
+	skVigilar(() => {
 		if (pendiente) return;
 		pendiente = true;
 		requestAnimationFrame(asegurar);
-	}).observe(document.documentElement, { childList: true, subtree: true });
+	}, { childList: true, subtree: true });
 })();
 
 /* Archivos que el lanzador sirve parchados (p. ej. el chat lateral con Open Terminal y Workspace): el navegador
@@ -1289,11 +1380,11 @@ function skVisible(selector) {
 		if (fila.getAttribute('aria-label') !== etiqueta) fila.setAttribute('aria-label', etiqueta);
 	};
 
-	new MutationObserver(() => {
+	skVigilar(() => {
 		if (pendiente) return;
 		pendiente = true;
 		requestAnimationFrame(asegurar);
-	}).observe(document.documentElement, {
+	}, {
 		childList: true,
 		subtree: true,
 		attributes: true,
@@ -1700,7 +1791,7 @@ function skVisible(selector) {
 		pendiente = true;
 		requestAnimationFrame(actualizar);
 	};
-	new MutationObserver(programar).observe(document.documentElement, {
+	skVigilar(programar, {
 		childList: true,
 		subtree: true,
 		attributes: true,
@@ -1710,7 +1801,7 @@ function skVisible(selector) {
 })();
 
 /*
- * Bienvenida con pétalos por modelo (lienzo "Pétalos por modelo"): en la pantalla de nuevo chat el
+ * Bienvenida con pétalos por modelo (lienzo "Pétalos · Sakura / Yoko / Lain"): en la pantalla de nuevo chat el
  * avatar del modelo va grande y centrado, con pétalos y sombra en los colores de su ícono. Los colores se sacan del
  * propio avatar (dibujado en un lienzo de 32 × 32, ~1 ms) cada vez que cambia, así que un ícono nuevo o un modelo
  * nuevo toma sus colores solo; el último resultado se guarda para pintarlo al instante.
@@ -1797,9 +1888,16 @@ function skVisible(selector) {
 			claro: `hsl(${a.h} ${sat(a.s, 0.8)}% 78%)`,
 			fuerte: `hsl(${b.h} ${sat(b.s, 0.7)}% ${Math.round(b.l * 100)}%)`,
 			anillo: `hsl(${a.h} ${sat(a.s, 0.7)}% 90%)`,
-			sombra: `hsl(${a.h} ${sat(a.s, 0.7)}% 40% / 0.24)`
+			sombra: `hsl(${a.h} ${sat(a.s, 0.7)}% 40% / 0.24)`,
+			// tonos en número para la barra lateral (color del modelo): principal y fuerte
+			h: a.h,
+			fh: b.h,
+			fs: b.s,
+			fl: b.l
 		};
 	};
+	// la barra lateral usa el mismo cálculo para el color de cada modelo
+	window.skCalcularColores = calcular;
 
 	const pintar = (caja, c) => {
 		caja.style.setProperty('--sk-petalo-claro', c.claro);
@@ -1859,11 +1957,11 @@ function skVisible(selector) {
 		}
 	};
 
-	new MutationObserver(() => {
+	skVigilar(() => {
 		if (pendiente) return;
 		pendiente = true;
 		requestAnimationFrame(preparar);
-	}).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['src'] });
+	}, { childList: true, subtree: true, attributes: true, attributeFilter: ['src'] });
 })();
 
 /*
@@ -1939,11 +2037,11 @@ function skVisible(selector) {
 		}
 	};
 
-	new MutationObserver(() => {
+	skVigilar(() => {
 		if (pendiente) return;
 		pendiente = true;
 		requestAnimationFrame(actualizar);
-	}).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['aria-selected'] });
+	}, { childList: true, subtree: true, attributes: true, attributeFilter: ['aria-selected'] });
 })();
 
 /*
@@ -2086,11 +2184,11 @@ function skVisible(selector) {
 		});
 	};
 
-	new MutationObserver(() => {
+	skVigilar(() => {
 		if (pendiente) return;
 		pendiente = true;
 		requestAnimationFrame(actualizar);
-	}).observe(document.documentElement, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['class', 'style', 'aria-label'] });
+	}, { childList: true, subtree: true, characterData: true, attributes: true, attributeFilter: ['class', 'style', 'aria-label'] });
 })();
 
 /*
@@ -2292,14 +2390,14 @@ function skVisible(selector) {
 		}
 	};
 
-	new MutationObserver(() => {
+	skVigilar(() => {
 		if (pendiente) return;
 		pendiente = true;
 		requestAnimationFrame(() => {
 			actualizar();
 			vigilarVoz();
 		});
-	}).observe(document.documentElement, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-sk-nivel', 'data-sk-voz'] });
+	}, { childList: true, subtree: true, attributes: true, attributeFilter: ['data-sk-nivel', 'data-sk-voz'] });
 })();
 
 /*
@@ -2380,11 +2478,11 @@ function skVisible(selector) {
 		});
 	};
 
-	new MutationObserver(() => {
+	skVigilar(() => {
 		if (pendiente) return;
 		pendiente = true;
 		requestAnimationFrame(actualizar);
-	}).observe(document.documentElement, { childList: true, subtree: true });
+	}, { childList: true, subtree: true });
 	actualizar();
 })();
 
@@ -2392,19 +2490,27 @@ function skVisible(selector) {
  * Generación de imagen en el chat (lienzo "Generación de imagen en el chat · escritorio y móvil" y "· móvil").
  * Mientras la herramienta generate_image/edit_image corre ("Explorando generate_image"), debajo aparece una tarjeta con
  * los pasos Cargando modelo → Generando → Lista, un lienzo con brillo y Cancelar. El lanzador
- * (el lanzador) dice en qué va ComfyUI en /static/carbono-imagen.json: si está cargando el modelo, o el paso
+ * (run_open_webui_https.py) dice en qué va ComfyUI en /static/sakura-imagen.json: si está cargando el modelo, o el paso
  * n de m (se ve el % y "Paso 6 de 8"). Sin ese dato la tarjeta muestra "Generando imagen…" con una barra que corre.
  * Al terminar, cada imagen generada queda en un marco de esquinas de 20 px con sombra, Ampliar arriba a la derecha,
- * debajo "Lista · 1024×1024 · modelo" con Descargar, Copiar, Variaciones y Regenerar, y "Prompt usado" desplegable.
+ * en una tarjeta blanca con la barra unida abajo: "1024×1024 · modelo" (con "‹ n / m ›" delante si la respuesta se
+ * regeneró) y los botones redondos Descargar, Copiar, Variaciones y Regenerar; "Prompt usado" debajo de la tarjeta.
+ * Varias imágenes en un mensaje van en cuadrícula de 2×2 dentro de la tarjeta; mientras se generan las variaciones se
+ * ven las listas, la que se genera con su % y las que esperan "En cola".
  */
 (() => {
 	const HERRAMIENTA = /\b(generate_image|edit_image)\b/;
-	const CORRIENDO = /^(Explorando|Exploring)/;
+	// mientras corre: "Ejecutando generate_image…" (herramienta sola) o "Explorando generate_image" (varias juntas);
+	// al terminar: "Ver el Resultado de…" / "Explorado…"
+	const CORRIENDO = /\b(Ejecutando|Explorando|Running|Exploring)\b/;
+	const TERMINADA = /\b(Ver el Resultado|View Result|Explorado|Explored)\b/;
 	const ICONOS = {
 		ampliar: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
 		descargar: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
 		copiar: '<path d="M8 8h12v12H8zM16 8V4H4v12h4"/>',
-		variaciones: '<path d="M4 7h4l2-3h4l2 3h4v12H4z"/><circle cx="12" cy="13" r="3.5"/>',
+		variaciones: '<rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/>',
+		anterior: '<path d="M15 6l-6 6 6 6"/>',
+		siguiente: '<path d="M9 6l6 6-6 6"/>',
 		regenerar: '<path d="M20 12a8 8 0 1 1-2.3-5.6M20 4v5h-5"/>',
 		listo: '<path d="M5 12l5 5 9-10"/>'
 	};
@@ -2412,7 +2518,7 @@ function skVisible(selector) {
 		`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONOS[nombre]}</svg>`;
 
 	let pendiente = false;
-	let estado = null; // último /static/carbono-imagen.json
+	let estado = null; // último /static/sakura-imagen.json
 	let sondeo = null;
 	let sinServidor = false;
 
@@ -2421,7 +2527,7 @@ function skVisible(selector) {
 	const consultar = async () => {
 		if (sinServidor) return;
 		try {
-			const r = await fetch('/static/carbono-imagen.json', { headers: autorizacion(), cache: 'no-store' });
+			const r = await fetch('/static/sakura-imagen.json', { headers: autorizacion(), cache: 'no-store' });
 			if (!r.ok || !(r.headers.get('content-type') || '').includes('json')) {
 				sinServidor = true;
 				return;
@@ -2437,75 +2543,129 @@ function skVisible(selector) {
 			.split(/[\\/]/)
 			.pop()
 			.replace(/\.(gguf|safetensors|ckpt|pt|bin)$/i, '')
-			.replace(/[-_.](Q\d\w*|fp\d+|bf16|f16)$/i, '');
+			.replace(/[-_.](Q\d\w*|fp\d+|bf16|f16)$/i, '')
+			// nombre corto como en el lienzo ("FLUX"): las dos primeras partes, "z-image-turbo" → "z-image"
+			.split(/[-_]/)
+			.slice(0, 2)
+			.join('-');
 
-	/* ---------- tarjeta mientras se genera ---------- */
+	/* ---------- tarjeta mientras se genera (lienzo: tarjeta blanca con barra unida abajo) ---------- */
+	const cancelar = async (e) => {
+		const b = e.currentTarget;
+		b.disabled = true;
+		b.textContent = 'Cancelando…';
+		try {
+			await fetch('/static/sakura-imagen-cancelar', { method: 'POST', headers: autorizacion() });
+		} catch {
+			// si falla, el botón vuelve
+		}
+		setTimeout(() => {
+			b.disabled = false;
+			b.textContent = 'Cancelar';
+		}, 4000);
+	};
+
+	// una imagen: lienzo con brillo y barra "Cargando modelo · 1 de 2" / "Generando · 2 de 2" con Cancelar
 	const tarjeta = () => {
 		const t = document.createElement('div');
 		t.className = 'sk-img-gen';
 		t.innerHTML = `
-			<div class="sk-img-pasos" aria-hidden="true">
-				<span class="sk-img-paso" data-paso="cargando"><i></i>Cargando modelo</span><b></b>
-				<span class="sk-img-paso" data-paso="generando"><i></i>Generando</span><b></b>
-				<span class="sk-img-paso" data-paso="lista"><i></i>Lista</span>
-			</div>
 			<div class="sk-img-lienzo" role="status" aria-live="polite">
 				<span class="sk-img-giro" aria-hidden="true"></span>
 				<strong class="sk-img-titulo"></strong>
 				<div class="sk-img-barra" aria-hidden="true"><i></i></div>
 				<small class="sk-img-nota"></small>
 			</div>
-			<div class="sk-img-acciones"><button type="button" class="sk-img-cancelar">Cancelar</button></div>`;
-		t.querySelector('.sk-img-cancelar').addEventListener('click', async (e) => {
-			const b = e.currentTarget;
-			b.disabled = true;
-			b.textContent = 'Cancelando…';
-			try {
-				await fetch('/static/carbono-imagen-cancelar', { method: 'POST', headers: autorizacion() });
-			} catch {
-				// si falla, el botón vuelve
-			}
-			setTimeout(() => {
-				b.disabled = false;
-				b.textContent = 'Cancelar';
-			}, 4000);
-		});
+			<div class="sk-img-barra-pie">
+				<span class="sk-img-progreso"><span class="sk-img-segmentos" aria-hidden="true"><i></i><i></i></span><b class="sk-img-fase"></b><span class="sk-img-de"></span></span>
+				<button type="button" class="sk-img-cancelar">Cancelar</button>
+			</div>`;
+		t.querySelector('.sk-img-cancelar').addEventListener('click', cancelar);
 		return t;
 	};
 
-	const pintar = (t) => {
+	// variaciones: cuadrícula de 2×2 dentro de la tarjeta; las listas con su imagen, la que se genera con su %, las
+	// demás "En cola"; abajo "1 de 4 listas" con un segmento por variación y Cancelar
+	const tarjetaVariaciones = () => {
+		const t = document.createElement('div');
+		t.className = 'sk-img-gen sk-img-gen-var';
+		t.innerHTML = `
+			<div class="sk-img-rejilla-carga" role="status" aria-live="polite"></div>
+			<div class="sk-img-barra-pie">
+				<span class="sk-img-progreso"><span class="sk-img-segmentos" aria-hidden="true"></span><b class="sk-img-fase"></b></span>
+				<button type="button" class="sk-img-cancelar">Cancelar</button>
+			</div>`;
+		t.querySelector('.sk-img-cancelar').addEventListener('click', cancelar);
+		return t;
+	};
+
+	const leerEstado = () => {
 		const reciente = estado && estado.inicio && estado.ahora - estado.inicio < 900;
-		let fase = 'generando';
-		let titulo = 'Generando imagen…';
-		let nota = 'Puede tardar unos segundos';
-		let pct = null;
-		if (reciente && estado.estado === 'iniciando') {
-			fase = 'cargando';
-			titulo = 'Preparando…';
-			nota = 'Enviando a ComfyUI';
-		} else if (reciente && estado.estado === 'cargando') {
-			fase = 'cargando';
-			titulo = 'Cargando modelo…';
-			nota = 'Solo pasa la primera vez';
-		} else if (reciente && estado.estado === 'generando' && estado.pasos > 0) {
-			pct = Math.min(100, Math.round((estado.paso / estado.pasos) * 100));
-			nota = `Paso ${estado.paso} de ${estado.pasos}`;
-		} else if (reciente && estado.estado === 'cancelada') {
-			titulo = 'Cancelando…';
-			nota = 'Se detiene en un momento';
+		if (reciente && estado.estado === 'iniciando') return { fase: 'cargando', titulo: 'Preparando…', nota: 'Enviando a ComfyUI', etiqueta: 'Preparando' };
+		if (reciente && estado.estado === 'cargando') return { fase: 'cargando', titulo: 'Cargando modelo…', nota: 'Solo pasa la primera vez', etiqueta: 'Cargando modelo' };
+		if (reciente && estado.estado === 'generando' && estado.pasos > 0) {
+			const pct = Math.min(100, Math.round((estado.paso / estado.pasos) * 100));
+			return { fase: 'generando', pct, nota: `Paso ${estado.paso} de ${estado.pasos}`, etiqueta: 'Generando' };
 		}
-		if (t.dataset.fase !== fase) t.dataset.fase = fase;
-		const conPct = pct !== null;
+		if (reciente && estado.estado === 'cancelada') return { fase: 'generando', titulo: 'Cancelando…', nota: 'Se detiene en un momento', etiqueta: 'Cancelando' };
+		return { fase: 'generando', titulo: 'Generando imagen…', nota: 'Puede tardar unos segundos', etiqueta: 'Generando' };
+	};
+
+	const pintar = (t) => {
+		if (t.classList.contains('sk-img-gen-var')) return pintarVariaciones(t);
+		const e = leerEstado();
+		if (t.dataset.fase !== e.fase) t.dataset.fase = e.fase;
+		const conPct = e.pct != null;
 		if (t.classList.contains('sk-img-con-pct') !== conPct) t.classList.toggle('sk-img-con-pct', conPct);
 		const tit = t.querySelector('.sk-img-titulo');
-		const html = conPct ? `${pct}<small>%</small>` : titulo;
+		const html = conPct ? `${e.pct}<small>%</small>` : e.titulo;
 		if (tit.innerHTML !== html) tit.innerHTML = html;
 		const n = t.querySelector('.sk-img-nota');
-		if (n.textContent !== nota) n.textContent = nota;
+		if (n.textContent !== e.nota) n.textContent = e.nota;
 		const barra = t.querySelector('.sk-img-barra > i');
-		const ancho = conPct ? `${pct}%` : '';
+		const ancho = conPct ? `${e.pct}%` : '';
 		if (barra.style.width !== ancho) barra.style.width = ancho;
+		const fase = t.querySelector('.sk-img-fase');
+		if (fase.textContent !== e.etiqueta) fase.textContent = e.etiqueta;
+		const de = t.querySelector('.sk-img-de');
+		const texto = e.fase === 'cargando' ? '· 1 de 2' : '· 2 de 2';
+		if (de.textContent !== texto) de.textContent = texto;
 	};
+
+	const ICONO_COLA = '<path d="M3 7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 8"/>';
+	const pintarVariaciones = (t) => {
+		const listas = t._listas || [];
+		const total = Math.max(4, listas.length + 1);
+		const e = leerEstado();
+		const actual = listas.length;
+		const firma = `${listas.map((i) => i.src).join('|')}#${total}#${e.fase}#${e.pct ?? ''}#${e.titulo ?? ''}`;
+		if (t.dataset.firma === firma) return;
+		t.dataset.firma = firma;
+		const celdas = [];
+		for (let n = 0; n < total; n++) {
+			if (n < actual) {
+				celdas.push(`<div class="sk-img-celda-carga sk-lista"><img alt="Variación ${n + 1}" src="${listas[n].src}"><span class="sk-img-num">${n + 1}</span></div>`);
+			} else if (n === actual) {
+				const centro =
+					e.pct != null
+						? `<strong>${e.pct}<small>%</small></strong><span class="sk-img-mini-barra"><i style="width:${e.pct}%"></i></span><em>Generando</em>`
+						: e.fase === 'cargando'
+							? `<span class="sk-img-giro" aria-hidden="true"></span><em>${e.etiqueta}</em>`
+							: `<span class="sk-img-mini-barra sk-corre"><i></i></span><em>${e.etiqueta}</em>`;
+				celdas.push(`<div class="sk-img-celda-carga sk-generando"><span class="sk-img-num">${n + 1}</span>${centro}</div>`);
+			} else {
+				celdas.push(`<div class="sk-img-celda-carga sk-en-cola"><span class="sk-img-num">${n + 1}</span>${svgCrudo(ICONO_COLA)}<em>En cola</em></div>`);
+			}
+		}
+		t.querySelector('.sk-img-rejilla-carga').innerHTML = celdas.join('');
+		t.querySelector('.sk-img-segmentos').innerHTML = Array.from({ length: total }, (_, n) =>
+			`<i class="${n < actual ? 'sk-hecho' : n === actual ? 'sk-actual' : ''}"></i>`
+		).join('');
+		escribir(t.querySelector('.sk-img-fase'), `${actual} de ${total} listas`);
+	};
+
+	const svgCrudo = (d) =>
+		`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
 
 	/* ---------- imagen terminada ---------- */
 	const promptDe = async (mensajeId) => {
@@ -2539,59 +2699,108 @@ function skVisible(selector) {
 			});
 			await navigator.clipboard.write([new ClipboardItem({ 'image/png': png })]);
 			boton.innerHTML = svg('listo');
-			setTimeout(() => (boton.innerHTML = svg('copiar')), 1500);
+			boton.setAttribute('aria-label', 'Imagen copiada');
+			boton.title = 'Imagen copiada';
 		} catch {
 			boton.classList.add('sk-img-fallo');
-			setTimeout(() => boton.classList.remove('sk-img-fallo'), 1500);
+			boton.setAttribute('aria-label', 'No se pudo copiar');
+			boton.title = 'No se pudo copiar';
 		}
+		setTimeout(() => {
+			boton.innerHTML = svg('copiar');
+			boton.classList.remove('sk-img-fallo');
+			boton.setAttribute('aria-label', 'Copiar');
+			boton.title = 'Copiar';
+		}, 1500);
 	};
 
-	const variacion = () => {
+	// Variaciones (lienzo "resultado de Variaciones"): pide 4 versiones distintas con el mismo prompt. Escribe la
+	// petición con el prompt de la imagen y la envía; el mensaje del usuario se ve como el chip "Pediste variaciones".
+	const PEDIDO = 'Genera 4 variaciones distintas de esta imagen con el mismo prompt';
+	const variaciones = async (mensaje) => {
+		const prompt = await promptDe(mensaje?.id.replace(/^message-/, '')).catch(() => '');
 		const caja = document.querySelector('#chat-input');
 		if (!caja) return;
 		caja.focus();
-		document.execCommand('insertText', false, 'Haz una variación de esta imagen');
+		document.execCommand('insertText', false, prompt ? `${PEDIDO}: «${prompt}»` : `${PEDIDO}.`);
+		for (let i = 0; i < 20; i++) {
+			await new Promise((r) => setTimeout(r, 50));
+			const enviar = document.querySelector('#send-message-button:not([disabled])');
+			if (enviar) {
+				enviar.click();
+				return;
+			}
+		}
 	};
 
-	const decorar = (img) => {
-		const grupo = img.closest('.group');
-		const envoltura = grupo?.parentElement;
-		if (!grupo || !envoltura || envoltura.querySelector(':scope > .sk-img-pie')) return;
-		grupo.classList.add('sk-img-marco');
-		envoltura.classList.add('sk-img-hecha');
-		const preview = grupo.querySelector('button');
+	// Regenerar: el botón de Open WebUI abre un menú (Prueba de nuevo · Añadir detalles · Más conciso); se elige
+	// "Prueba de nuevo", que hace otra respuesta y deja la anterior en el historial ("‹ 1 / 2 ›")
+	const regenerar = async (mensaje) => {
+		const boton = mensaje?.querySelector("button[aria-label='Regenerar'], button[aria-label='Regenerate']");
+		if (!boton) return;
+		document.documentElement.classList.add('sk-img-regenerando');
+		try {
+			boton.click();
+			for (let i = 0; i < 25; i++) {
+				await new Promise((r) => setTimeout(r, 40));
+				const opcion = [...document.querySelectorAll('[role="menu"] button, [role="menuitem"]')].find((b) =>
+					/^(Prueba de nuevo|Intentar de nuevo|Try again)$/i.test(b.textContent.trim())
+				);
+				if (opcion) {
+					opcion.click();
+					return;
+				}
+			}
+		} finally {
+			setTimeout(() => document.documentElement.classList.remove('sk-img-regenerando'), 150);
+		}
+	};
 
-		const ampliar = document.createElement('button');
-		ampliar.type = 'button';
-		ampliar.className = 'sk-img-ampliar';
-		ampliar.setAttribute('aria-label', 'Ampliar');
-		ampliar.innerHTML = svg('ampliar');
-		ampliar.addEventListener('click', (e) => {
-			e.stopPropagation();
-			preview?.click();
-		});
-		grupo.appendChild(ampliar);
+	// versión que se ve de la respuesta ("2/2" de Open WebUI, entre sus botones anterior y siguiente)
+	const versiones = (mensaje) => {
+		const m = mensaje?.querySelector('.previous-message-button')?.parentElement?.textContent.match(/(\d+)\s*\/\s*(\d+)/);
+		return m ? [Number(m[1]), Number(m[2])] : null;
+	};
 
-		const mensaje = img.closest('[id^="message-"]');
+	// pie: "Lista · 1024×1024 · modelo" con "‹ n / m ›" a la derecha; debajo Descargar y Copiar redondos, una raya y
+	// las píldoras Variaciones y Regenerar; al final "Prompt usado". actual() da la imagen sobre la que actúan.
+	const crearPie = (mensaje, actual) => {
 		const pie = document.createElement('div');
 		pie.className = 'sk-img-pie';
 		pie.innerHTML = `
 			<div class="sk-img-fila">
-				<span class="sk-img-meta"><span class="sk-img-lista">${svg('listo')}Lista</span><span class="sk-img-datos"></span></span>
-				<span class="sk-img-botones">
-					<a class="sk-img-btn" aria-label="Descargar" title="Descargar" download="imagen.png">${svg('descargar')}</a>
-					<button type="button" class="sk-img-btn" data-accion="copiar" aria-label="Copiar" title="Copiar">${svg('copiar')}</button>
-					<button type="button" class="sk-img-btn" data-accion="variaciones" aria-label="Variaciones" title="Variaciones">${svg('variaciones')}</button>
-					<button type="button" class="sk-img-btn" data-accion="regenerar" aria-label="Regenerar" title="Regenerar">${svg('regenerar')}</button>
+				<span class="sk-img-meta" aria-live="polite">
+					<span class="sk-img-version" hidden>
+						<button type="button" data-accion="anterior" aria-label="Versión anterior" title="Versión anterior">${svg('anterior')}</button>
+						<span class="sk-img-cuenta"></span>
+						<button type="button" data-accion="siguiente" aria-label="Versión siguiente" title="Versión siguiente">${svg('siguiente')}</button>
+					</span>
+					<span class="sk-img-datos"></span>
 				</span>
+				<a class="sk-img-btn" aria-label="Descargar" title="Descargar" download="sakura-imagen.png">${svg('descargar')}</a>
+				<button type="button" class="sk-img-btn" data-accion="copiar" aria-label="Copiar" title="Copiar">${svg('copiar')}</button>
+				<button type="button" class="sk-img-btn" data-accion="variaciones" aria-label="Variaciones · crea 4 versiones con el mismo prompt" title="Variaciones · crea 4 versiones con el mismo prompt">${svg('variaciones')}</button>
+				<button type="button" class="sk-img-btn" data-accion="regenerar" aria-label="Regenerar · reemplaza la imagen; la anterior queda en el historial" title="Regenerar · reemplaza la imagen; la anterior queda en el historial">${svg('regenerar')}</button>
 			</div>
 			<details class="sk-img-prompt"><summary>Prompt usado</summary><div>Cargando…</div></details>`;
-		pie.querySelector('a').href = img.src;
-		pie.querySelector('[data-accion="copiar"]').addEventListener('click', (e) => copiar(img, e.currentTarget));
-		pie.querySelector('[data-accion="variaciones"]').addEventListener('click', variacion);
-		pie.querySelector('[data-accion="regenerar"]').addEventListener('click', () =>
-			mensaje?.querySelector("button[aria-label='Regenerar'], button[aria-label='Regenerate']")?.click()
-		);
+		const descargar = pie.querySelector('a');
+		descargar.href = actual()?.src || '';
+		// nombre de archivo propio por imagen (no todas "sakura-imagen.png")
+		descargar.addEventListener('click', () => {
+			const img = actual();
+			descargar.href = img?.src || '';
+			const n = img?.closest('.sk-img-escondida') ? `-${(mensaje?.querySelector('.sk-img-variaciones')?._imgs || []).indexOf(img) + 1}` : '';
+			descargar.download = `sakura-imagen-${(mensaje?.id || '').replace(/^message-/, '').slice(0, 8)}${n}.png`;
+		});
+		pie.addEventListener('click', (e) => {
+			const b = e.target.closest('button[data-accion]');
+			if (!b) return;
+			const accion = b.dataset.accion;
+			if (accion === 'copiar') copiar(actual(), b);
+			else if (accion === 'variaciones') variaciones(mensaje);
+			else if (accion === 'regenerar') regenerar(mensaje);
+			else mensaje?.querySelector(accion === 'anterior' ? '.previous-message-button' : '.next-message-button')?.click();
+		});
 		const detalles = pie.querySelector('details');
 		detalles.addEventListener('toggle', async () => {
 			if (!detalles.open || detalles.dataset.cargado) return;
@@ -2599,35 +2808,293 @@ function skVisible(selector) {
 			const texto = await promptDe(mensaje?.id.replace(/^message-/, '')).catch(() => '');
 			detalles.querySelector('div').textContent = texto || 'No se encontró el prompt de esta imagen.';
 		});
-		const datos = () => {
-			if (!img.naturalWidth) return;
-			const modelo = modeloCorto(estado?.modelo);
-			pie.querySelector('.sk-img-datos').textContent = `${img.naturalWidth}×${img.naturalHeight}${modelo ? ` · ${modelo}` : ''}`;
-		};
-		img.complete ? datos() : img.addEventListener('load', datos, { once: true });
-		envoltura.appendChild(pie);
+		return pie;
+	};
+
+	const escribir = (el, texto) => {
+		if (el && el.textContent !== texto) el.textContent = texto;
+	};
+
+	const pintarVersion = (pie, v) => {
+		const caja = pie.querySelector('.sk-img-version');
+		const ocultar = !v || v[1] < 2;
+		if (caja.hidden !== ocultar) caja.hidden = ocultar;
+		if (ocultar) return;
+		escribir(caja.querySelector('.sk-img-cuenta'), `${v[0]} / ${v[1]}`);
+		const ant = caja.querySelector('[data-accion="anterior"]');
+		const sig = caja.querySelector('[data-accion="siguiente"]');
+		if (ant.disabled !== v[0] <= 1) ant.disabled = v[0] <= 1;
+		if (sig.disabled !== v[0] >= v[1]) sig.disabled = v[0] >= v[1];
+	};
+
+	// una imagen: marco de 20 px, Ampliar y el pie
+	// proporción de la imagen (ancho / alto) en su contenedor: el CSS calcula con ella el ancho para que una imagen
+	// vertical no pase del alto de la ventana y la imagen se vea completa, sin recortes
+	const proporcionar = (el, img) => {
+		if (!img?.naturalWidth) return;
+		const r = (img.naturalWidth / img.naturalHeight).toFixed(4);
+		if (el.style.getPropertyValue('--sk-img-r') !== r) {
+			el.style.setProperty('--sk-img-r', r);
+			el.style.setProperty('--sk-img-proporcion', `${img.naturalWidth} / ${img.naturalHeight}`);
+		}
+	};
+
+	const decorar = (img, mensaje, v) => {
+		const grupo = img.closest('.group');
+		const envoltura = grupo?.parentElement;
+		if (!grupo || !envoltura) return;
+		envoltura.classList.remove('sk-img-escondida');
+		let pie = envoltura.querySelector(':scope > .sk-img-pie');
+		if (!pie) {
+			grupo.classList.add('sk-img-marco');
+			envoltura.classList.add('sk-img-hecha');
+			if (!grupo.querySelector(':scope > .sk-img-ampliar')) {
+				const ampliar = document.createElement('button');
+				ampliar.type = 'button';
+				ampliar.className = 'sk-img-ampliar';
+				ampliar.setAttribute('aria-label', 'Ampliar');
+				ampliar.innerHTML = svg('ampliar');
+				ampliar.addEventListener('click', (e) => {
+					e.stopPropagation();
+					grupo.querySelector('button')?.click();
+				});
+				grupo.appendChild(ampliar);
+			}
+			// el botón de Open WebUI que abre la vista previa no tenía nombre para lectores de pantalla
+			grupo.querySelector('button:not(.sk-img-ampliar)')?.setAttribute('aria-label', 'Ver la imagen en grande');
+			pie = crearPie(mensaje, () => img);
+			envoltura.appendChild(pie);
+		}
+		// tamaño y modelo (se vuelve a escribir si Open WebUI cambia la imagen al pasar de versión)
+		if (img.naturalWidth) {
+			// la proporción real queda reservada para que al cambiar de versión el pie no salte
+			const proporcion = `${img.naturalWidth} / ${img.naturalHeight}`;
+			proporcionar(envoltura, img);
+			const tam = `${img.naturalWidth}×${img.naturalHeight}`;
+			const d = pie.querySelector('.sk-img-datos');
+			if (d.dataset.tam !== tam) {
+				d.dataset.tam = tam;
+				d.textContent = tam;
+				const modelo = modeloCorto(estado?.modelo);
+				if (modelo) {
+					const m = document.createElement('span');
+					m.className = 'sk-img-modelo';
+					m.textContent = ` · ${modelo}`;
+					d.appendChild(m);
+				}
+			}
+		}
+		pintarVersion(pie, v);
+	};
+
+	// varias imágenes en un mensaje (Variaciones): cuadrícula de 2×2 con número; tocar una la elige (aro azul y
+	// palomita) y tocar la elegida la abre grande. El pie actúa sobre la elegida.
+	const cuadricula = (imgs, mensaje, v) => {
+		const envolturas = imgs.map((i) => i.closest('.group')?.parentElement).filter(Boolean);
+		if (!envolturas.length) return;
+		envolturas.forEach((e) => {
+			e.querySelector(':scope > .sk-img-pie')?.remove();
+			if (!e.classList.contains('sk-img-escondida')) e.classList.add('sk-img-escondida');
+		});
+		let caja = mensaje.querySelector('.sk-img-variaciones');
+		if (!caja) {
+			caja = document.createElement('div');
+			caja.className = 'sk-img-variaciones';
+			caja.dataset.sel = '0';
+			caja.innerHTML = '<div class="sk-img-rejilla" role="group" aria-label="Variaciones"></div>';
+			const elegida = () => caja._imgs?.[Number(caja.dataset.sel)] ?? caja._imgs?.[0];
+			caja.appendChild(crearPie(mensaje, elegida));
+			caja.querySelector('.sk-img-rejilla').addEventListener('click', (e) => {
+				const celda = e.target.closest('.sk-img-celda');
+				if (!celda) return;
+				const n = Number(celda.dataset.n);
+				if (n === Number(caja.dataset.sel)) caja._imgs?.[n]?.closest('.group')?.querySelector('button')?.click();
+				else {
+					caja.dataset.sel = String(n);
+					pintarSeleccion(caja);
+				}
+			});
+			envolturas[0].before(caja);
+		}
+		caja._imgs = imgs;
+		proporcionar(caja, imgs[0]);
+		const firma = imgs.map((i) => i.src).join('|');
+		if (caja.dataset.firma !== firma) {
+			caja.dataset.firma = firma;
+			if (Number(caja.dataset.sel) >= imgs.length) caja.dataset.sel = '0';
+			const rejilla = caja.querySelector('.sk-img-rejilla');
+			rejilla.replaceChildren(
+				...imgs.map((original, n) => {
+					const celda = document.createElement('button');
+					celda.type = 'button';
+					celda.className = 'sk-img-celda';
+					celda.dataset.n = String(n);
+					const foto = document.createElement('img');
+					foto.alt = `Variación ${n + 1}`;
+					foto.src = original.src;
+					const num = document.createElement('span');
+					num.className = 'sk-img-num';
+					celda.append(foto, num);
+					return celda;
+				})
+			);
+			pintarSeleccion(caja);
+		}
+		pintarVersion(caja.querySelector('.sk-img-pie'), v);
+	};
+
+	const pintarSeleccion = (caja) => {
+		const sel = Number(caja.dataset.sel);
+		caja.querySelectorAll('.sk-img-celda').forEach((celda, n) => {
+			const elegida = n === sel;
+			celda.setAttribute('aria-pressed', String(elegida));
+			celda.title = elegida ? 'Abrir en grande' : `Elegir la variación ${n + 1}`;
+			celda.querySelector('.sk-img-num').innerHTML = elegida ? svg('listo') : String(n + 1);
+		});
+		const img = caja._imgs[sel];
+		const tam = img?.naturalWidth ? ` · ${img.naturalWidth}×${img.naturalHeight}` : '';
+		escribir(caja.querySelector('.sk-img-datos'), `Variación ${sel + 1} de ${caja._imgs.length}${tam}`);
+	};
+
+	// chips del usuario: "Pediste variaciones de la imagen" en lugar del texto de la petición, y "Regeneraste la imagen"
+	// debajo del mensaje cuya respuesta que se ve es una regeneración (versión 2 o más)
+	const chip = (tipo) => {
+		const c = document.createElement('span');
+		c.className = 'sk-img-chip';
+		c.dataset.tipo = tipo;
+		c.innerHTML = `<img alt="">${svg(tipo === 'pedido' ? 'variaciones' : 'regenerar')}${tipo === 'pedido' ? 'Pediste variaciones de la imagen' : 'Regeneraste la imagen'}`;
+		return c;
+	};
+
+	const ponerMiniatura = (c, src) => {
+		const i = c.querySelector('img');
+		if (src && i.getAttribute('src') !== src) i.src = src;
+	};
+
+	const chips = (regeneradas) => {
+		let ultima = null;
+		let usuario = null;
+		const quiere = new Map(); // mensaje del usuario → ['pedido' | 'regenerada', miniatura]
+		document.querySelectorAll(".user-message, .chat-assistant img[alt='generated-image.png']").forEach((el) => {
+			if (el.tagName !== 'IMG') {
+				usuario = el;
+				const texto = el.querySelector('.chat-user .rounded-3xl .markdown-prose')?.textContent.trim() || '';
+				if (texto.startsWith(PEDIDO)) quiere.set(el, ['pedido', ultima?.src]);
+				return;
+			}
+			ultima = el;
+			const mensaje = el.closest('[id^="message-"]');
+			if (usuario && regeneradas.has(mensaje) && !quiere.has(usuario)) quiere.set(usuario, ['regenerada', el.src]);
+		});
+		document.querySelectorAll('.user-message').forEach((u) => {
+			const [tipo, src] = quiere.get(u) || [];
+			const burbuja = u.querySelector('.chat-user .rounded-3xl');
+			// pedido: el chip va dentro de la burbuja y el texto no se ve
+			const enBurbuja = burbuja?.querySelector(':scope > .sk-img-chip');
+			if (tipo === 'pedido' && burbuja) {
+				if (!burbuja.classList.contains('sk-img-pedido')) burbuja.classList.add('sk-img-pedido');
+				const c = enBurbuja || burbuja.appendChild(chip('pedido'));
+				ponerMiniatura(c, src);
+			} else if (burbuja?.classList.contains('sk-img-pedido')) {
+				burbuja.classList.remove('sk-img-pedido');
+				enBurbuja?.remove();
+			}
+			// regenerada: fila propia debajo de la burbuja
+			const fila = u.querySelector('.sk-img-chip-fila');
+			if (tipo === 'regenerada' && burbuja) {
+				let f = fila;
+				if (!f) {
+					f = document.createElement('div');
+					f.className = 'sk-img-chip-fila';
+					f.appendChild(chip('regenerada'));
+					burbuja.parentElement.after(f);
+				}
+				ponerMiniatura(f.firstElementChild, src);
+			} else fila?.remove();
+		});
+	};
+
+	const imagenes = () => {
+		const porMensaje = new Map();
+		document.querySelectorAll(".chat-assistant img[alt='generated-image.png']").forEach((img) => {
+			const mensaje = img.closest('[id^="message-"]');
+			if (!mensaje) return;
+			if (!porMensaje.has(mensaje)) porMensaje.set(mensaje, []);
+			porMensaje.get(mensaje).push(img);
+		});
+		const regeneradas = new Set();
+		porMensaje.forEach((imgs, mensaje) => {
+			const v = versiones(mensaje);
+			if (v && v[0] > 1) regeneradas.add(mensaje);
+			if (imgs.length > 1) cuadricula(imgs, mensaje, v);
+			else {
+				mensaje.querySelector('.sk-img-variaciones')?.remove();
+				decorar(imgs[0], mensaje, v);
+			}
+		});
+		chips(regeneradas);
 	};
 
 	/* ---------- ciclo ---------- */
 	const actualizar = () => {
 		pendiente = false;
 		let generando = false;
-		document.querySelectorAll('.chat-assistant [id*="detail-group"]').forEach((grupo) => {
-			const texto = grupo.textContent.trim();
-			const corre = CORRIENDO.test(texto) && HERRAMIENTA.test(texto);
-			let t = grupo.nextElementSibling?.classList.contains('sk-img-gen') ? grupo.nextElementSibling : null;
-			if (corre) {
-				generando = true;
-				if (!t) {
-					t = tarjeta();
-					grupo.after(t);
-				}
-				pintar(t);
-			} else if (t) {
-				t.remove();
-			}
+		// mensaje → dónde va la tarjeta. Se activa con la fila "Ejecutando generate_image…" o con el estado
+		// "Generando imagen … % · paso n/m" que pone el medidor de rendimiento (a veces llega antes que la fila).
+		const enCurso = new Map();
+		document.querySelectorAll('.chat-assistant .status-description').forEach((e) => {
+			const bloque = e.closest('div.relative.w-full') ?? e;
+			const mensaje = e.closest('.chat-assistant');
+			const esImagen = /Generando imagen/.test(e.textContent);
+			const yaTieneImagen = !!mensaje?.querySelector("img[alt='generated-image.png']");
+			if (esImagen && mensaje && !yaTieneImagen && !enCurso.has(mensaje)) enCurso.set(mensaje, bloque);
+			// "Generando imagen … %" lo reemplaza la tarjeta; "Imagen lista … % · 172 s" repite la insignia "Lista"
+			const ocultar = esImagen || /Imagen lista/.test(e.textContent);
+			if (bloque.classList.contains('sk-img-estado-oculto') !== ocultar) bloque.classList.toggle('sk-img-estado-oculto', ocultar);
 		});
-		document.querySelectorAll(".chat-assistant img[alt='generated-image.png']").forEach(decorar);
+		document.querySelectorAll('.chat-assistant :is([id*="detail-group"], [id$="-tool-call"])').forEach((grupo) => {
+			if (grupo.parentElement.closest('[id*="detail-group"], [id$="-tool-call"]')) return;
+			const texto = grupo.textContent.trim();
+			const corre = CORRIENDO.test(texto) && !TERMINADA.test(texto) && HERRAMIENTA.test(texto);
+			// como en el lienzo, la fila de la herramienta no se ve: mientras corre la reemplaza la tarjeta y al terminar
+			// la imagen ya está arriba. Solo si todas las herramientas de la fila son de imagen (generar, editar, mostrar).
+			const nombres = texto.match(/\b[a-z]+(?:_[a-z]+)+\b/g) || [];
+			const soloImagen = nombres.length > 0 && nombres.every((n) => /^(generate_image|edit_image|display_file)$/.test(n));
+			if (grupo.classList.contains('sk-img-herramienta') !== soloImagen) grupo.classList.toggle('sk-img-herramienta', soloImagen);
+			const mensaje = grupo.closest('.chat-assistant');
+			if (corre && mensaje) enCurso.set(mensaje, grupo);
+		});
+		// respuestas a "Genera 4 variaciones…": mientras corren se ve la cuadrícula de carga (las listas, la que se genera
+		// y las que esperan) en lugar de las imágenes sueltas
+		const variando = new Set();
+		let pidio = false;
+		document.querySelectorAll('.user-message, .chat-assistant').forEach((el) => {
+			if (el.classList.contains('user-message')) {
+				pidio = (el.querySelector('.chat-user .rounded-3xl .markdown-prose')?.textContent.trim() || '').startsWith(PEDIDO);
+			} else if (pidio) variando.add(el);
+		});
+		document.querySelectorAll('.sk-img-gen').forEach((t) => {
+			const m = t.closest('.chat-assistant');
+			if (!enCurso.has(m) || t.classList.contains('sk-img-gen-var') !== variando.has(m)) t.remove();
+		});
+		document.querySelectorAll('.chat-assistant[data-sk-variando]').forEach((m) => {
+			if (!enCurso.has(m)) m.removeAttribute('data-sk-variando');
+		});
+		enCurso.forEach((ancla, mensaje) => {
+			generando = true;
+			const esVar = variando.has(mensaje);
+			let t = mensaje.querySelector('.sk-img-gen');
+			if (!t) {
+				t = esVar ? tarjetaVariaciones() : tarjeta();
+				ancla.after(t);
+			}
+			if (esVar) {
+				if (!mensaje.hasAttribute('data-sk-variando')) mensaje.setAttribute('data-sk-variando', '');
+				t._listas = [...mensaje.querySelectorAll("img[alt='generated-image.png']")];
+			}
+			pintar(t);
+		});
+		imagenes();
 
 		if (generando && !sondeo) {
 			const vuelta = async () => {
@@ -2639,11 +3106,11 @@ function skVisible(selector) {
 		}
 	};
 
-	new MutationObserver(() => {
+	skVigilar(() => {
 		if (pendiente) return;
 		pendiente = true;
 		requestAnimationFrame(actualizar);
-	}).observe(document.documentElement, { childList: true, subtree: true, characterData: true });
+	}, { childList: true, subtree: true, characterData: true });
 	consultar();
 })();
 
@@ -2818,11 +3285,11 @@ function skVisible(selector) {
 	};
 
 	TELEFONO.addEventListener('change', actualizar);
-	new MutationObserver(() => {
+	skVigilar(() => {
 		if (pendiente) return;
 		pendiente = true;
 		requestAnimationFrame(actualizar);
-	}).observe(document.body, { childList: true, subtree: true });
+	}, { childList: true, subtree: true });
 })();
 
 /*
@@ -2840,10 +3307,1358 @@ function skVisible(selector) {
 			document.documentElement.style.setProperty('--sk-barra-ancho', ancho);
 		}
 	};
-	new MutationObserver(() => {
+	skVigilar(() => {
 		if (pendiente) return;
 		pendiente = true;
 		requestAnimationFrame(actualizar);
-	}).observe(document.body, { childList: true, subtree: true });
+	}, { childList: true, subtree: true });
 	window.addEventListener('resize', actualizar);
+})();
+
+/*
+ * Buscar (lienzo "Buscar rediseñado · móvil y escritorio"): marca la caja de búsqueda de Open WebUI (.sk-buscar-caja),
+ * agrega las píldoras de tipo (Todo · Chats · Notas, las opciones que trae Open WebUI) debajo del buscador, el botón
+ * "Abrir chat" en la vista previa y las teclas del pie. Las píldoras usan el selector de tipo de Open WebUI: se abre
+ * sin verse, se toca la opción y se cierra.
+ */
+(() => {
+	const TIPOS = [
+		['Todo', ''],
+		['Chats', '<path d="M4 5h16v11H9l-5 4z"/>'],
+		['Notas', '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 8h6M9 12h6M9 16h4"/>']
+	];
+	const svg = (d) =>
+		`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+	let pendiente = false;
+	let eligiendo = false;
+
+	const tipoActual = (caja) => {
+		const b = caja.querySelector("button[aria-label^='Tipo de contenido']");
+		return (b?.textContent || 'Todo').trim();
+	};
+
+	const elegir = async (caja, nombre) => {
+		if (eligiendo || tipoActual(caja) === nombre) return;
+		const boton = caja.querySelector("button[aria-label^='Tipo de contenido']");
+		if (!boton) return;
+		eligiendo = true;
+		document.documentElement.classList.add('sk-buscar-eligiendo');
+		try {
+			// se abre después del clic de la píldora: si no, el mismo clic cuenta como "clic afuera" y lo cierra
+			await new Promise((r) => setTimeout(r, 30));
+			boton.click();
+			for (let i = 0; i < 20; i++) {
+				await new Promise((r) => setTimeout(r, 40));
+				const opcion = [...caja.querySelectorAll('[data-search-panel] .app-dropdown-menu button')].find(
+					(b) => b.textContent.trim() === nombre
+				);
+				if (opcion) {
+					opcion.click();
+					break;
+				}
+			}
+			await new Promise((r) => setTimeout(r, 60));
+			if (caja.querySelector('[data-search-panel] .app-dropdown-menu')) boton.click();
+		} finally {
+			setTimeout(() => document.documentElement.classList.remove('sk-buscar-eligiendo'), 150);
+			eligiendo = false;
+			caja.querySelector('input')?.focus();
+		}
+	};
+
+	const montar = (caja) => {
+		caja.classList.add('sk-buscar-caja');
+		const cabeza = caja.firstElementChild;
+		if (cabeza && !caja.querySelector(':scope > .sk-buscar-chips')) {
+			const fila = document.createElement('div');
+			fila.className = 'sk-buscar-chips';
+			fila.setAttribute('role', 'group');
+			fila.setAttribute('aria-label', 'Tipo de contenido');
+			fila.innerHTML = TIPOS.map(
+				([nombre, icono]) => `<button type="button" data-tipo="${nombre}" aria-pressed="false">${icono ? svg(icono) : ''}${nombre}</button>`
+			).join('');
+			fila.addEventListener('click', (e) => {
+				const b = e.target.closest('[data-tipo]');
+				if (b) elegir(caja, b.dataset.tipo);
+			});
+			cabeza.after(fila);
+		}
+	};
+
+	const actualizar = () => {
+		pendiente = false;
+		const lista = document.querySelector('#workspace-search-results');
+		const caja = lista?.closest('.modal')?.querySelector(':scope > div > div');
+		if (!caja) return;
+		if (!caja.classList.contains('sk-buscar-caja')) montar(caja);
+
+		// píldora activa
+		const actual = tipoActual(caja);
+		caja.querySelectorAll('.sk-buscar-chips [data-tipo]').forEach((b) => {
+			const v = String(b.dataset.tipo === actual);
+			if (b.getAttribute('aria-pressed') !== v) b.setAttribute('aria-pressed', v);
+		});
+
+		// "Abrir chat" en la vista previa: usa el botón Abrir del pie
+		const vista = caja.querySelector("section[aria-label='Vista previa del resultado']");
+		if (vista && !vista.querySelector(':scope > .sk-buscar-abrir')) {
+			const abrir = document.createElement('button');
+			abrir.type = 'button';
+			abrir.className = 'sk-buscar-abrir';
+			abrir.innerHTML = `${svg('<path d="M14 4h6v6M20 4l-9 9"/><path d="M19 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1h5"/>')}Abrir chat`;
+			abrir.addEventListener('click', () => {
+				const pie = caja.lastElementChild;
+				[...pie.querySelectorAll('button')].find((b) => /Abrir|Open/.test(b.textContent))?.click();
+			});
+			vista.appendChild(abrir);
+		}
+
+		// teclas del pie
+		const pie = caja.lastElementChild;
+		if (pie && !pie.contains(lista) && !pie.classList.contains('sk-buscar-chips') && !pie.querySelector('.sk-buscar-teclas')) {
+			const teclas = document.createElement('span');
+			teclas.className = 'sk-buscar-teclas';
+			teclas.innerHTML = '<span><kbd>↑</kbd><kbd>↓</kbd>Moverse</span><span><kbd>↵</kbd>Abrir</span>';
+			pie.prepend(teclas);
+		}
+	};
+
+	skVigilar(() => {
+		if (pendiente) return;
+		pendiente = true;
+		requestAnimationFrame(actualizar);
+	}, { childList: true, subtree: true, characterData: true });
+})();
+
+/*
+ * Barra lateral rediseñada (lienzo "Barra lateral rediseñada · escritorio y móvil", variación C claro): la interfaz
+ * toma el color del modelo activo. Igual que los pétalos de la bienvenida, el color sale del avatar de cada modelo
+ * (window.skCalcularColores), así que un modelo o ícono nuevo trae su color solo. Se publica como variables:
+ *   --sk-m         acento ("338 67% 52%", para hsl(var(--sk-m) / alfa))
+ *   --sk-m-oscuro  texto sobre el tinte ("Modelo activo")
+ *   --sk-m-tinte   fondo claro de la tarjeta del modelo
+ * Agrega a la barra la tarjeta "Modelo activo" (abre el selector de modelo) y la fila "Modelos fijados" (los demás
+ * modelos fijados; tocar uno abre un chat nuevo con él). Cada chat de la lista lleva el avatar de su modelo y su
+ * color (anillo al pensar, renglón teñido con punto al llegar respuesta, barra del chat abierto): el modelo de cada
+ * chat se lee una vez de la API y se guarda. El resto (Nuevo chat negro con Buscar al lado, tarjeta del usuario…)
+ * es CSS sobre las piezas de Open WebUI.
+ */
+(() => {
+	const CLAVE_COLORES = 'sk-modelo-colores-2';
+	const CLAVE_CHATS = 'sk-chat-modelo';
+	const RESPALDO = { m: '220 14% 46%', oscuro: '220 16% 34%', tinte: '220 20% 95%' };
+	const leer = (clave) => {
+		try {
+			return JSON.parse(localStorage.getItem(clave) || '{}');
+		} catch {
+			return {};
+		}
+	};
+	const guardar = (clave, valor) => {
+		try {
+			localStorage.setItem(clave, JSON.stringify(valor));
+		} catch {
+			// sin localStorage: se recalcula en cada carga
+		}
+	};
+	const colores = leer(CLAVE_COLORES); // id del modelo → { m, oscuro, tinte }
+	const chatModelo = leer(CLAVE_CHATS); // id del chat → id del modelo
+	const nombres = {}; // id del modelo → nombre
+	const calculando = new Set();
+	const pidiendo = new Set();
+	let pendiente = false;
+	let activo = null;
+	const avatar = (id) => `/api/v1/models/model/profile/image?id=${encodeURIComponent(id)}`;
+	const headers = () => ({ Authorization: `Bearer ${localStorage.token || ''}` });
+	const ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+	const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ESCAPES[c]);
+	const svg = (d, tam = 18) =>
+		`<svg viewBox="0 0 24 24" width="${tam}" height="${tam}" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+	const limitar = (v, a, b) => Math.min(b, Math.max(a, v));
+
+	// paleta del modelo a partir del cálculo de los pétalos: acento = tono fuerte del avatar con brillo de 43–54 %,
+	// texto un 9 % más oscuro (contraste ≥ 4.5:1 sobre el tinte) y tinte con el tono principal
+	const paleta = (c) => {
+		if (c?.fh == null) return null;
+		const s = Math.round(limitar((c.fs || 0.6) * 1.25, 0.55, 0.8) * 100);
+		const l = limitar((c.fl ?? 0.42) + 0.06, 0.43, 0.54);
+		return {
+			m: `${c.fh} ${s}% ${Math.round(l * 100)}%`,
+			oscuro: `${c.fh} ${s}% ${Math.round(Math.min(l - 0.09, 0.42) * 100)}%`,
+			tinte: `${c.h} 80% 94%`
+		};
+	};
+
+	const calcularColor = (id) => {
+		if (!id || colores[id] || calculando.has(id) || !window.skCalcularColores) return;
+		calculando.add(id);
+		const img = new Image();
+		img.onload = () => {
+			try {
+				const p = paleta(window.skCalcularColores(img));
+				if (p) {
+					colores[id] = p;
+					guardar(CLAVE_COLORES, colores);
+					programar();
+				}
+			} catch {
+				// imagen que no se puede leer: queda el color de respaldo
+			}
+		};
+		img.src = avatar(id);
+	};
+	// el selector de modelo de la barra usa los mismos colores
+	window.skColorModelo = (id) => {
+		calcularColor(id);
+		return colores[id] || null;
+	};
+
+	// nombres de los modelos guardados en Espacio de Trabajo
+	fetch('/api/v1/models/list', { headers: headers() })
+		.then((r) => (r.ok ? r.json() : null))
+		.then((d) => {
+			for (const m of Array.isArray(d) ? d : d?.items || d?.data || []) nombres[m.id] = m.name;
+			programar();
+		})
+		.catch(() => {});
+
+	// versión de Open WebUI debajo del nombre
+	fetch('/api/version')
+		.then((r) => (r.ok ? r.json() : null))
+		.then((d) => d?.version && document.documentElement.style.setProperty('--sk-version', `"v${d.version}"`))
+		.catch(() => {});
+
+	const idDeSrc = (src) => {
+		try {
+			return new URL(src, location.origin).searchParams.get('id');
+		} catch {
+			return null;
+		}
+	};
+
+	// modelo activo: el del selector de la caja de mensaje; si no hay, el del chat abierto o el de la bienvenida
+	const modeloActivo = () => {
+		const img = document.querySelector(
+			"#message-input-container :is(button, [aria-label^='Modelo']) img[src*='/models/model/profile/image']"
+		);
+		const deCaja = img && idDeSrc(img.getAttribute('src'));
+		if (deCaja) return deCaja;
+		const chat = (location.pathname.match(/\/c\/([^/?#]+)/) || [])[1];
+		if (chat && chatModelo[chat]) return chatModelo[chat];
+		const bienvenida = document.querySelector(".sk-bienvenida-avatar img[src*='/models/model/profile/image']");
+		return (bienvenida && idDeSrc(bienvenida.getAttribute('src'))) || document.querySelector('#pinned-models-list [data-id]')?.dataset.id || null;
+	};
+
+	const nombreDe = (id) =>
+		nombres[id] ||
+		document.querySelector(`#pinned-models-list [data-id="${CSS.escape(id)}"]`)?.textContent.trim() ||
+		id;
+
+	// el modelo de cada chat (una vez; 3 a la vez)
+	const pedirModelos = async (ids) => {
+		const faltan = ids.filter((id) => !(id in chatModelo) && !pidiendo.has(id));
+		if (!faltan.length) return;
+		faltan.forEach((id) => pidiendo.add(id));
+		const trabajar = async () => {
+			while (faltan.length) {
+				const id = faltan.shift();
+				try {
+					const r = await fetch(`/api/v1/chats/${encodeURIComponent(id)}`, { headers: headers() });
+					if (r.ok) {
+						const d = await r.json();
+						chatModelo[id] = d?.chat?.models?.[0] || null;
+					}
+				} catch {
+					// sin conexión: se intenta en la siguiente carga
+				}
+				pidiendo.delete(id);
+			}
+		};
+		await Promise.all([trabajar(), trabajar(), trabajar()]);
+		guardar(CLAVE_CHATS, chatModelo);
+		programar();
+	};
+
+	// hoja con el avatar y el color de cada chat (sin tocar los elementos de Open WebUI)
+	const hoja = document.createElement('style');
+	hoja.id = 'sk-barra-colores';
+	let hojaTexto = '';
+	const variables = (p) => `--sk-m:${p.m};--sk-m-oscuro:${p.oscuro};--sk-m-tinte:${p.tinte};`;
+
+	const pintarHoja = (ids) => {
+		const porModelo = new Map();
+		for (const chat of ids) {
+			const m = chatModelo[chat];
+			if (!m) continue;
+			calcularColor(m);
+			if (!porModelo.has(m)) porModelo.set(m, []);
+			porModelo.get(m).push(chat);
+		}
+		let texto = '';
+		porModelo.forEach((chats, m) => {
+			const p = colores[m] || RESPALDO;
+			const sel = chats.map((c) => `#sidebar-chat-item:has(> a[href="/c/${CSS.escape(c)}"])`).join(',');
+			texto += `${sel}{${variables(p)}--sk-chat-avatar:url("${avatar(m)}");}\n`;
+		});
+		if (texto !== hojaTexto) {
+			hojaTexto = texto;
+			hoja.textContent = texto;
+		}
+		if (!hoja.isConnected) document.head.appendChild(hoja);
+	};
+
+	const tarjeta = () => {
+		const t = document.createElement('div');
+		t.className = 'sk-barra-extra';
+		t.innerHTML = `
+			<button type="button" class="sk-barra-modelo" aria-haspopup="listbox">
+				<img alt="">
+				<span class="sk-barra-modelo-texto"><b></b><small>Modelo activo</small></span>
+				${svg('<path d="M6 9l6 6 6-6"/>', 17)}
+			</button>
+			<div class="sk-barra-fijados" role="group" aria-label="Modelos fijados">
+				<span class="sk-barra-avatares"></span>
+				<a class="sk-barra-fijar" href="/workspace/models" aria-label="Fijar otro modelo" title="Fijar otro modelo">${svg('<path d="M12 5v14M5 12h14"/>', 15)}</a>
+				<span class="sk-barra-fijados-texto">Modelos fijados</span>
+			</div>`;
+		// abre el selector de modelo de la caja de mensaje; sin caja (otra página), un chat nuevo
+		t.querySelector('.sk-barra-modelo').addEventListener('click', (e) => {
+			e.stopPropagation();
+			window.skSelectorModelo?.alternar(t.querySelector('.sk-barra-modelo'));
+		});
+		t.querySelector('.sk-barra-avatares').addEventListener('click', (e) => {
+			const b = e.target.closest('[data-modelo]');
+			if (!b) return;
+			document.querySelector(`#pinned-models-list [data-id="${CSS.escape(b.dataset.modelo)}"] a`)?.click();
+		});
+		return t;
+	};
+
+	const montar = () => {
+		const raiz = document.querySelector('#sidebar > div');
+		const cabeza = raiz?.firstElementChild;
+		if (!cabeza || document.querySelector('#sidebar:has(#sidebar-open-button)')) return null;
+		let extra = raiz.querySelector(':scope > .sk-barra-extra');
+		if (!extra) {
+			extra = tarjeta();
+			cabeza.after(extra);
+		}
+		return extra;
+	};
+
+	const actualizar = () => {
+		pendiente = false;
+		// color del modelo activo en toda la interfaz
+		const id = modeloActivo();
+		if (id) calcularColor(id);
+		const p = (id && colores[id]) || RESPALDO;
+		const raizDoc = document.documentElement;
+		if (raizDoc.style.getPropertyValue('--sk-m') !== p.m) {
+			raizDoc.style.setProperty('--sk-m', p.m);
+			raizDoc.style.setProperty('--sk-m-oscuro', p.oscuro);
+			raizDoc.style.setProperty('--sk-m-tinte', p.tinte);
+		}
+		// el chat abierto aprende su modelo del selector (sin pedirlo a la API)
+		const chat = (location.pathname.match(/\/c\/([^/?#]+)/) || [])[1];
+		const img = document.querySelector("#message-input-container img[src*='/models/model/profile/image']");
+		const deCaja = img && idDeSrc(img.getAttribute('src'));
+		if (chat && deCaja && chatModelo[chat] !== deCaja) {
+			chatModelo[chat] = deCaja;
+			guardar(CLAVE_CHATS, chatModelo);
+		}
+
+		// barra contraída: el modelo activo lleva el aro de su color
+		document.querySelectorAll('.sk-rail-modelo').forEach((r) => {
+			let modelo = null;
+			try {
+				modelo = new URL(r.href, location.origin).searchParams.get('model');
+			} catch {
+				// enlace sin modelo
+			}
+			const es = !!id && modelo === id;
+			if (r.hasAttribute('data-activo') !== es) r.toggleAttribute('data-activo', es);
+		});
+
+		const extra = montar();
+		// el CSS de la barra abierta se aplica solo con ella montada (la contraída tiene su propio diseño)
+		raizDoc.classList.toggle('sk-barra-c', !!extra);
+		if (extra && id) {
+			if (activo !== id) {
+				activo = id;
+				extra.querySelector('.sk-barra-modelo img').src = avatar(id);
+			}
+			const nombre = nombreDe(id);
+			const b = extra.querySelector('.sk-barra-modelo b');
+			if (b.textContent !== nombre) b.textContent = nombre;
+			const boton = extra.querySelector('.sk-barra-modelo');
+			const etiqueta = `Modelo activo: ${nombre}. Cambiar de modelo`;
+			if (boton.getAttribute('aria-label') !== etiqueta) boton.setAttribute('aria-label', etiqueta);
+			// los demás modelos fijados
+			const fijados = [...document.querySelectorAll('#pinned-models-list [data-id]')].map((e) => e.dataset.id).filter((m) => m !== id);
+			const caja = extra.querySelector('.sk-barra-avatares');
+			const firma = fijados.join('|');
+			if (caja.dataset.firma !== firma) {
+				caja.dataset.firma = firma;
+				caja.innerHTML = fijados
+					.map(
+						(m) =>
+							`<button type="button" data-modelo="${esc(m)}" aria-label="Chat nuevo con ${esc(nombreDe(m))}" title="${esc(nombreDe(m))}"><img alt="" src="${avatar(m)}"></button>`
+					)
+					.join('');
+			}
+			fijados.forEach(calcularColor);
+		}
+
+		// lista de chats
+		const ids = [...document.querySelectorAll('#sidebar-chat-item > a[href^="/c/"]')].map((a) => a.getAttribute('href').slice(3));
+		pintarHoja(ids);
+		pedirModelos(ids);
+	};
+
+	const programar = () => {
+		if (pendiente) return;
+		pendiente = true;
+		requestAnimationFrame(actualizar);
+	};
+
+	skVigilar(programar, {
+		childList: true,
+		subtree: true,
+		attributes: true,
+		attributeFilter: ['src']
+	});
+	window.addEventListener('popstate', programar);
+	programar();
+})();
+
+/*
+ * Tarjeta del usuario al pie de la barra (lienzo "Barra lateral rediseñada"): el engrane de 34 px abre Ajustes directo,
+ * sin pasar por el menú de usuario (usa el atajo de Open WebUI, Ctrl/Cmd + punto); el resto de la tarjeta (avatar y
+ * nombre) abre el menú completo como siempre. Si el atajo no abre Ajustes, se toca "Ajustes" en el menú sin que se vea.
+ */
+(() => {
+	let pendiente = false;
+	const ajustesAbiertos = () => !!document.querySelector('#settings-tabs-container');
+	const porMenu = async () => {
+		const boton = document.querySelector("#sidebar button[aria-haspopup='true']:has(img[aria-label='Abrir Menu de Perfiles de Usuario'])");
+		if (!boton) return;
+		document.documentElement.classList.add('sk-abriendo-ajustes');
+		try {
+			boton.click();
+			for (let i = 0; i < 25; i++) {
+				await new Promise((r) => setTimeout(r, 40));
+				const opcion = [...document.querySelectorAll('[role="menu"] :is(button, a, [role="menuitem"])')].find((b) =>
+					/^(Ajustes|Configuración|Settings)/i.test(b.textContent.trim())
+				);
+				if (opcion) {
+					opcion.click();
+					return;
+				}
+			}
+			boton.click();
+		} finally {
+			setTimeout(() => document.documentElement.classList.remove('sk-abriendo-ajustes'), 200);
+		}
+	};
+	const abrirAjustes = async () => {
+		if (ajustesAbiertos()) return;
+		const mac = /Mac|iPhone|iPad/.test(navigator.platform);
+		document.dispatchEvent(
+			new KeyboardEvent('keydown', { key: '.', code: 'Period', ctrlKey: !mac, metaKey: mac, bubbles: true, cancelable: true })
+		);
+		await new Promise((r) => setTimeout(r, 250));
+		if (!ajustesAbiertos()) porMenu();
+	};
+	const montar = () => {
+		pendiente = false;
+		const fila = document.querySelector("#sidebar span[style*='contents']:has(img[aria-label='Abrir Menu de Perfiles de Usuario'])")?.parentElement;
+		if (!fila || fila.querySelector(':scope > .sk-barra-ajustes')) return;
+		fila.classList.add('sk-barra-usuario');
+		const g = document.createElement('button');
+		g.type = 'button';
+		g.className = 'sk-barra-ajustes';
+		g.setAttribute('aria-label', 'Ajustes');
+		g.title = 'Ajustes';
+		g.innerHTML =
+			'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>';
+		g.addEventListener('click', abrirAjustes);
+		fila.appendChild(g);
+	};
+	skVigilar(() => {
+		if (pendiente) return;
+		pendiente = true;
+		requestAnimationFrame(montar);
+	}, { childList: true, subtree: true });
+})();
+
+/*
+ * Modo voz: al iniciarlo, Open WebUI abre las pestañas (en el teléfono, el cajón "Pestañas") y crea a la vez su pestaña
+ * por defecto, el explorador de archivos "Inicio", junto a la pestaña Voz. Aquí se cierra esa pestaña de archivos solo
+ * cuando nació junto con la de Voz (menos de 1.5 s de diferencia); una pestaña Inicio abierta antes o después a mano
+ * no se toca.
+ */
+(() => {
+	const VOZ = "path[d^='M12 1C10.34']";
+	const ARCHIVOS = "path[d^='M2 11V4.6']";
+	const nacio = new WeakMap(); // pestaña → cuándo apareció
+	const cerradas = new WeakSet();
+	let pendiente = false;
+
+	const revisar = () => {
+		pendiente = false;
+		const ahora = Date.now();
+		const pestanas = [...document.querySelectorAll("[role='tab']")].filter((t) => !t.closest('#settings-tabs-container'));
+		pestanas.forEach((t) => nacio.has(t) || nacio.set(t, ahora));
+		const voz = pestanas.find((t) => t.querySelector(VOZ));
+		if (!voz) return;
+		const tVoz = nacio.get(voz);
+		if (ahora - tVoz > 3000) return;
+		for (const t of pestanas) {
+			if (t === voz || cerradas.has(t) || !t.querySelector(ARCHIVOS)) continue;
+			if (Math.abs(nacio.get(t) - tVoz) > 1500) continue;
+			const nombre = t.textContent.trim();
+			const cerrar = t.parentElement?.querySelector(`button[aria-label='Cerrar ${CSS.escape(nombre)}'], button[aria-label='Close ${CSS.escape(nombre)}']`);
+			if (!cerrar) continue;
+			cerradas.add(t);
+			cerrar.click();
+			// la pestaña Voz queda elegida
+			setTimeout(() => {
+				const v = [...document.querySelectorAll("[role='tab']")].find((x) => x.querySelector(VOZ));
+				if (v && v.getAttribute('aria-selected') !== 'true') v.click();
+			}, 60);
+		}
+	};
+
+	skVigilar(() => {
+		if (pendiente) return;
+		pendiente = true;
+		requestAnimationFrame(revisar);
+	}, { childList: true, subtree: true });
+})();
+
+/*
+ * Chat en pantalla ancha (lienzo "Chat en pantalla ancha · conceptos de accesibilidad y ergonomía"):
+ *  - Conmutador "Compacta | Ampliada" en la barra de pestañas (pantallas de 1200 px o más). Compacta: el chat y la caja
+ *    de mensaje en una columna de 1120 px centrada, el texto de las respuestas a 760 px (renglones legibles) y la imagen
+ *    generada junto al texto. Ampliada: todo el ancho, como antes. Se recuerda en el navegador.
+ *  - Encabezado de cada mensaje con la hora: "Sakura · 1:13 a. m." y, en los tuyos, "1:12 a. m. · tu nombre".
+ *  - Métricas del medidor de rendimiento (la línea "⏱ 13.0s · ⚡ 2.95s · …") como una barra con íconos, separadores y
+ *    la barrita del contexto; el botón de gráfica al final abre debajo la tarjeta "Rendimiento de la respuesta" (cada
+ *    dato con su nombre y el reparto del tiempo entre pensar, herramientas y escribir).
+ */
+(() => {
+	const CLAVE = 'sk-vista-chat';
+	const raiz = document.documentElement;
+	let vista = 'compacta';
+	try {
+		vista = localStorage.getItem(CLAVE) || 'compacta';
+	} catch {
+		// sin localStorage: compacta
+	}
+	const aplicar = () => {
+		raiz.classList.toggle('sk-vista-compacta', vista === 'compacta');
+		raiz.classList.toggle('sk-vista-ampliada', vista === 'ampliada');
+	};
+	aplicar();
+
+	const svg = (d, tam = 14) =>
+		`<svg viewBox="0 0 24 24" width="${tam}" height="${tam}" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+	const ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+	const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ESCAPES[c]);
+	const ICONOS = {
+		compacta: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M8 8v8M16 8v8"/>',
+		ampliada: '<rect x="3" y="4" width="18" height="16" rx="2"/><path d="M7 12h10M9 10l-2 2 2 2M15 10l2 2-2 2"/>',
+		reloj: '<circle cx="12" cy="13" r="8"/><path d="M12 9v4l2.5 2M9 2h6"/>',
+		rayo: '<path d="M13 2L4 14h7l-1 8 9-12h-7z"/>',
+		velocidad: '<path d="M5 15c-1 1-1.5 4-1.5 4s3-.5 4-1.5M9 13l2 2M14.5 4.5c2-1 4.5-1 4.5-1s0 2.5-1 4.5L12 14l-3-3z"/>',
+		pensar: '<path d="M9 18h6M10 21h4M12 3a6 6 0 0 0-4 10.5c.6.6 1 1.4 1 2.5h6c0-1.1.4-1.9 1-2.5A6 6 0 0 0 12 3z"/>',
+		herramientas: '<path d="M14.7 6.3a4 4 0 0 0-5.4 5.4L3 18l3 3 6.3-6.3a4 4 0 0 0 5.4-5.4l-2.4 2.4-2.6-.6-.6-2.6z"/>',
+		escribir: '<path d="M4 20h4L19 9l-4-4L4 16z"/>',
+		memoria: '<ellipse cx="12" cy="6" rx="7" ry="3"/><path d="M5 6v12c0 1.7 3.1 3 7 3s7-1.3 7-3V6M5 12c0 1.7 3.1 3 7 3s7-1.3 7-3"/>',
+		imagen: '<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="2"/><path d="M21 16l-5-5-8 8"/>',
+		voz: '<path d="M5 10v4h3l4 4V6L8 10z"/><path d="M16 9a4 4 0 0 1 0 6M19 6a8 8 0 0 1 0 12"/>',
+		grafica: '<path d="M4 20V10M10 20V4M16 20v-7M22 20H2"/>'
+	};
+	// emoji del medidor → [ícono, color, nombre]
+	const EMOJIS = [
+		[/^⏱/u, 'reloj', '#52525b', 'Tiempo total'],
+		[/^⚡/u, 'rayo', '#e8890c', 'Primera palabra'],
+		[/^🚀/u, 'velocidad', '#52525b', 'Velocidad'],
+		[/^🤔/u, 'pensar', '#7c5cff', 'Pensar'],
+		[/^🔧/u, 'herramientas', '#e8890c', 'Herramientas'],
+		[/^✍/u, 'escribir', '#2361c7', 'Escribir'],
+		[/^💾/u, 'memoria', '#14706a', 'Memoria'],
+		[/^🎨/u, 'imagen', '#d6336c', 'Imagen'],
+		[/^(🔊|🗣|🎙)/u, 'voz', '#d6336c', 'Voz']
+	];
+	const CONTEXTO = { '🟢': '#2b8a5a', '🟡': '#c99a06', '🟠': '#e8890c', '🔴': '#d9363e' };
+	let pendiente = false;
+
+	/* ---------- conmutador Compacta | Ampliada ---------- */
+	const conmutador = () => {
+		const d = document.createElement('div');
+		d.className = 'sk-vista';
+		d.setAttribute('role', 'radiogroup');
+		d.setAttribute('aria-label', 'Ancho del chat');
+		d.innerHTML = [
+			['compacta', 'Compacta', 'Columna centrada, más fácil de leer'],
+			['ampliada', 'Ampliada', 'Todo el ancho de la pantalla']
+		]
+			.map(([v, t, ayuda]) => `<button type="button" role="radio" data-vista="${v}" aria-checked="false" aria-label="${t}" title="${t} · ${ayuda}">${svg(ICONOS[v])}<span>${t}</span></button>`)
+			.join('');
+		d.addEventListener('click', (e) => {
+			const b = e.target.closest('[data-vista]');
+			if (!b) return;
+			vista = b.dataset.vista;
+			try {
+				localStorage.setItem(CLAVE, vista);
+			} catch {
+				// sin localStorage: solo esta sesión
+			}
+			aplicar();
+			programar();
+		});
+		return d;
+	};
+
+	/* ---------- tus datos (nombre y foto) para tus mensajes ---------- */
+	let yo = null;
+	fetch('/api/v1/auths/', { headers: { Authorization: `Bearer ${localStorage.token || ''}` } })
+		.then((r) => (r.ok ? r.json() : null))
+		.then((d) => {
+			if (!d) return;
+			yo = { nombre: (d.name || '').split(' ')[0] || d.name || '' };
+			if (d.profile_image_url) raiz.style.setProperty('--sk-yo-avatar', `url("${String(d.profile_image_url).replace(/"/g, '%22')}")`);
+			programar();
+		})
+		.catch(() => {});
+
+	const hora = (el) => {
+		const dt = el?.getAttribute('datetime');
+		if (!dt) return '';
+		const f = new Date(dt);
+		return Number.isNaN(f.getTime()) ? '' : f.toLocaleTimeString('es-MX', { hour: 'numeric', minute: '2-digit' });
+	};
+
+	/* ---------- métricas ---------- */
+	const segundos = (t) => {
+		const m = String(t).match(/([\d.]+)\s*s\b/g);
+		return m ? parseFloat(m[m.length - 1]) : 0;
+	};
+	const dato = (texto) => {
+		for (const [re, icono, color, nombre] of EMOJIS) {
+			if (re.test(texto)) {
+				const valor = texto.replace(re, '').replace(/^️/, '').trim();
+				return { html: `<span class="sk-met" title="${nombre}"><i style="color:${color}">${svg(ICONOS[icono], 13)}</i>${esc(valor)}</span>`, icono, valor };
+			}
+		}
+		const ctx = texto.match(/^(🟢|🟡|🟠|🔴)\s*(.*)$/u);
+		if (ctx) {
+			const pct = Math.min(100, parseFloat((ctx[2].match(/\((\d+(?:\.\d+)?)\s*%\)/) || [])[1] || 0));
+			return {
+				html: `<span class="sk-met" title="Contexto"><span class="sk-met-ctx"><span style="width:${pct}%;background:${CONTEXTO[ctx[1]]}"></span></span>${esc(ctx[2].replace(/\s*\(/, ' (').replace(/%\)/, ' %)'))}</span>`,
+				icono: 'contexto'
+			};
+		}
+		return { html: `<span class="sk-met">${esc(texto)}</span>`, icono: null, valor: texto };
+	};
+
+	const metricasHtml = (texto) => {
+		const partes = texto.split(' · ').map((s) => s.trim()).filter(Boolean);
+		const items = [];
+		let desglose = false;
+		for (const p of partes) {
+			if (p.includes(' + ')) {
+				desglose = true;
+				const sub = p.split(' + ').map((s) => s.replace(/\s*=.*$/, '').trim()).map(dato);
+				const tiempos = sub.map((s) => segundos(s.valor || ''));
+				const total = tiempos.reduce((a, b) => a + b, 0) || 1;
+				const colores = { pensar: '#7c5cff', herramientas: '#e8890c', escribir: '#2361c7' };
+				const barra = sub
+					.map((s, n) => `<span style="width:${Math.max(2, Math.round((tiempos[n] / total) * 46))}px;background:${colores[s.icono] || '#a1a1aa'}"></span>`)
+					.join('');
+				items.push(`<span class="sk-met-grupo">${sub.map((s) => s.html).join('<span class="sk-met-mas">+</span>')}<span class="sk-met-barra" aria-hidden="true">${barra}</span></span>`);
+			} else if (desglose && /^=?\s*[\d.]+\s*s$/.test(p)) {
+				// el total del desglose ya está en ⏱
+			} else items.push(dato(p).html);
+		}
+		return items.join('<span class="sk-met-sep" aria-hidden="true">|</span>');
+	};
+
+	// tarjeta "Rendimiento de la respuesta": cada dato con su nombre y el reparto del tiempo en una barra grande
+	const tarjetaHtml = (texto) => {
+		const filas = [];
+		let reparto = '';
+		const fila = (p) => {
+			for (const [re, icono, color, nombre] of EMOJIS) {
+				if (re.test(p)) return { icono, color, nombre, valor: p.replace(re, '').replace(/^️/, '').trim() };
+			}
+			const ctx = p.match(/^(🟢|🟡|🟠|🔴)\s*(.*)$/u);
+			if (ctx) return { icono: 'contexto', color: CONTEXTO[ctx[1]], nombre: 'Contexto usado', valor: ctx[2] };
+			return null;
+		};
+		for (const p of texto.split(' · ').map((s) => s.trim()).filter(Boolean)) {
+			if (p.includes(' + ')) {
+				const sub = p.split(' + ').map((s) => fila(s.replace(/\s*=.*$/, '').trim())).filter(Boolean);
+				const tiempos = sub.map((s) => segundos(s.valor));
+				const total = tiempos.reduce((a, b) => a + b, 0) || 1;
+				reparto = `<div class="sk-met-reparto"><div class="sk-met-reparto-barra" aria-hidden="true">${sub
+					.map((s, n) => `<span style="flex:${Math.max(0.02, tiempos[n] / total)};background:${s.color}"></span>`)
+					.join('')}</div><div class="sk-met-leyenda">${sub
+					.map((s, n) => `<span><i style="background:${s.color}"></i>${s.nombre} ${esc(s.valor)} · ${Math.round((tiempos[n] / total) * 100)} %</span>`)
+					.join('')}</div></div>`;
+				sub.forEach((s) => filas.push(s));
+			} else {
+				const f = fila(p);
+				if (f) filas.push(f);
+			}
+		}
+		const BATERIA = '<rect x="3" y="7" width="18" height="10" rx="2"/><path d="M7 11v2M11 11v2"/>';
+		const fila2 = (f) => {
+			if (f.icono === 'contexto') {
+				const pct = Math.min(100, parseFloat((f.valor.match(/\((\d+(?:\.\d+)?)\s*%\)/) || [])[1] || 0));
+				const valor = f.valor.replace(/\s*\([^)]*\)/, '').replace('/', ' / ');
+				return `<div><dt><i style="color:${f.color}">${svg(BATERIA, 14)}</i>${f.nombre}</dt><dd>${esc(valor)}</dd></div><div class="sk-met-ctx-fila" aria-hidden="true"><span style="width:${pct}%;background:${f.color}"></span></div>`;
+			}
+			const valor = f.icono === 'velocidad' ? f.valor.replace(/t\/s$/, ' tokens/s') : f.valor;
+			return `<div><dt><i style="color:${f.color}">${svg(ICONOS[f.icono], 14)}</i>${f.nombre}</dt><dd>${esc(valor)}</dd></div>`;
+		};
+		return `<div class="sk-met-tarjeta-titulo">Rendimiento de la respuesta</div><dl>${filas.filter((f) => !['pensar', 'herramientas', 'escribir'].includes(f.icono) || !reparto).map(fila2).join('')}</dl>${reparto}`;
+	};
+
+	// teléfono: lo principal en corto (tiempo, velocidad, contexto, memoria)
+	const cortaHtml = (texto) => {
+		const items = [];
+		const k = (n) => `${Math.round(parseFloat(n))}K`;
+		for (const p of texto.split(' · ').map((s) => s.trim())) {
+			if (/^⏱/u.test(p)) {
+				const s = segundos(p);
+				items.push(`<i style="color:#52525b">${svg(ICONOS.reloj, 12)}</i>${s >= 10 ? Math.round(s) : s} s`);
+			} else if (/^🚀/u.test(p)) items.push(`<i style="color:#52525b">${svg(ICONOS.velocidad, 12)}</i>${esc(p.replace(/^🚀\s*/u, ''))}`);
+			else if (/^(🟢|🟡|🟠|🔴)/u.test(p)) {
+				const m = p.match(/([\d.]+)K\s*\/\s*([\d.]+)K/);
+				const pct = Math.min(100, parseFloat((p.match(/\((\d+(?:\.\d+)?)\s*%\)/) || [])[1] || 0));
+				const color = CONTEXTO[[...p][0]] || '#2b8a5a';
+				items.push(`<span class="sk-met-ctx"><span style="width:${pct}%;background:${color}"></span></span>${m ? `${k(m[1])}/${k(m[2])}` : ''}`);
+			} else if (/^💾/u.test(p)) items.push(`<i style="color:#14706a">${svg(ICONOS.memoria, 12)}</i>${esc(p.replace(/^💾\s*/u, ''))}`);
+		}
+		return items.join('<span class="sk-met-punto" aria-hidden="true">·</span>');
+	};
+
+	const metricas = () => {
+		document.querySelectorAll('.chat-assistant .status-description').forEach((d) => {
+			const texto = d.textContent.trim();
+			if (!/^⏱/u.test(texto)) {
+				if (d.hasAttribute('data-sk-metricas')) d.removeAttribute('data-sk-metricas');
+				return;
+			}
+			const bloque = d.closest('div.relative.w-full');
+			if (!bloque) return;
+			if (!d.hasAttribute('data-sk-metricas')) d.setAttribute('data-sk-metricas', '');
+			let caja = bloque.previousElementSibling?.classList.contains('sk-metricas') ? bloque.previousElementSibling : null;
+			if (!caja) {
+				caja = document.createElement('div');
+				caja.className = 'sk-metricas';
+				const id = `sk-met-${Math.random().toString(36).slice(2, 9)}`;
+				caja.innerHTML = `<div class="sk-met-barra-datos"></div><span class="sk-met-corta"></span><button type="button" class="sk-met-detalle" aria-label="Ver rendimiento completo" title="Rendimiento de la respuesta" aria-expanded="false" aria-controls="${id}">${svg(ICONOS.grafica, 15)}</button><div class="sk-met-tarjeta" id="${id}" hidden></div>`;
+				const detalle = caja.querySelector('.sk-met-detalle');
+				detalle.addEventListener('click', () => {
+					const tarjeta = caja.querySelector('.sk-met-tarjeta');
+					tarjeta.hidden = !tarjeta.hidden;
+					detalle.setAttribute('aria-expanded', String(!tarjeta.hidden));
+				});
+				bloque.before(caja);
+			}
+			if (caja.dataset.texto !== texto) {
+				caja.dataset.texto = texto;
+				caja.querySelector('.sk-met-barra-datos').innerHTML = metricasHtml(texto);
+				caja.querySelector('.sk-met-tarjeta').innerHTML = tarjetaHtml(texto);
+				caja.querySelector('.sk-met-corta').innerHTML = cortaHtml(texto);
+			}
+		});
+	};
+
+	/* ---------- encabezados con hora ---------- */
+	const encabezados = () => {
+		document.querySelectorAll('[id^="message-"]:not(.user-message)').forEach((m) => {
+			const h3 = m.querySelector(':scope h3:has(#response-message-model-name)');
+			if (!h3) return;
+			const texto = hora(m.querySelector('time[datetime]'));
+			let s = h3.querySelector(':scope > .sk-hora');
+			if (!texto) return s?.remove();
+			if (!s) {
+				s = document.createElement('span');
+				s.className = 'sk-hora';
+				h3.appendChild(s);
+			}
+			if (s.textContent !== texto) s.textContent = texto;
+		});
+		document.querySelectorAll('.user-message .chat-user').forEach((u) => {
+			const texto = hora(u.querySelector('time[datetime]'));
+			let c = u.querySelector(':scope > .sk-usuario-cabeza');
+			if (!c) {
+				c = document.createElement('div');
+				c.className = 'sk-usuario-cabeza';
+				c.innerHTML = '<span class="sk-hora"></span><b></b>';
+				u.prepend(c);
+			}
+			const h = c.querySelector('.sk-hora');
+			if (h.textContent !== texto) h.textContent = texto;
+			const n = c.querySelector('b');
+			const nombre = yo?.nombre || '';
+			if (n.textContent !== nombre) n.textContent = nombre;
+		});
+	};
+
+	const actualizar = () => {
+		pendiente = false;
+		// Open WebUI reescribe las clases de <html> al aplicar el tema: se vuelve a poner la vista elegida
+		aplicar();
+		// el conmutador va en la barra de pestañas del panel donde está el chat (con la vista dividida hay dos barras)
+		const chat = document.querySelector('#messages-container');
+		const r = chat?.getBoundingClientRect();
+		const centro = r && r.width ? r.left + r.width / 2 : null;
+		const barras = [...document.querySelectorAll("div.h-9:has(button[aria-label='Nueva pestaña'])")];
+		const suya =
+			centro == null
+				? null
+				: barras.find((barra) => {
+						const b = barra.getBoundingClientRect();
+						return b.width && b.left <= centro && centro <= b.right;
+					});
+		barras.forEach((barra) => {
+			let c = barra.querySelector(':scope > .sk-vista');
+			if (barra !== suya) return c?.remove();
+			if (!c) {
+				c = conmutador();
+				barra.appendChild(c);
+			}
+			// barra mediana: solo los íconos, para dejar sitio a las pestañas
+			const iconos = barra.getBoundingClientRect().width < 1300;
+			if (c.classList.contains('sk-vista-iconos') !== iconos) c.classList.toggle('sk-vista-iconos', iconos);
+			c.querySelectorAll('[data-vista]').forEach((b) => {
+				const v = String(b.dataset.vista === vista);
+				if (b.getAttribute('aria-checked') !== v) b.setAttribute('aria-checked', v);
+			});
+		});
+		metricas();
+		encabezados();
+	};
+
+	const programar = () => {
+		if (pendiente) return;
+		pendiente = true;
+		requestAnimationFrame(actualizar);
+	};
+
+	skVigilar(programar, { childList: true, subtree: true, characterData: true });
+	new MutationObserver(() => {
+		if (!raiz.classList.contains(`sk-vista-${vista}`)) aplicar();
+	}).observe(raiz, { attributes: true, attributeFilter: ['class'] });
+	programar();
+})();
+
+/*
+ * Pestañas con muchas abiertas: la tira de pestañas de cada panel (.panel-tab-strip, ya se desliza en horizontal) se
+ * recorre con la rueda del ratón, con las flechas ‹ › que aparecen a los lados cuando no caben todas y arrastrando
+ * en pantallas táctiles. Los bordes se desvanecen donde quedan pestañas escondidas y la pestaña nueva o la elegida
+ * se acomoda a la vista.
+ */
+(() => {
+	const FLECHA = {
+		izq: '<path d="M15 6l-6 6 6 6"/>',
+		der: '<path d="M9 6l6 6-6 6"/>'
+	};
+	const svg = (d) =>
+		`<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+	let pendiente = false;
+	const vistas = new WeakMap(); // tira → { izq, der, n }
+
+	const estado = (tira) => {
+		const v = vistas.get(tira);
+		if (!v) return;
+		const mas = tira.scrollWidth - tira.clientWidth > 2;
+		const izq = mas && tira.scrollLeft > 2;
+		const der = mas && tira.scrollLeft < tira.scrollWidth - tira.clientWidth - 2;
+		if (tira.classList.contains('sk-mas-izq') !== izq) tira.classList.toggle('sk-mas-izq', izq);
+		if (tira.classList.contains('sk-mas-der') !== der) tira.classList.toggle('sk-mas-der', der);
+		if (v.izq.hidden !== !mas) v.izq.hidden = !mas;
+		if (v.der.hidden !== !mas) v.der.hidden = !mas;
+		if (v.izq.disabled !== !izq) v.izq.disabled = !izq;
+		if (v.der.disabled !== !der) v.der.disabled = !der;
+	};
+
+	const flecha = (tira, dir) => {
+		const b = document.createElement('button');
+		b.type = 'button';
+		b.className = 'sk-pest-flecha';
+		b.dataset.dir = dir;
+		b.hidden = true;
+		b.setAttribute('aria-label', dir === 'izq' ? 'Pestañas anteriores' : 'Más pestañas');
+		b.title = dir === 'izq' ? 'Pestañas anteriores' : 'Más pestañas';
+		b.innerHTML = svg(FLECHA[dir]);
+		b.addEventListener('click', () => tira.scrollBy({ left: (dir === 'izq' ? -1 : 1) * tira.clientWidth * 0.7, behavior: 'smooth' }));
+		return b;
+	};
+
+	const preparar = (tira) => {
+		if (vistas.has(tira)) return;
+		const izq = flecha(tira, 'izq');
+		const der = flecha(tira, 'der');
+		tira.before(izq);
+		tira.after(der);
+		vistas.set(tira, { izq, der, n: tira.children.length });
+		// rueda vertical → desplazamiento horizontal
+		tira.addEventListener(
+			'wheel',
+			(e) => {
+				if (tira.scrollWidth <= tira.clientWidth || Math.abs(e.deltaY) <= Math.abs(e.deltaX)) return;
+				tira.scrollLeft += e.deltaY;
+				e.preventDefault();
+			},
+			{ passive: false }
+		);
+		tira.addEventListener('scroll', () => estado(tira), { passive: true });
+		new ResizeObserver(() => estado(tira)).observe(tira);
+	};
+
+	const actualizar = () => {
+		pendiente = false;
+		document.querySelectorAll('.panel-tab-strip').forEach((tira) => {
+			preparar(tira);
+			const v = vistas.get(tira);
+			// pestaña nueva: se va al final para que se vea
+			if (tira.children.length > v.n) tira.scrollTo({ left: tira.scrollWidth, behavior: 'smooth' });
+			v.n = tira.children.length;
+			estado(tira);
+		});
+	};
+
+	skVigilar(() => {
+		if (pendiente) return;
+		pendiente = true;
+		requestAnimationFrame(actualizar);
+	}, { childList: true, subtree: true });
+})();
+
+/*
+ * Al cambiar el ancho de la ventana (de escritorio a teléfono o al revés), Open WebUI rehace sus paneles y, si el panel
+ * lateral quedó sin pestañas, crea su pestaña por defecto: el explorador de archivos "Inicio". Aquí se cierra esa
+ * pestaña cuando aparece justo después del cambio (2.5 s) y hay más pestañas de archivos que las que tenías abiertas
+ * antes; una pestaña Inicio abierta a mano se queda.
+ */
+(() => {
+	const ARCHIVOS = "path[d^='M2 11V4.6']";
+	const cortes = ['(max-width: 767px)', '(max-width: 1023px)'].map((q) => window.matchMedia(q));
+	let tenias = null; // pestañas de archivos que tenías antes del cambio
+	let hasta = 0;
+	let pendiente = false;
+
+	const archivos = () =>
+		[...document.querySelectorAll("[role='tab'], .panel-tab")].filter((t) => !t.closest('#settings-tabs-container') && t.querySelector(ARCHIVOS));
+
+	const revisar = () => {
+		pendiente = false;
+		const lista = [...new Set(archivos().map((t) => t.closest('.panel-tab') || t))];
+		if (Date.now() > hasta) {
+			tenias = lista.length;
+			return;
+		}
+		if (tenias == null || lista.length <= tenias) return;
+		// las sobrantes (las más nuevas van al final)
+		for (const t of lista.slice(tenias)) {
+			const nombre = t.textContent.trim();
+			const cerrar = (t.parentElement || t).querySelector(
+				`button[aria-label='Cerrar ${CSS.escape(nombre)}'], button[aria-label='Close ${CSS.escape(nombre)}']`
+			);
+			cerrar?.click();
+		}
+	};
+
+	const programar = () => {
+		if (pendiente) return;
+		pendiente = true;
+		requestAnimationFrame(revisar);
+	};
+
+	cortes.forEach((m) =>
+		m.addEventListener('change', () => {
+			hasta = Date.now() + 2500;
+			programar();
+		})
+	);
+	skVigilar(programar, { childList: true, subtree: true });
+	programar();
+})();
+
+/*
+ * Modo voz, detalles del lienzo "2 · Azul y negro (rojo solo al silenciar)":
+ *  - el nombre del modelo debajo del avatar ("Sakura", 26 px);
+ *  - mientras responde, el inicio de lo que está diciendo entre comillas («¡Qué bueno escucharte…») sobre
+ *    "Toca para interrumpir";
+ *  - en el teléfono, la cabecera "‹ Chat · Modo voz" en lugar de la fila de pestañas del cajón; "‹ Chat" lo cierra y
+ *    vuelve al chat (la llamada sigue).
+ */
+(() => {
+	let pendiente = false;
+	const telefono = window.matchMedia('(max-width: 767px)');
+	// "Modo voz" con el estado y el tiempo de la llamada debajo ("● Escuchando · 0:42")
+	const ESTADOS = { escuchando: 'Escuchando', pensando: 'Pensando', respondiendo: 'Respondiendo', silenciado: 'Silenciado' };
+	const TITULO = '<div class="sk-voz-titulo"><b>Modo voz</b><small data-estado="escuchando"><i></i><span></span></small></div>';
+	let inicio = 0;
+	let reloj = null;
+	const tiempo = () => {
+		const s = Math.max(0, Math.floor((Date.now() - inicio) / 1000));
+		return `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+	};
+	const pintarTitulos = () => {
+		const boton = document.querySelector('.sk-voz-boton');
+		const estado = Object.keys(ESTADOS).find((e) => boton?.classList.contains(`sk-voz-${e}`)) || 'escuchando';
+		document.querySelectorAll('.sk-voz-titulo small').forEach((s) => {
+			if (s.dataset.estado !== estado) s.dataset.estado = estado;
+			const texto = `${ESTADOS[estado]} · ${tiempo()}`;
+			const span = s.querySelector('span');
+			if (span.textContent !== texto) span.textContent = texto;
+		});
+	};
+
+	const nombreModelo = () => {
+		const b = document.querySelector("#message-input-container button[aria-label^='Modelo selecc']");
+		const n = b?.getAttribute('aria-label')?.split(':').slice(1).join(':').trim();
+		return n || [...document.querySelectorAll('#response-message-model-name')].at(-1)?.textContent.trim() || '';
+	};
+
+	const cita = () => {
+		const t = [...document.querySelectorAll('.chat-assistant #response-content-container .markdown-prose')].at(-1)?.textContent.replace(/\s+/g, ' ').trim() || '';
+		if (!t) return '';
+		if (t.length <= 90) return `«${t}»`;
+		const corte = t.slice(0, 90);
+		return `«${corte.slice(0, corte.lastIndexOf(' ') > 40 ? corte.lastIndexOf(' ') : 90)}…»`;
+	};
+
+	const actualizar = () => {
+		pendiente = false;
+		// tiempo de la llamada: desde que aparece el modo voz
+		const hayVoz = Boolean(document.querySelector('.sk-voz-boton'));
+		// la imagen de fondo del chat, para el vidrio del modo voz en el teléfono (como en el lienzo)
+		const fondo = document.querySelector('div.bg-cover.bg-no-repeat.pointer-events-none')?.style.backgroundImage || '';
+		if (fondo && document.documentElement.style.getPropertyValue('--sk-fondo-chat') !== fondo) {
+			document.documentElement.style.setProperty('--sk-fondo-chat', fondo);
+		}
+		if (hayVoz && !inicio) {
+			inicio = Date.now();
+			reloj = setInterval(pintarTitulos, 1000);
+		} else if (!hayVoz && inicio) {
+			inicio = 0;
+			clearInterval(reloj);
+		}
+		document.querySelectorAll('.sk-voz-boton').forEach((boton) => {
+			const escena = boton.querySelector(':scope > .sk-voz-escena');
+			if (!escena) return;
+			let n = escena.querySelector(':scope > .sk-voz-nombre');
+			if (!n) {
+				n = document.createElement('span');
+				n.className = 'sk-voz-nombre';
+				escena.appendChild(n);
+			}
+			const nombre = nombreModelo();
+			if (n.textContent !== nombre) n.textContent = nombre;
+		});
+		document.querySelectorAll("[role='status'][aria-live][data-sk-voz]").forEach((caja) => {
+			let c = caja.querySelector(':scope > .sk-voz-cita');
+			if (!c) {
+				c = document.createElement('div');
+				c.className = 'sk-voz-cita';
+				caja.insertBefore(c, caja.querySelector(':scope > button'));
+			}
+			const texto = caja.dataset.skVoz === 'respondiendo' ? cita() : '';
+			if (c.textContent !== texto) c.textContent = texto;
+		});
+
+		// cabecera del teléfono
+		const dlg = document.querySelector(".modal[role='dialog'][aria-label='Pestañas'], .modal[role='dialog'][aria-label='Tabs']");
+		const voz = dlg?.querySelector('.sk-voz-boton');
+		const conVoz = Boolean(telefono.matches && voz && voz.offsetParent);
+		if (dlg) {
+			if (dlg.classList.contains('sk-voz-movil') !== conVoz) dlg.classList.toggle('sk-voz-movil', conVoz);
+			const columna = dlg.querySelector('#controls-container')?.parentElement;
+			let cab = columna?.querySelector(':scope > .sk-voz-cabeza');
+			if (conVoz && columna && !cab) {
+				cab = document.createElement('div');
+				cab.className = 'sk-voz-cabeza';
+				cab.innerHTML =
+					'<button type="button" aria-label="Volver al chat"><svg viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg>Chat</button>' +
+					TITULO;
+				cab.querySelector('button').addEventListener('click', () =>
+					dlg.querySelector("button[aria-label='Ocultar pestañas'], button[aria-label='Hide tabs']")?.click()
+				);
+				columna.prepend(cab);
+			} else if (!conVoz) cab?.remove();
+		}
+
+		// escritorio: el título "Modo voz" arriba del panel de voz (la conversación ya se ve al lado)
+		document.querySelectorAll("[role='tabpanel']:has(.sk-voz-boton)").forEach((panel) => {
+			const enCajon = Boolean(panel.closest(".modal[role='dialog']"));
+			let t = panel.querySelector(':scope > .sk-voz-cabeza-panel');
+			if (enCajon) return t?.remove();
+			if (!t) {
+				t = document.createElement('div');
+				t.className = 'sk-voz-cabeza sk-voz-cabeza-panel';
+				t.innerHTML = TITULO;
+				panel.prepend(t);
+			}
+		});
+		pintarTitulos();
+	};
+
+	skVigilar(() => {
+		if (pendiente) return;
+		pendiente = true;
+		requestAnimationFrame(actualizar);
+	}, { childList: true, subtree: true, characterData: true });
+	telefono.addEventListener('change', actualizar);
+})();
+
+/*
+ * Selector de modelo de la barra lateral (lienzo "Selector de modelo abierto · escritorio / móvil"): al tocar la tarjeta
+ * "Modelo activo" se abre debajo un panel con buscador ("Buscar entre 10 modelos"), los modelos fijados y todos los
+ * demás. Cada renglón: avatar (o una letra si el modelo no tiene foto), nombre, tipo (Personaje, Modelo base · local,
+ * Conexión externa, Desactivado…), chincheta para fijar o quitar de la barra y palomita en el activo.
+ * Elegir un modelo y fijarlo se hace con el selector de Open WebUI (se abre sin verse y se toca la opción), así que
+ * todo queda guardado igual que siempre.
+ */
+(() => {
+	let panel = null;
+	let modelos = null;
+	let ancla = null;
+	const headers = () => ({ Authorization: `Bearer ${localStorage.token || ''}` });
+	const ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+	const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ESCAPES[c]);
+	const svg = (d, tam = 15, extra = '') =>
+		`<svg viewBox="0 0 24 24" width="${tam}" height="${tam}" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"${extra}>${d}</svg>`;
+	const CHINCHETA = '<path d="M9 4h6l-1 6 3 3H7l3-3zM12 13v7"/>';
+	const avatar = (id) => `/api/v1/models/model/profile/image?id=${encodeURIComponent(id)}`;
+	const espera = (ms) => new Promise((r) => setTimeout(r, ms));
+
+	const cargar = async () => {
+		if (modelos) return modelos;
+		try {
+			const r = await fetch('/api/models', { headers: headers() });
+			const d = await r.json();
+			modelos = (d.data || d || []).map((m) => {
+				const meta = m.info?.meta || {};
+				const propio = Boolean(m.info?.base_model_id);
+				let tipo = propio ? 'Personaje' : m.connection_type === 'local' ? 'Modelo base · local' : 'Conexión externa';
+				let apagado = false;
+				if (m.info && m.info.is_active === false) {
+					tipo = 'Desactivado';
+					apagado = true;
+				} else if (meta.hidden) {
+					tipo = 'Oculto';
+					apagado = true;
+				}
+				return { id: m.id, nombre: m.name || m.id, tipo, apagado, foto: propio || Boolean(meta.profile_image_url) };
+			});
+		} catch {
+			modelos = [];
+		}
+		return modelos;
+	};
+
+	const activo = () => {
+		const img = document.querySelector("#message-input-container :is(button, [aria-label^='Modelo']) img[src*='/models/model/profile/image']");
+		try {
+			return img ? new URL(img.getAttribute('src'), location.origin).searchParams.get('id') : null;
+		} catch {
+			return null;
+		}
+	};
+	const fijados = () => [...document.querySelectorAll('#pinned-models-list [data-id]')].map((e) => e.dataset.id);
+
+	// abre el selector de Open WebUI sin que se vea, hace algo y lo cierra
+	const conSelectorOculto = async (accion) => {
+		const boton = document.querySelector("#message-input-container button[aria-label^='Modelo selecc']");
+		if (!boton) return false;
+		document.documentElement.classList.add('sk-selector-oculto');
+		try {
+			boton.click();
+			let lista = null;
+			for (let i = 0; i < 25 && !lista; i++) {
+				await espera(40);
+				lista = document.querySelector("[role='listbox']:has(button[data-value])");
+			}
+			if (!lista) return false;
+			const hecho = await accion(lista);
+			// al elegir, Open WebUI la cierra solo (con su animación de salida): se espera sin verla. Si sigue abierta
+			// (por ejemplo después de fijar), se cierra con Escape.
+			const abierta = () => document.querySelector("[role='listbox']:has(button[data-value])");
+			for (let i = 0; i < 30 && abierta(); i++) {
+				await espera(60);
+				if (i === 4 && abierta()) {
+					document.activeElement?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+					abierta()?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
+				}
+			}
+			return hecho;
+		} finally {
+			setTimeout(() => document.documentElement.classList.remove('sk-selector-oculto'), 200);
+		}
+	};
+
+	const elegir = async (id) => {
+		const hecho = await conSelectorOculto(async (lista) => {
+			const op = [...lista.querySelectorAll('button[data-value]')].find((b) => b.dataset.value === id);
+			if (!op) return false;
+			op.click();
+			return true;
+		});
+		if (!hecho && !document.querySelector('#message-input-container')) location.href = `/?model=${encodeURIComponent(id)}`;
+		cerrar();
+	};
+
+	const fijar = async (id) => {
+		await conSelectorOculto(async (lista) => {
+			const op = [...lista.querySelectorAll('button[data-value]')].find((b) => b.dataset.value === id);
+			// el "Más Opciones" de ese mismo renglón (Open WebUI lo pone dentro del botón del modelo)
+			const mas = op?.querySelector("button[aria-label='Más Opciones'], button[aria-label='More Options']");
+			if (!mas) return false;
+			mas.click();
+			for (let i = 0; i < 25; i++) {
+				await espera(40);
+				const item = [...document.querySelectorAll("[role='menu'] :is(button, [role='menuitem'])")].find((b) =>
+					/panel lateral|barra lateral|sidebar/i.test(b.textContent)
+				);
+				if (item) {
+					item.click();
+					return true;
+				}
+			}
+			return false;
+		});
+		setTimeout(pintar, 300);
+	};
+
+	const renglon = (m, esActivo, fijado) => {
+		const c = window.skColorModelo?.(m.id);
+		const color = c ? `hsl(${c.m})` : '#52525b';
+		const imagen = m.foto
+			? `<img alt="" src="${avatar(m.id)}">`
+			: `<span class="sk-sel-letra">${esc((m.nombre.match(/[a-z0-9]/i) || ['?'])[0].toUpperCase())}</span>`;
+		const sub = esActivo ? 'Activo' : fijado && m.tipo === 'Personaje' ? '' : m.tipo;
+		return `<div class="sk-sel-fila${esActivo ? ' sk-activo' : ''}${m.apagado ? ' sk-apagado' : ''}" role="option" aria-selected="${esActivo}" data-id="${esc(m.id)}" tabindex="${m.apagado ? -1 : 0}" style="--sk-sel-color:${color}">
+			${imagen}
+			<span class="sk-sel-texto"><b>${esc(m.nombre)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</span>
+			<button type="button" class="sk-sel-fijar${fijado ? ' sk-fijado' : ''}" data-fijar="${esc(m.id)}" aria-label="${fijado ? 'Quitar de fijados' : 'Fijar en la barra'}: ${esc(m.nombre)}" title="${fijado ? 'Quitar de fijados' : 'Fijar en la barra'}">${svg(CHINCHETA, 14, fijado ? ' fill="currentColor"' : '')}</button>
+			<span class="sk-sel-marca" aria-hidden="true">${esActivo ? svg('<path d="M5 12l5 5 9-10"/>', 16) : ''}</span>
+		</div>`;
+	};
+
+	const pintar = () => {
+		if (!panel || !modelos) return;
+		const q = panel.querySelector('input').value.trim().toLowerCase();
+		const act = activo();
+		const fij = fijados();
+		const visibles = modelos.filter((m) => !q || m.nombre.toLowerCase().includes(q) || m.id.toLowerCase().includes(q));
+		const arriba = fij.map((id) => visibles.find((m) => m.id === id)).filter(Boolean);
+		const abajo = visibles.filter((m) => !fij.includes(m.id));
+		const seccion = (titulo, lista) =>
+			lista.length ? `<div class="sk-sel-rotulo"><span>${titulo}</span><span>${lista.length}</span></div>${lista.map((m) => renglon(m, m.id === act, fij.includes(m.id))).join('')}` : '';
+		panel.querySelector('.sk-sel-lista').innerHTML =
+			seccion('Fijados', arriba) + seccion('Todos los modelos', abajo) || '<div class="sk-sel-vacio">Ningún modelo coincide</div>';
+	};
+
+	const cerrar = () => {
+		if (!panel) return;
+		panel.remove();
+		panel = null;
+		ancla?.setAttribute('aria-expanded', 'false');
+		document.removeEventListener('pointerdown', fuera, true);
+		document.removeEventListener('keydown', teclas, true);
+	};
+	const fuera = (e) => {
+		if (document.documentElement.classList.contains('sk-selector-oculto')) return;
+		if (panel && !panel.contains(e.target) && !ancla?.contains(e.target)) cerrar();
+	};
+	const teclas = (e) => {
+		// el Escape que mandamos al selector oculto de Open WebUI no cierra el panel
+		if (!e.isTrusted) return;
+		if (e.key === 'Escape' && panel) {
+			e.stopPropagation();
+			cerrar();
+			ancla?.focus();
+		}
+	};
+
+	const abrir = async (boton) => {
+		ancla = boton;
+		const lista = await cargar();
+		panel = document.createElement('div');
+		panel.className = 'sk-selector';
+		panel.setAttribute('role', 'dialog');
+		panel.setAttribute('aria-label', 'Elegir modelo');
+		panel.innerHTML = `
+			<label class="sk-sel-buscar">${svg('<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>', 15)}<input type="search" placeholder="Buscar entre ${lista.length} modelos" aria-label="Buscar modelo"></label>
+			<div class="sk-sel-lista" role="listbox" aria-label="Modelos"></div>`;
+		panel.querySelector('input').addEventListener('input', pintar);
+		panel.addEventListener('click', (e) => {
+			const pin = e.target.closest('[data-fijar]');
+			if (pin) {
+				e.stopPropagation();
+				fijar(pin.dataset.fijar);
+				return;
+			}
+			const fila = e.target.closest('.sk-sel-fila:not(.sk-apagado)');
+			if (fila) elegir(fila.dataset.id);
+		});
+		panel.addEventListener('keydown', (e) => {
+			const fila = e.target.closest?.('.sk-sel-fila');
+			if (fila && (e.key === 'Enter' || e.key === ' ') && e.target === fila) {
+				e.preventDefault();
+				if (!fila.classList.contains('sk-apagado')) elegir(fila.dataset.id);
+			}
+			if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+				const filas = [...panel.querySelectorAll('.sk-sel-fila:not(.sk-apagado)')];
+				const i = filas.indexOf(document.activeElement);
+				const sig = filas[(i + (e.key === 'ArrowDown' ? 1 : -1) + filas.length) % filas.length];
+				if (sig) {
+					e.preventDefault();
+					sig.focus();
+				}
+			}
+		});
+		const extra = boton.closest('.sk-barra-extra');
+		(extra?.parentElement || document.body).appendChild(panel);
+		const r = boton.getBoundingClientRect();
+		const caja = panel.parentElement.getBoundingClientRect();
+		const arriba = r.bottom - caja.top + 6;
+		panel.style.top = `${arriba}px`;
+		panel.style.maxHeight = `${Math.max(240, caja.height - arriba - 80)}px`;
+		firma = `${activo()}|${fijados().join(',')}`;
+		boton.setAttribute('aria-expanded', 'true');
+		pintar();
+		panel.querySelector('input').focus({ preventScroll: true });
+		document.addEventListener('pointerdown', fuera, true);
+		document.addEventListener('keydown', teclas, true);
+	};
+
+	window.skSelectorModelo = {
+		alternar: (boton) => (panel ? cerrar() : abrir(boton))
+	};
+
+	// si cambia la lista de fijados o el modelo activo con el panel abierto, se vuelve a pintar (solo entonces, para no
+	// entrar en un ciclo con el propio panel)
+	let firma = '';
+	let pendiente = false;
+	skVigilar(() => {
+		if (!panel || pendiente) return;
+		pendiente = true;
+		requestAnimationFrame(() => {
+			pendiente = false;
+			const f = `${activo()}|${fijados().join(',')}`;
+			if (f !== firma) {
+				firma = f;
+				pintar();
+			}
+		});
+	}, { childList: true, subtree: true, attributes: true, attributeFilter: ['src'] });
 })();
