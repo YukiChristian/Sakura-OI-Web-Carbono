@@ -1,10 +1,34 @@
 /*
- * Carbono 0.95.1 — comportamiento del tema. El lanzador lo sirve en /static/loader.js
+ * Carbono 0.95.2 — comportamiento del tema. El lanzador lo sirve en /static/loader.js
  * (que Open WebUI carga en cada página) mientras exista carbono/ACTIVO.
  *
  * Barras de desplazamiento que solo aparecen mientras haces scroll: carbono.css las deja
  * transparentes y aquí se marca con .sk-scrolling el elemento que se está desplazando.
  */
+/*
+ * Sin transiciones mientras carga: el tema se aplica justo después de que Open WebUI pinta la página, y los botones con
+ * transición (Nuevo Chat, píldoras, tarjeta del modelo…) se veían "cargar" con un fundido de su color de Open WebUI al
+ * del tema. Hasta que la barra queda montada (o 3 s como mucho) las transiciones van apagadas y todo sale ya listo.
+ */
+(() => {
+	const hoja = document.createElement('style');
+	hoja.id = 'sk-sin-transicion';
+	hoja.textContent = '*,*::before,*::after{transition:none!important}';
+	(document.head || document.documentElement).appendChild(hoja);
+	const inicio = performance.now();
+	const quitar = () => requestAnimationFrame(() => requestAnimationFrame(() => hoja.remove()));
+	const esperar = () => {
+		// con la barra a la vista se espera a que el tema la arme; sin barra (teléfono), a que aparezca el chat
+		const barra = document.querySelector('#sidebar');
+		const conBarra = barra && barra.getBoundingClientRect().width > 0;
+		const lista = conBarra
+			? barra.querySelector('.sk-barra-extra, .sk-chats-envoltura')
+			: document.querySelector('#chat-input, #messages-container, main');
+		if (lista || performance.now() - inicio > 3000) setTimeout(quitar, 150);
+		else requestAnimationFrame(esperar);
+	};
+	requestAnimationFrame(esperar);
+})();
 /*
  * Observador compartido (optimización): antes cada módulo tenía su propio MutationObserver sobre toda la página (26),
  * así que cada cambio de Open WebUI —por ejemplo, cada trozo de texto mientras responde— generaba 26 registros y
@@ -881,7 +905,15 @@ function skVisible(selector) {
 			cerrar(); // la barra se abrió o cambió a teléfono
 			return;
 		}
-		if (rail.querySelector('.sk-chats-boton')) return;
+		// los modelos y "Chats" van después del último acceso fijado (Notas, Espacio, Agenda…), no a media fila: así
+		// Calendario queda con su grupo aunque se fije después
+		const fijados = [...rail.querySelectorAll("a[href='/notes'], a[href='/workspace'], a[href='/calendar'], a[href='/automations'], a[href^='/playground']")];
+		const ultimo = (fijados.at(-1) || rail.querySelector("a[href='/workspace']"))?.parentElement;
+		const existente = rail.querySelector('.sk-chats-envoltura');
+		if (existente) {
+			if (ultimo && ultimo.nextElementSibling !== existente) ultimo.after(existente);
+			return;
+		}
 		if (!modelosFijados) {
 			if (localStorage.token && modelosFijados === null) {
 				modelosFijados = undefined;
@@ -889,7 +921,6 @@ function skVisible(selector) {
 			}
 			return;
 		}
-		const ultimo = rail.querySelector("a[href='/workspace']")?.closest('.flex')?.parentElement;
 		if (!ultimo?.parentElement) return;
 		const envoltura = document.createElement('div');
 		envoltura.className = 'sk-chats-envoltura';
@@ -2162,6 +2193,7 @@ function skVisible(selector) {
 			const panelVoz = boton.closest("[role='tabpanel']");
 			const panelChat = document.getElementById('chat-panel-main-chat-view');
 			const raizPaneles = panelChat?.parentElement;
+			if (panelVoz && !panelVoz.hasAttribute('data-sk-panel-voz')) panelVoz.setAttribute('data-sk-panel-voz', '');
 			if (panelVoz && raizPaneles) {
 				const l = panelVoz.style.left || '0%';
 				const w = panelVoz.style.width || '100%';
@@ -3463,11 +3495,14 @@ function skVisible(selector) {
 	};
 	const colores = leer(CLAVE_COLORES); // id del modelo → { m, oscuro, tinte }
 	const chatModelo = leer(CLAVE_CHATS); // id del chat → id del modelo
-	const nombres = {}; // id del modelo → nombre
+	// el último modelo activo, los fijados y los nombres se recuerdan: al recargar, la tarjeta "Modelo activo" y la fila
+	// de fijados salen completas desde el primer cuadro en lugar de aparecer vacías y rellenarse un instante después
+	const CLAVE_ULTIMO = 'sk-barra-ultimo';
+	const ultimo = leer(CLAVE_ULTIMO); // { activo, fijados: [ids] }
+	const nombres = leer('sk-modelo-nombres'); // id del modelo → nombre
 	const calculando = new Set();
 	const pidiendo = new Set();
 	let pendiente = false;
-	let activo = null;
 	const avatar = (id) => `/api/v1/models/model/profile/image?id=${encodeURIComponent(id)}`;
 	const headers = () => ({ Authorization: `Bearer ${localStorage.token || ''}` });
 	const ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
@@ -3518,6 +3553,7 @@ function skVisible(selector) {
 		.then((r) => (r.ok ? r.json() : null))
 		.then((d) => {
 			for (const m of Array.isArray(d) ? d : d?.items || d?.data || []) nombres[m.id] = m.name;
+			guardar('sk-modelo-nombres', nombres);
 			programar();
 		})
 		.catch(() => {});
@@ -3546,7 +3582,7 @@ function skVisible(selector) {
 		const chat = (location.pathname.match(/\/c\/([^/?#]+)/) || [])[1];
 		if (chat && chatModelo[chat]) return chatModelo[chat];
 		const bienvenida = document.querySelector(".sk-bienvenida-avatar img[src*='/models/model/profile/image']");
-		return (bienvenida && idDeSrc(bienvenida.getAttribute('src'))) || document.querySelector('#pinned-models-list [data-id]')?.dataset.id || null;
+		return (bienvenida && idDeSrc(bienvenida.getAttribute('src'))) || document.querySelector('#pinned-models-list [data-id]')?.dataset.id || ultimo.activo || null;
 	};
 
 	const nombreDe = (id) =>
@@ -3618,7 +3654,6 @@ function skVisible(selector) {
 			</button>
 			<div class="sk-barra-fijados" role="group" aria-label="Modelos fijados">
 				<span class="sk-barra-avatares"></span>
-				<a class="sk-barra-fijar" href="/workspace/models" aria-label="Fijar otro modelo" title="Fijar otro modelo">${svg('<path d="M12 5v14M5 12h14"/>', 15)}</a>
 				<span class="sk-barra-fijados-texto">Modelos fijados</span>
 			</div>`;
 		// abre el selector de modelo de la caja de mensaje; sin caja (otra página), un chat nuevo
@@ -3631,7 +3666,20 @@ function skVisible(selector) {
 			if (!b) return;
 			document.querySelector(`#pinned-models-list [data-id="${CSS.escape(b.dataset.modelo)}"] a`)?.click();
 		});
+		// la fila de fijados vive dentro de la lista que se desliza (se va con Nuevo Chat y las píldoras); se guarda aquí
+		// para encontrarla aunque ya no sea hija de la tarjeta
+		t.skFijados = t.querySelector('.sk-barra-fijados');
 		return t;
+	};
+
+	// al deslizar la lista, un degradado arriba desvanece los chats en lugar de cortarlos de golpe bajo la tarjeta. Se
+	// enciende cuando Nuevo Chat ya pasó del todo: desvanecer ese botón negro (blanco en oscuro) sobre el panel claro se
+	// veía como un brillo; así el botón se oculta limpio y lo que se desvanece son las píldoras y los chats.
+	const marcarDesplazada = (lista) => {
+		const boton = lista.querySelector('#sidebar-new-chat-button');
+		const limite = boton ? boton.getBoundingClientRect().bottom - lista.getBoundingClientRect().top + lista.scrollTop : 2;
+		const arriba = lista.scrollTop > 2 && lista.scrollTop >= limite;
+		if (lista.classList.contains('sk-lista-desplazada') !== arriba) lista.classList.toggle('sk-lista-desplazada', arriba);
 	};
 
 	const montar = () => {
@@ -3642,6 +3690,18 @@ function skVisible(selector) {
 		if (!extra) {
 			extra = tarjeta();
 			cabeza.after(extra);
+		}
+		const fijados = extra.skFijados;
+		const lista = raiz.querySelector(':scope > .overflow-y-auto');
+		if (fijados && lista) {
+			if (lista.firstElementChild !== fijados) lista.prepend(fijados);
+			if (!lista.dataset.skDesvanecer) {
+				lista.dataset.skDesvanecer = '1';
+				lista.addEventListener('scroll', () => marcarDesplazada(lista), { passive: true });
+			}
+			marcarDesplazada(lista);
+		} else if (fijados && fijados.parentElement !== extra) {
+			extra.append(fijados);
 		}
 		return extra;
 	};
@@ -3683,9 +3743,36 @@ function skVisible(selector) {
 		// el CSS de la barra abierta se aplica solo con ella montada (la contraída tiene su propio diseño)
 		raizDoc.classList.toggle('sk-barra-c', !!extra);
 		if (extra && id) {
-			if (activo !== id) {
-				activo = id;
-				extra.querySelector('.sk-barra-modelo img').src = avatar(id);
+			// se compara con la propia imagen (no con una variable): en el teléfono la barra se desmonta al cerrarla y la
+			// tarjeta nueva llega sin foto aunque el modelo no haya cambiado
+			const foto = extra.querySelector('.sk-barra-modelo img');
+			if (foto.dataset.modelo !== id) {
+				foto.dataset.modelo = id;
+				// la foto recordada (144 px en WebP, nítida en pantallas 3x) sale al instante; la del servidor se pide por detrás y, si cambió, la
+				// reemplaza y se recuerda para la próxima vez
+				if (ultimo.fotoId === id && ultimo.foto) foto.src = ultimo.foto;
+				const real = new Image();
+				real.onload = () => {
+					if (foto.dataset.modelo !== id) return;
+					try {
+						const lienzo = document.createElement('canvas');
+						lienzo.width = lienzo.height = 144;
+						lienzo.getContext('2d').drawImage(real, 0, 0, 144, 144);
+						const datos = lienzo.toDataURL('image/webp', 0.85);
+						if (ultimo.foto !== datos || ultimo.fotoId !== id) {
+							ultimo.foto = datos;
+							ultimo.fotoId = id;
+							guardar(CLAVE_ULTIMO, ultimo);
+						}
+						if (foto.src !== datos) foto.src = datos;
+					} catch {
+						foto.src = real.src;
+					}
+				};
+				real.onerror = () => {
+					if (foto.dataset.modelo === id && !foto.getAttribute('src')) foto.src = avatar(id);
+				};
+				real.src = avatar(id);
 			}
 			const nombre = nombreDe(id);
 			const b = extra.querySelector('.sk-barra-modelo b');
@@ -3694,8 +3781,16 @@ function skVisible(selector) {
 			const etiqueta = `Modelo activo: ${nombre}. Cambiar de modelo`;
 			if (boton.getAttribute('aria-label') !== etiqueta) boton.setAttribute('aria-label', etiqueta);
 			// los demás modelos fijados
-			const fijados = [...document.querySelectorAll('#pinned-models-list [data-id]')].map((e) => e.dataset.id).filter((m) => m !== id);
-			const caja = extra.querySelector('.sk-barra-avatares');
+			// los fijados de Open WebUI en cuanto pinta su lista; mientras tanto, los recordados
+			const lista = document.querySelector('#pinned-models-list');
+			const todos = lista ? [...lista.querySelectorAll('[data-id]')].map((e) => e.dataset.id) : ultimo.fijados || [];
+			if (lista && (ultimo.activo !== id || String(ultimo.fijados) !== String(todos))) {
+				ultimo.activo = id;
+				ultimo.fijados = todos;
+				guardar(CLAVE_ULTIMO, ultimo);
+			}
+			const fijados = todos.filter((m) => m !== id);
+			const caja = (extra.skFijados || extra).querySelector('.sk-barra-avatares');
 			const firma = fijados.join('|');
 			if (caja.dataset.firma !== firma) {
 				caja.dataset.firma = firma;
@@ -4026,25 +4121,29 @@ function skVisible(selector) {
 		return `<div class="sk-met-tarjeta-titulo">Rendimiento de la respuesta</div><dl>${filas.filter((f) => !['pensar', 'herramientas', 'escribir'].includes(f.icono) || !reparto).map(fila2).join('')}</dl>${reparto}`;
 	};
 
-	// teléfono: lo principal en corto (tiempo, velocidad, contexto, memoria)
+	// teléfono: lo principal en corto (tiempo, velocidad, contexto, memoria). Cada dato lleva su clase: en la tarjeta del
+	// "Mensaje en vidrio" el teléfono deja solo el tiempo y el escritorio angosto, tiempo y contexto
 	const cortaHtml = (texto) => {
 		const items = [];
 		const k = (n) => `${Math.round(parseFloat(n))}K`;
 		for (const p of texto.split(' · ').map((s) => s.trim())) {
 			if (/^⏱/u.test(p)) {
 				const s = segundos(p);
-				items.push(`<i style="color:#52525b">${svg(ICONOS.reloj, 12)}</i>${s >= 10 ? Math.round(s) : s} s`);
-			} else if (/^🚀/u.test(p)) items.push(`<i style="color:#52525b">${svg(ICONOS.velocidad, 12)}</i>${esc(p.replace(/^🚀\s*/u, ''))}`);
+				items.push(['tiempo', `<i style="color:#71717a">${svg(ICONOS.reloj, 12)}</i>${s} s`]);
+			} else if (/^🚀/u.test(p)) items.push(['velocidad', `<i style="color:#52525b">${svg(ICONOS.velocidad, 12)}</i>${esc(p.replace(/^🚀\s*/u, ''))}`]);
 			else if (/^(🟢|🟡|🟠|🔴)/u.test(p)) {
 				const m = p.match(/([\d.]+)K\s*\/\s*([\d.]+)K/);
 				const pct = Math.min(100, parseFloat((p.match(/\((\d+(?:\.\d+)?)\s*%\)/) || [])[1] || 0));
 				const color = CONTEXTO[[...p][0]] || '#2b8a5a';
-				items.push(`<span class="sk-met-ctx"><span style="width:${pct}%;background:${color}"></span></span>${m ? `${k(m[1])}/${k(m[2])}` : ''}`);
-			} else if (/^💾/u.test(p)) items.push(`<i style="color:#14706a">${svg(ICONOS.memoria, 12)}</i>${esc(p.replace(/^💾\s*/u, ''))}`);
+				items.push(['contexto', `<span class="sk-met-ctx"><span style="width:${pct}%;background:${color}"></span></span>${m ? `${k(m[1])}/${k(m[2])}` : ''}`]);
+			} else if (/^💾/u.test(p)) items.push(['memoria', `<i style="color:#14706a">${svg(ICONOS.memoria, 12)}</i>${esc(p.replace(/^💾\s*/u, ''))}`]);
 		}
-		return items.join('<span class="sk-met-punto" aria-hidden="true">·</span>');
+		return items
+			.map(([tipo, h], n) => `<span class="sk-met-c sk-met-c-${tipo}">${n ? '<span class="sk-met-punto" aria-hidden="true">·</span>' : ''}${h}</span>`)
+			.join('');
 	};
 
+	const telefonoMetricas = window.matchMedia('(max-width: 767px)');
 	const metricas = () => {
 		document.querySelectorAll('.chat-assistant .status-description').forEach((d) => {
 			const texto = d.textContent.trim();
@@ -4055,25 +4154,60 @@ function skVisible(selector) {
 			const bloque = d.closest('div.relative.w-full');
 			if (!bloque) return;
 			if (!d.hasAttribute('data-sk-metricas')) d.setAttribute('data-sk-metricas', '');
-			let caja = bloque.previousElementSibling?.classList.contains('sk-metricas') ? bloque.previousElementSibling : null;
+			const raiz = d.closest('[id^="message-"]') || bloque.parentElement;
+			let caja = raiz.querySelector('.sk-metricas');
 			if (!caja) {
 				caja = document.createElement('div');
 				caja.className = 'sk-metricas';
 				const id = `sk-met-${Math.random().toString(36).slice(2, 9)}`;
 				caja.innerHTML = `<div class="sk-met-barra-datos"></div><span class="sk-met-corta"></span><button type="button" class="sk-met-detalle" aria-label="Ver rendimiento completo" title="Rendimiento de la respuesta" aria-expanded="false" aria-controls="${id}">${svg(ICONOS.grafica, 15)}</button><div class="sk-met-tarjeta" id="${id}" hidden></div>`;
+				// la tarjeta de detalle se guarda aparte: con el mensaje terminado sale de la caja y va debajo de la fila
+				caja.skTarjeta = caja.querySelector('.sk-met-tarjeta');
 				const detalle = caja.querySelector('.sk-met-detalle');
 				detalle.addEventListener('click', () => {
-					const tarjeta = caja.querySelector('.sk-met-tarjeta');
+					const tarjeta = caja.skTarjeta;
 					tarjeta.hidden = !tarjeta.hidden;
 					detalle.setAttribute('aria-expanded', String(!tarjeta.hidden));
 				});
 				bloque.before(caja);
 			}
+			// "Mensaje en vidrio": las métricas van en la fila de las acciones (en gris, sin caja) y el detalle se abre
+			// debajo, dentro de la misma tarjeta; mientras la respuesta se escribe (sin acciones todavía) quedan arriba
+			const fila = raiz.querySelector('.buttons');
+			if (fila?.parentElement) {
+				const pie = fila.parentElement;
+				if (!pie.classList.contains('sk-pie')) pie.classList.add('sk-pie');
+				if (fila.nextElementSibling !== caja) fila.after(caja);
+				if (caja.nextElementSibling !== caja.skTarjeta) caja.after(caja.skTarjeta);
+			}
 			if (caja.dataset.texto !== texto) {
 				caja.dataset.texto = texto;
 				caja.querySelector('.sk-met-barra-datos').innerHTML = metricasHtml(texto);
-				caja.querySelector('.sk-met-tarjeta').innerHTML = tarjetaHtml(texto);
+				caja.skTarjeta.innerHTML = tarjetaHtml(texto);
 				caja.querySelector('.sk-met-corta').innerHTML = cortaHtml(texto);
+			}
+			// en la fila de acciones, si la barra completa no cabe junto a los botones se compacta a tiempo y contexto
+			// en lugar de bajar de línea
+			if (fila?.parentElement) {
+				const barra = caja.querySelector('.sk-met-barra-datos');
+				// en el teléfono la tarjeta se ajusta a su contenido: el espacio que cuenta es el que podría llegar a
+				// ocupar (el ancho del mensaje menos el relleno de la tarjeta), no el que ocupa ahora
+				const mensaje = telefonoMetricas.matches ? fila.closest("[id^='message-']") : null;
+				const anchoPie = mensaje ? mensaje.clientWidth - 24 : fila.parentElement.clientWidth;
+				const libre = anchoPie - fila.offsetWidth - 10 - 34;
+				const ancho = caja.classList.contains('sk-met-compacta') ? Number(caja.dataset.anchoBarra || 0) : barra.scrollWidth;
+				if (!caja.classList.contains('sk-met-compacta')) caja.dataset.anchoBarra = String(ancho);
+				const compacta = ancho > libre;
+				if (caja.classList.contains('sk-met-compacta') !== compacta) caja.classList.toggle('sk-met-compacta', compacta);
+				// teléfono: si ni el tiempo cabe junto a las acciones, se quita y queda solo el botón de la gráfica
+				// (el tiempo sigue en el detalle)
+				const corta = caja.querySelector('.sk-met-corta');
+				const sinTiempoAntes = caja.classList.contains('sk-met-sin-tiempo');
+				const anchoCorta = sinTiempoAntes ? Number(caja.dataset.anchoCorta || 0) : corta.offsetWidth;
+				if (!sinTiempoAntes && anchoCorta) caja.dataset.anchoCorta = String(anchoCorta);
+				const libreTel = anchoPie - fila.offsetWidth - 6 - 24 - 4;
+				const sinTiempo = telefonoMetricas.matches && anchoCorta > libreTel;
+				if (sinTiempoAntes !== sinTiempo) caja.classList.toggle('sk-met-sin-tiempo', sinTiempo);
 			}
 		});
 	};
@@ -4115,9 +4249,20 @@ function skVisible(selector) {
 		// Open WebUI reescribe las clases de <html> al aplicar el tema: se vuelve a poner la vista elegida
 		aplicar();
 		// el conmutador va en la barra de pestañas del panel donde está el chat (con la vista dividida hay dos barras)
-		const chat = document.querySelector('#messages-container');
+		// el chat visible: sus mensajes o, en una pestaña "Nuevo Chat" todavía vacía (o con otra pestaña oculta detrás),
+		// su caja de mensaje; antes se tomaba el primer #messages-container aunque estuviera oculto y el conmutador
+		// desaparecía con dos chats abiertos
+		const chat = [...document.querySelectorAll("#messages-container, #message-input-container, [id^='side-chat-input-'][id$='-wrapper']")].find(
+			(e) => e.getBoundingClientRect().width > 0
+		);
 		const r = chat?.getBoundingClientRect();
 		const centro = r && r.width ? r.left + r.width / 2 : null;
+		// con el modo voz abierto en escritorio, su panel ocupa la derecha bajo la misma barra: el conmutador se queda
+		// del lado del chat, antes del panel de voz
+		const panelVoz = [...document.querySelectorAll("[role='tabpanel']:has(.sk-voz-boton)")].find((p) => {
+			const q = p.getBoundingClientRect();
+			return q.width > 0 && centro != null && q.left > centro && !p.closest(".modal[role='dialog']");
+		});
 		const barras = [...document.querySelectorAll("div.h-9:has(button[aria-label='Nueva pestaña'])")];
 		const suya =
 			centro == null
@@ -4134,8 +4279,15 @@ function skVisible(selector) {
 				barra.appendChild(c);
 			}
 			// barra mediana: solo los íconos, para dejar sitio a las pestañas
-			const iconos = barra.getBoundingClientRect().width < 1300;
+			const rb = barra.getBoundingClientRect();
+			const limite = panelVoz ? panelVoz.getBoundingClientRect().left - 8 : null;
+			const ancho = limite != null ? limite - rb.left : rb.width;
+			const iconos = ancho < 1300;
 			if (c.classList.contains('sk-vista-iconos') !== iconos) c.classList.toggle('sk-vista-iconos', iconos);
+			// se corre a la izquierda lo que haga falta para terminar antes del panel de voz
+			const margen = parseFloat(c.style.marginRight) || 0;
+			const nuevo = limite != null ? Math.max(0, Math.round(margen + c.getBoundingClientRect().right - limite)) : 0;
+			if (Math.abs(nuevo - margen) > 1) c.style.marginRight = nuevo ? `${nuevo}px` : '';
 			c.querySelectorAll('[data-vista]').forEach((b) => {
 				const v = String(b.dataset.vista === vista);
 				if (b.getAttribute('aria-checked') !== v) b.setAttribute('aria-checked', v);
@@ -4381,6 +4533,9 @@ function skVisible(selector) {
 		const conVoz = Boolean(telefono.matches && voz && voz.offsetParent);
 		if (dlg) {
 			if (dlg.classList.contains('sk-voz-movil') !== conVoz) dlg.classList.toggle('sk-voz-movil', conVoz);
+			// queda marcada mientras exista: al salir, el contenido de la llamada se va antes que la ventana y su fondo
+			// oscuro de Open WebUI se alcanzaba a ver (carbono.css lo quita en [data-sk-fue-voz])
+			if (conVoz && !dlg.hasAttribute('data-sk-fue-voz')) dlg.setAttribute('data-sk-fue-voz', '');
 			const columna = dlg.querySelector('#controls-container')?.parentElement;
 			let cab = columna?.querySelector(':scope > .sk-voz-cabeza');
 			if (conVoz && columna && !cab) {
@@ -4597,6 +4752,7 @@ function skVisible(selector) {
 		panel.setAttribute('role', 'dialog');
 		panel.setAttribute('aria-label', 'Elegir modelo');
 		panel.innerHTML = `
+			<div class="sk-sel-titulo">Elegir modelo</div>
 			<label class="sk-sel-buscar">${svg('<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>', 15)}<input type="search" placeholder="Buscar entre ${lista.length} modelos" aria-label="Buscar modelo"></label>
 			<div class="sk-sel-lista" role="listbox" aria-label="Modelos"></div>`;
 		panel.querySelector('input').addEventListener('input', pintar);
@@ -4661,4 +4817,969 @@ function skVisible(selector) {
 			}
 		});
 	}, { childList: true, subtree: true, attributes: true, attributeFilter: ['src'] });
+})();
+
+/*
+ * Íconos de modelos en WebP: Open WebUI ya convierte los PNG y JPG que subes como ícono de un modelo a WebP de 250 × 250,
+ * pero las WebP las guarda tal cual (para no romper las animadas), aunque pesen megas. Aquí, si la imagen elegida es
+ * una WebP fija (sin animación), antes de que Open WebUI la lea se pasa a PNG del mismo tamaño para que haga su
+ * recorte normal a WebP de 250 × 250. Las WebP y GIF animadas no se tocan.
+ */
+(() => {
+	const PAGINAS = /^\/(workspace\/models|admin\/settings\/models)/;
+	const ES_ICONO = "input[type='file'][accept='image/*']";
+	// una WebP animada lleva el bloque "ANIM" en su cabecera
+	const animada = async (archivo) => {
+		const cabeza = new Uint8Array(await archivo.slice(0, 64).arrayBuffer());
+		return new TextDecoder('latin1').decode(cabeza).includes('ANIM');
+	};
+	const aPng = async (archivo) => {
+		const mapa = await createImageBitmap(archivo);
+		const lienzo = document.createElement('canvas');
+		lienzo.width = mapa.width;
+		lienzo.height = mapa.height;
+		lienzo.getContext('2d').drawImage(mapa, 0, 0);
+		mapa.close?.();
+		const blob = await new Promise((listo) => lienzo.toBlob(listo, 'image/png'));
+		return new File([blob], archivo.name.replace(/\.webp$/i, '') + '.png', { type: 'image/png' });
+	};
+	document.addEventListener(
+		'change',
+		async (e) => {
+			const input = e.target;
+			if (!(input instanceof HTMLInputElement) || !input.matches(ES_ICONO) || !PAGINAS.test(location.pathname)) return;
+			if (input.dataset.skConvertido) {
+				delete input.dataset.skConvertido;
+				return;
+			}
+			const archivo = input.files?.[0];
+			if (!archivo || archivo.type !== 'image/webp') return;
+			e.stopImmediatePropagation();
+			let final = archivo;
+			try {
+				if (!(await animada(archivo))) final = await aPng(archivo);
+			} catch (error) {
+				console.error('[sakura] ícono del modelo', error);
+			}
+			const lista = new DataTransfer();
+			lista.items.add(final);
+			input.files = lista.files;
+			input.dataset.skConvertido = '1';
+			input.dispatchEvent(new Event('input', { bubbles: true }));
+			input.dispatchEvent(new Event('change', { bubbles: true }));
+		},
+		true
+	);
+})();
+
+/*
+ * Chat temporal activo: Open WebUI cambia el ícono de su botón a una burbuja con palomita. Se marca <html> con
+ * .sk-chat-temporal para la franja "Chat temporal · no se guarda en tu historial" (antes era html:has(...) en el CSS,
+ * que obligaba al navegador a revisar toda la página en cada cambio del chat).
+ */
+(() => {
+	const raiz = document.documentElement;
+	let pendiente = false;
+	const revisar = () => {
+		pendiente = false;
+		const activo = !!document.querySelector("#temporary-chat-button path[d^='M8 12L11 15']");
+		if (raiz.classList.contains('sk-chat-temporal') !== activo) raiz.classList.toggle('sk-chat-temporal', activo);
+	};
+	skVigilar(
+		() => {
+			if (pendiente) return;
+			pendiente = true;
+			requestAnimationFrame(revisar);
+		},
+		{ childList: true, subtree: true }
+	);
+	revisar();
+})();
+
+/*
+ * Botón "Modo de Voz" de la caja de mensaje como interruptor: con la llamada en curso, tocarlo otra vez la termina
+ * (Open WebUI no hacía nada). Mientras dura lleva un aro del color del modelo, aria-pressed y el título
+ * "Terminar modo voz".
+ */
+(() => {
+	const BOTON = ":is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) button:is([aria-label='Modo de Voz'], [aria-label='Voice mode'])";
+	const FIN = ":is(button[aria-label='Finalizar llamada'], button[aria-label='End call'])";
+	const finTab = () => document.querySelector(`.panel-tab ${FIN}`);
+	const enCurso = () => Boolean(finTab() || document.querySelector('.sk-voz-boton'));
+	let pendiente = false;
+
+	const marcar = () => {
+		pendiente = false;
+		const activo = enCurso();
+		document.querySelectorAll(BOTON).forEach((b) => {
+			if (b.classList.contains('sk-voz-en-curso') === activo) return;
+			b.classList.toggle('sk-voz-en-curso', activo);
+			b.setAttribute('aria-pressed', String(activo));
+			if (activo) {
+				if (!b.dataset.skTitulo) b.dataset.skTitulo = b.getAttribute('title') || '';
+				b.setAttribute('title', 'Terminar modo voz');
+			} else if (b.dataset.skTitulo !== undefined) {
+				b.setAttribute('title', b.dataset.skTitulo);
+			}
+		});
+	};
+
+	document.addEventListener(
+		'click',
+		(e) => {
+			const b = e.target.closest?.(BOTON);
+			if (!b || !enCurso()) return;
+			// la X de la pestaña Voz o, si no hay pestaña (cajón del teléfono), el botón Finalizar del modo voz
+			const fin = finTab() || document.querySelector(`.sk-voz-boton ~ * ${FIN}, [role='tabpanel'] ${FIN}, .modal ${FIN}`);
+			if (!fin) return;
+			e.preventDefault();
+			e.stopImmediatePropagation();
+			fin.click();
+		},
+		true
+	);
+
+	skVigilar(
+		() => {
+			if (pendiente) return;
+			pendiente = true;
+			requestAnimationFrame(marcar);
+		},
+		{ childList: true, subtree: true }
+	);
+	marcar();
+})();
+
+/*
+ * "Editar mensaje" (lienzos "Mensaje en vidrio · editar mensaje" y "Editar mensaje · escritorio y móvil"): mientras
+ * editas un mensaje tuyo, la tarjeta dice quién volverá a responder ("Lain volverá a responder desde aquí"), las
+ * respuestas que vienen después se atenúan con la nota "Esta respuesta se reemplazará al guardar" y la caja de
+ * mensaje de abajo se atenúa. <html> lleva .sk-editando mientras dura.
+ */
+(() => {
+	const raiz = document.documentElement;
+	let pendiente = false;
+	const revisar = () => {
+		pendiente = false;
+		const campo = document.querySelector("#messages-container textarea[id^='message-edit-']");
+		const mensaje = campo?.closest('.user-message');
+		const editando = Boolean(mensaje);
+		if (raiz.classList.contains('sk-editando') !== editando) raiz.classList.toggle('sk-editando', editando);
+		const marcados = new Set();
+		if (mensaje) {
+			const caja = campo.closest('.rounded-3xl') || campo.parentElement;
+			// las respuestas que vienen después de tu mensaje (hasta el siguiente mensaje tuyo)
+			const contenedor = mensaje.parentElement?.parentElement;
+			const hermanos = contenedor ? [...contenedor.children] : [];
+			const desde = hermanos.indexOf(mensaje.parentElement);
+			let quien = '';
+			for (const h of hermanos.slice(desde + 1)) {
+				const m = h.querySelector(':scope [id^="message-"]') || (h.id?.startsWith('message-') ? h : null);
+				if (!m) continue;
+				if (m.classList.contains('user-message')) break;
+				if (!quien) quien = m.querySelector('#response-message-model-name')?.textContent.trim() || '';
+				marcados.add(m);
+			}
+			const texto = quien ? `${quien} volverá a responder desde aquí` : 'Volverá a responder desde aquí';
+			// el CSS lo pinta en la fila de los botones con content: var(--sk-responde)
+			const valor = JSON.stringify(texto);
+			if (caja && caja.style.getPropertyValue('--sk-responde') !== valor) caja.style.setProperty('--sk-responde', valor);
+		}
+		document.querySelectorAll('.sk-se-reemplaza').forEach((m) => marcados.has(m) || m.classList.remove('sk-se-reemplaza', 'sk-se-reemplaza-nota'));
+		let primero = true;
+		marcados.forEach((m) => {
+			if (!m.classList.contains('sk-se-reemplaza')) m.classList.add('sk-se-reemplaza');
+			if (m.classList.contains('sk-se-reemplaza-nota') !== primero) m.classList.toggle('sk-se-reemplaza-nota', primero);
+			primero = false;
+		});
+	};
+	skVigilar(
+		() => {
+			if (pendiente) return;
+			pendiente = true;
+			requestAnimationFrame(revisar);
+		},
+		{ childList: true, subtree: true }
+	);
+})();
+
+/*
+ * Final del chat en el teléfono: si ya estás abajo del todo y sigues empujando hacia arriba, la lista se estira con
+ * resistencia (al principio sigue al dedo y cada vez cuesta más, hasta ~80 px) y al soltar vuelve despacio a su sitio
+ * (0.7 s, sin brincos); así se nota que no hay más. Se mueve la lista entera y no su contenido: mover el contenido le
+ * quitaba altura desplazable y al soltar el final del chat quedaba tapado por la caja de mensaje. Solo en el teléfono
+ * y sin la preferencia de reducir el movimiento.
+ */
+(() => {
+	const telefono = window.matchMedia('(max-width: 767px)');
+	const quieto = window.matchMedia('(prefers-reduced-motion: reduce)');
+	const LIMITE = 80;
+	let lista = null;
+	let base = null;
+	let tirando = false;
+
+	const alFinal = (sc) => sc.scrollTop + sc.clientHeight >= sc.scrollHeight - 2;
+	const mover = (d, suave) => {
+		lista.style.transition = suave ? 'transform 0.7s cubic-bezier(0.22, 1, 0.36, 1)' : 'none';
+		lista.style.transform = d ? `translateY(${-d.toFixed(1)}px)` : '';
+	};
+	const soltar = () => {
+		if (lista && tirando) {
+			mover(0, true);
+			const sc = lista;
+			setTimeout(() => {
+				if (!tirando && sc.style.transform === '') sc.style.transition = '';
+			}, 720);
+		}
+		tirando = false;
+		base = null;
+	};
+
+	document.addEventListener(
+		'touchstart',
+		(e) => {
+			if (tirando) soltar();
+			lista = telefono.matches && !quieto.matches ? e.target.closest?.('#messages-container') : null;
+			base = null;
+		},
+		{ passive: true }
+	);
+
+	document.addEventListener(
+		'touchmove',
+		(e) => {
+			if (!lista || e.touches.length !== 1) return;
+			const y = e.touches[0].clientY;
+			if (!alFinal(lista)) {
+				if (tirando) soltar();
+				return;
+			}
+			// la referencia es el punto donde se llegó al final, no donde empezó el gesto
+			if (base === null) base = y;
+			const empuje = base - y; // dedo hacia arriba = quieres seguir bajando
+			if (empuje <= 0) {
+				if (tirando) {
+					mover(0, false);
+					tirando = false;
+				}
+				base = Math.max(base, y);
+				return;
+			}
+			tirando = true;
+			// resistencia tipo goma: casi 1:2 al principio y cada vez más dura hasta el límite
+			const d = LIMITE * (1 - 1 / (1 + (empuje * 0.55) / LIMITE));
+			mover(d, false);
+		},
+		{ passive: true }
+	);
+
+	document.addEventListener('touchend', soltar, { passive: true });
+	document.addEventListener('touchcancel', soltar, { passive: true });
+})();
+
+/*
+ * Visor de imágenes (el de Open WebUI) con zoom que no se sale de la imagen:
+ *  - la X cierra al poner el dedo y el clic que el navegador manda al levantarlo caía en la imagen del chat de
+ *    atrás y la volvía a abrir; ahora ese clic se descarta;
+ *  - la librería de Open WebUI (panzoom) dejaba arrastrar la imagen fuera de la pantalla hasta perderla y alejarla por
+ *    debajo de su tamaño. El tema toma los gestos dentro del visor: pellizco o rueda para acercar (1× a 5×), arrastre
+ *    solo con zoom y siempre con la imagen cubriendo la pantalla (si es más chica que la pantalla, centrada), doble
+ *    toque o doble clic para acercar a 2.5× y volver.
+ */
+(() => {
+	const VISOR = ".modal[role='dialog'][aria-modal='true'].bg-black";
+	const MAX = 5;
+	const estados = new WeakMap(); // img → { s, tx, ty }
+	const punteros = new Map(); // pointerId → { x, y }
+	let gesto = null;
+	let ultimoToque = { t: 0, x: 0, y: 0 };
+
+	const enVisor = (e) => {
+		const modal = e.target?.closest?.(VISOR);
+		return modal && !e.target.closest('button') ? modal : null;
+	};
+	const imagen = (modal) => modal?.querySelector('img');
+	const estado = (img) => {
+		let s = estados.get(img);
+		if (!s) {
+			s = { s: 1, tx: 0, ty: 0 };
+			estados.set(img, s);
+		}
+		return s;
+	};
+
+	// tamaño dibujado de la imagen (object-fit contain / scale-down) y centro de su caja sin la transformación
+	const medidas = (img, st) => {
+		// se mide con la transformación que está pintada (no con la nueva que se está calculando)
+		const p = st.p || { s: 1, tx: 0, ty: 0 };
+		const r = img.getBoundingClientRect();
+		const bw = r.width / p.s;
+		const bh = r.height / p.s;
+		let dw = bw;
+		let dh = bh;
+		if (img.naturalWidth && img.naturalHeight) {
+			const ajuste = getComputedStyle(img).objectFit;
+			if (ajuste === 'contain' || ajuste === 'scale-down') {
+				let k = Math.min(bw / img.naturalWidth, bh / img.naturalHeight);
+				if (ajuste === 'scale-down') k = Math.min(k, 1);
+				dw = img.naturalWidth * k;
+				dh = img.naturalHeight * k;
+			}
+		}
+		return { cx: r.left + r.width / 2 - p.tx, cy: r.top + r.height / 2 - p.ty, dw, dh };
+	};
+
+	const limitar = (img, st) => {
+		st.s = Math.min(MAX, Math.max(1, st.s));
+		if (st.s === 1) {
+			st.tx = 0;
+			st.ty = 0;
+			return;
+		}
+		const { cx, cy, dw, dh } = medidas(img, st);
+		const eje = (t, c, d, v) => {
+			const ancho = d * st.s;
+			if (ancho <= v) return v / 2 - c; // más chica que la pantalla: centrada
+			return Math.min(ancho / 2 - c, Math.max(v - c - ancho / 2, t));
+		};
+		st.tx = eje(st.tx, cx, dw, window.innerWidth);
+		st.ty = eje(st.ty, cy, dh, window.innerHeight);
+	};
+
+	const pintar = (img, st, suave) => {
+		img.style.transformOrigin = '50% 50%';
+		img.style.transition = suave ? 'transform 0.25s ease' : 'none';
+		img.style.transform = st.s === 1 && !st.tx && !st.ty ? '' : `translate(${st.tx}px, ${st.ty}px) scale(${st.s})`;
+		st.p = { s: st.s, tx: st.tx, ty: st.ty };
+	};
+
+	// acercar o alejar alrededor de un punto de la pantalla
+	const zoomEn = (img, st, nuevo, px, py) => {
+		const { cx, cy } = medidas(img, st);
+		const qx = (px - cx - st.tx) / st.s;
+		const qy = (py - cy - st.ty) / st.s;
+		st.s = Math.min(MAX, Math.max(1, nuevo));
+		st.tx = px - cx - st.s * qx;
+		st.ty = py - cy - st.s * qy;
+		limitar(img, st);
+	};
+
+	// la librería de Open WebUI escucha ratón, toques, rueda y doble clic: dentro del visor no le llegan
+	for (const tipo of ['mousedown', 'mousemove', 'mouseup', 'touchstart', 'touchmove', 'touchend', 'dblclick', 'wheel']) {
+		window.addEventListener(
+			tipo,
+			(e) => {
+				const modal = enVisor(e);
+				if (!modal) return;
+				e.stopImmediatePropagation();
+				if (tipo === 'touchmove' || tipo === 'wheel') e.preventDefault();
+				const img = imagen(modal);
+				if (!img) return;
+				const st = estado(img);
+				if (tipo === 'wheel') {
+					zoomEn(img, st, st.s * Math.exp(-e.deltaY * 0.002), e.clientX, e.clientY);
+					pintar(img, st, false);
+				} else if (tipo === 'dblclick') {
+					zoomEn(img, st, st.s > 1.05 ? 1 : 2.5, e.clientX, e.clientY);
+					pintar(img, st, true);
+				}
+			},
+			{ capture: true, passive: false }
+		);
+	}
+
+	window.addEventListener(
+		'pointerdown',
+		(e) => {
+			const modal = e.target?.closest?.(VISOR);
+			if (!modal) return;
+			// la X del visor: descartar el clic que llega al levantar el dedo
+			const cerrar = modal.querySelector(':scope > div:first-child button');
+			if (cerrar && cerrar.contains(e.target)) {
+				const tragar = (ev) => {
+					ev.preventDefault();
+					ev.stopImmediatePropagation();
+				};
+				document.addEventListener('click', tragar, { capture: true, once: true });
+				setTimeout(() => document.removeEventListener('click', tragar, true), 700);
+				return;
+			}
+			if (e.target.closest('button')) return;
+			const img = imagen(modal);
+			if (!img) return;
+			punteros.set(e.pointerId, { x: e.clientX, y: e.clientY });
+			const st = estado(img);
+			const lista = [...punteros.values()];
+			if (lista.length === 2) {
+				const [a, b] = lista;
+				gesto = { img, tipo: 'pellizco', d0: Math.hypot(a.x - b.x, a.y - b.y) || 1, s0: st.s };
+			} else if (lista.length === 1) {
+				gesto = { img, tipo: 'arrastre', x: e.clientX, y: e.clientY, tx: st.tx, ty: st.ty };
+				// doble toque en el teléfono (el doble clic del navegador no llega con los toques)
+				if (e.pointerType === 'touch') {
+					const ahora = Date.now();
+					if (ahora - ultimoToque.t < 300 && Math.hypot(e.clientX - ultimoToque.x, e.clientY - ultimoToque.y) < 30) {
+						zoomEn(img, st, st.s > 1.05 ? 1 : 2.5, e.clientX, e.clientY);
+						pintar(img, st, true);
+						gesto = null;
+						ultimoToque = { t: 0, x: 0, y: 0 };
+						return;
+					}
+					ultimoToque = { t: ahora, x: e.clientX, y: e.clientY };
+				}
+			}
+		},
+		true
+	);
+
+	window.addEventListener(
+		'pointermove',
+		(e) => {
+			if (!gesto || !punteros.has(e.pointerId)) return;
+			punteros.set(e.pointerId, { x: e.clientX, y: e.clientY });
+			const { img } = gesto;
+			if (!img.isConnected) return;
+			const st = estado(img);
+			const lista = [...punteros.values()];
+			if (gesto.tipo === 'pellizco' && lista.length >= 2) {
+				const [a, b] = lista;
+				const d = Math.hypot(a.x - b.x, a.y - b.y) || 1;
+				zoomEn(img, st, gesto.s0 * (d / gesto.d0), (a.x + b.x) / 2, (a.y + b.y) / 2);
+				pintar(img, st, false);
+			} else if (gesto.tipo === 'arrastre' && st.s > 1) {
+				st.tx = gesto.tx + (e.clientX - gesto.x);
+				st.ty = gesto.ty + (e.clientY - gesto.y);
+				limitar(img, st);
+				pintar(img, st, false);
+			}
+		},
+		true
+	);
+
+	const fin = (e) => {
+		punteros.delete(e.pointerId);
+		if (!gesto) return;
+		const { img } = gesto;
+		const lista = [...punteros.values()];
+		if (lista.length === 1 && img.isConnected) {
+			// de pellizco a un dedo: sigue como arrastre desde donde quedó
+			const st = estado(img);
+			gesto = { img, tipo: 'arrastre', x: lista[0].x, y: lista[0].y, tx: st.tx, ty: st.ty };
+		} else if (!lista.length) {
+			gesto = null;
+		}
+	};
+	window.addEventListener('pointerup', fin, true);
+	window.addEventListener('pointercancel', fin, true);
+})();
+
+/*
+ * Saltos de línea en el chat: Open WebUI convierte cada salto suelto en <br> y el modelo los usa para empezar una idea
+ * nueva, que quedaba pegada al renglón de arriba. Chrome no deja dar margen a un <br>, así que detrás de cada uno va un
+ * span vacío (.sk-salto, 0.5em de alto en carbono.css). Si Open WebUI vuelve a pintar el párrafo y el span queda suelto,
+ * se quita.
+ */
+(() => {
+	const SALTOS = ':is(.chat-assistant, .user-message .chat-user) .markdown-prose p > br';
+	let pendiente = false;
+	const actualizar = () => {
+		pendiente = false;
+		const lista = document.getElementById('messages-container');
+		if (!lista) return;
+		for (const s of lista.querySelectorAll('.sk-salto')) {
+			if (s.previousSibling?.nodeName !== 'BR') s.remove();
+		}
+		for (const br of lista.querySelectorAll(SALTOS)) {
+			if (br.nextSibling?.classList?.contains('sk-salto')) continue;
+			const s = document.createElement('span');
+			s.className = 'sk-salto';
+			s.setAttribute('aria-hidden', 'true');
+			br.after(s);
+		}
+	};
+	skVigilar(() => {
+		if (pendiente) return;
+		pendiente = true;
+		requestAnimationFrame(actualizar);
+	});
+})();
+
+/*
+ * Teléfono: entrada de la barra lateral. Open WebUI tardaba en moverla (arma la lista de chats antes de deslizar) y la
+ * barra aparecía incompleta y se completaba por partes (modelo, fijados, lista) mientras se deslizaba. Ahora, al poner
+ * el dedo en "Abrir barra lateral":
+ *  1. sale al instante un panel con la forma de la barra (fondo, esquinas y sombra copiados del #sidebar), con el mismo
+ *     deslizamiento de 210 ms de Open WebUI; es una animación CSS de transform y se mueve fluida aunque la página esté
+ *     ocupada;
+ *  2. el toque normal abre la barra real, que se arma oculta (y deja pasar el toque al botón mientras tanto);
+ *  3. en cuanto el panel terminó y la barra real tiene sus piezas (o a lo más 150 ms después de abrirse), la barra
+ *     toma su lugar y su contenido aparece rápido (carbono.css, html[data-sk-barra='revela']).
+ * Después de la primera vez la barra queda armada aunque esté cerrada: entonces no hay panel ni espera, la barra misma
+ * se desliza con su contenido desde el toque (html[data-sk-barra='desliza']) y Open WebUI la da por abierta después.
+ * El panel y el velo se crean una vez y quedan ocultos; al tocar solo se cambian atributos data-* que ningún módulo
+ * vigila, así el toque no pone a trabajar al resto del tema.
+ */
+(() => {
+	const telefono = matchMedia('(max-width: 767px)');
+	const sinMovimiento = matchMedia('(prefers-reduced-motion: reduce)');
+	const ABRIR = "button[aria-label='Abrir Barra Lateral'], button[aria-label='Open Sidebar']";
+	const DESLIZA = 210;
+	const raiz = document.documentElement;
+	let panel = null;
+	let velo = null;
+	let activo = null;
+	let finRevela = 0;
+
+	const preparar = () => {
+		if (panel?.isConnected || !document.body) return;
+		velo = document.createElement('div');
+		velo.className = 'sk-barra-velo';
+		panel = document.createElement('div');
+		panel.className = 'sk-barra-fantasma';
+		panel.setAttribute('aria-hidden', 'true');
+		document.body.append(velo, panel);
+	};
+
+	// abierta y completa: con la tarjeta del modelo, los fijados y la lista de chats; si alguna pieza no llega (sin
+	// fijados, sin chats) se espera a lo más 150 ms desde que se abrió
+	const lista = () => {
+		const s = document.getElementById('sidebar');
+		if (!s || /translateX\(-100%\)/.test(s.getAttribute('style') || '')) return false;
+		activo.abierta ??= performance.now();
+		const completa = s.querySelector('.sk-barra-modelo') && s.querySelector('.sk-barra-fijados') && s.querySelector('#sidebar-chat-item');
+		return Boolean(completa) || performance.now() - activo.abierta > 150;
+	};
+
+	const apagar = () => {
+		panel.removeAttribute('data-sk-activo');
+		velo.removeAttribute('data-sk-activo');
+	};
+
+	// medidas de la barra abierta: la primera vez tras cargar la app la barra aún no existe y el panel las toma de aquí
+	// (antes salía más angosto y más corto que la barra final)
+	const CLAVE_MEDIDAS = 'sk-barra-medidas-2'; // -2: desde que la barra del teléfono es de pantalla completa
+	const guardarSombra = () => {
+		const s = document.getElementById('sidebar');
+		if (!s) return;
+		const cs = getComputedStyle(s);
+		const sombra = cs.boxShadow;
+		if (sombra && sombra !== 'none' && raiz.style.getPropertyValue('--sk-barra-sombra') !== sombra) raiz.style.setProperty('--sk-barra-sombra', sombra);
+		const r = s.getBoundingClientRect();
+		if (r.width < 100 || Math.abs(r.left - s.offsetLeft) > 1) return;
+		try {
+			localStorage.setItem(CLAVE_MEDIDAS, JSON.stringify({ l: r.left, t: r.top, w: r.width, h: r.height, vw: innerWidth, vh: innerHeight, fondo: cs.backgroundColor, radio: cs.borderRadius, sombra }));
+		} catch {}
+	};
+
+	const medidasGuardadas = () => {
+		try {
+			const m = JSON.parse(localStorage.getItem(CLAVE_MEDIDAS) || 'null');
+			return m && m.vw === innerWidth && Math.abs(m.vh - innerHeight) < 200 ? m : null;
+		} catch {
+			return null;
+		}
+	};
+
+	const revelar = () => {
+		activo = null;
+		requestAnimationFrame(() => window.skAlinearFijados?.());
+		setTimeout(guardarSombra, 500);
+		raiz.dataset.skBarra = 'revela';
+		apagar();
+		clearTimeout(finRevela);
+		finRevela = setTimeout(() => {
+			if (raiz.dataset.skBarra === 'revela') delete raiz.dataset.skBarra;
+		}, 400);
+	};
+
+	const retraer = () => {
+		activo = null;
+		delete raiz.dataset.skBarra;
+		if (panel.dataset.skActivo) panel.dataset.skActivo = 'sale';
+		velo.dataset.skActivo = 'sale';
+		setTimeout(() => {
+			if (!activo) apagar();
+		}, 200);
+	};
+
+	// modo directo: la barra ya estaba armada y se deslizó ella misma; termina cuando Open WebUI la da por abierta
+	const terminarDirecta = () => {
+		activo = null;
+		requestAnimationFrame(() => window.skAlinearFijados?.());
+		setTimeout(guardarSombra, 500);
+		delete raiz.dataset.skBarra;
+		velo.removeAttribute('data-sk-activo');
+	};
+
+	// el fondo oscuro de Open WebUI ya existe (lo crea un poco después de dar la barra por abierta): hasta entonces
+	// sigue el velo; quitarlo antes dejaba un instante sin fondo oscuro (parpadeo gris)
+	const fondoListo = () => {
+		const o = document.querySelector('div.fixed.z-40.bg-black');
+		if (o && getComputedStyle(o).display === 'none') return true; // teléfono: barra de pantalla completa, sin fondo oscuro
+		return Boolean(o) && parseFloat(getComputedStyle(o).opacity) >= 0.58; // ya terminó su propia entrada
+	};
+
+	const vigilar = () => {
+		if (!activo) return;
+		const t = performance.now() - activo.t0;
+		if (activo.directa) {
+			const s = document.getElementById('sidebar');
+			const abierta = s && !/translateX\(-100%\)/.test(s.getAttribute('style') || '');
+			if (t >= DESLIZA && abierta && fondoListo()) return terminarDirecta();
+			if (t > 3000) return abierta ? terminarDirecta() : retraer();
+		} else {
+			if (t >= DESLIZA && lista() && fondoListo()) return revelar();
+			if (t > 3000) return lista() ? revelar() : retraer();
+		}
+		requestAnimationFrame(vigilar);
+	};
+
+	document.addEventListener(
+		'pointerdown',
+		(e) => {
+			if (activo || !telefono.matches || sinMovimiento.matches || !e.isPrimary || e.button > 0) return;
+			const boton = e.target.closest?.(ABRIR);
+			if (!boton) return;
+			preparar();
+			const s = document.getElementById('sidebar');
+			// después de la primera vez la barra queda armada (oculta fuera de la pantalla): se desliza ella misma, con
+			// todo su contenido, desde el toque. La primera vez todavía no existe: sale el panel y la barra entra al
+			// estar completa.
+			const directa = Boolean(s?.querySelector('.sk-barra-modelo') && s.querySelector('#sidebar-chat-item'));
+			if (directa) {
+				velo.dataset.skActivo = 'entra';
+				raiz.dataset.skBarra = 'desliza';
+				activo = { t0: performance.now(), directa: true };
+			}
+			const cs = s ? getComputedStyle(s) : null;
+			const m = directa ? null : medidasGuardadas();
+			if (!directa) Object.assign(panel.style, {
+				left: `${m ? m.l : s ? s.offsetLeft : 8}px`,
+				top: `${m ? m.t : s ? s.offsetTop : 8}px`,
+				width: `${m ? m.w : s ? s.offsetWidth : Math.min(360, innerWidth - 44)}px`,
+				height: `${m ? m.h : s ? s.offsetHeight : innerHeight}px`,
+				background: m?.fondo || cs?.backgroundColor || 'var(--sk-sidebar)',
+				borderRadius: m?.radio || cs?.borderRadius || '20px',
+				boxShadow: m?.sombra || cs?.boxShadow || 'none'
+			});
+			if (!directa) {
+				panel.dataset.skActivo = 'entra';
+				velo.dataset.skActivo = 'entra';
+				raiz.dataset.skBarra = 'cargando';
+				activo = { t0: performance.now() };
+			}
+
+			// la barra la abre el toque normal de Open WebUI (abrirla desde aquí al poner el dedo fallaba la primera vez:
+			// Open WebUI cambia el botón a mitad del toque). Si el toque se cancela (era un desliz) el panel se retira.
+			const cancelar = (ev) => {
+				if (ev.pointerId === e.pointerId && activo) retraer();
+			};
+			window.addEventListener('pointercancel', cancelar, { capture: true, once: true });
+			setTimeout(() => window.removeEventListener('pointercancel', cancelar, true), 1500);
+			requestAnimationFrame(vigilar);
+		},
+		true
+	);
+
+	if (document.body) preparar();
+	else document.addEventListener('DOMContentLoaded', preparar, { once: true });
+})();
+
+/* Pantalla de llamada: al tocar "Modo de voz" se guarda el centro del botón para que la pantalla se abra en círculo
+   desde ahí, y se marca la entrada (html[data-sk-voz-entrada]) para la cascada de la cabecera, la foto y los botones. */
+(() => {
+	const BOTON = "button[aria-label='Modo de Voz'], button[aria-label='Voice mode']";
+	let fin = 0;
+	document.addEventListener(
+		'pointerdown',
+		(e) => {
+			const b = e.target.closest?.(BOTON);
+			if (!b) return;
+			const r = b.getBoundingClientRect();
+			const raiz = document.documentElement;
+			raiz.style.setProperty('--sk-voz-x', `${Math.round(r.left + r.width / 2)}px`);
+			raiz.style.setProperty('--sk-voz-y', `${Math.round(r.top + r.height / 2)}px`);
+			raiz.dataset.skVozEntrada = '';
+			clearTimeout(fin);
+			// la pantalla puede tardar en montarse (micrófono, conexión): la cascada espera hasta 2.5 s
+			fin = setTimeout(() => delete raiz.dataset.skVozEntrada, 2500);
+		},
+		true
+	);
+})();
+
+/* Bienvenida (chat nuevo): la foto, el nombre y "¿Cómo puedo ayudarte hoy?" aparecen quietos. Open WebUI los hace
+   entrar con un fundido (animaciones creadas desde JavaScript, que CSS no puede quitar): en cuanto empiezan se dan por
+   terminadas. Los pétalos son animaciones CSS y siguen igual. */
+(() => {
+	let hasta = 0;
+	let corriendo = false;
+	const finalizar = () => {
+		const b = document.querySelector('.sk-bienvenida');
+		if (!b) return;
+		for (const a of b.getAnimations({ subtree: true })) {
+			if (!(a instanceof CSSAnimation) && !(a instanceof CSSTransition)) a.finish();
+		}
+	};
+	const bucle = () => {
+		finalizar();
+		if (performance.now() < hasta) requestAnimationFrame(bucle);
+		else corriendo = false;
+	};
+	skVigilar(() => {
+		if (!document.querySelector('.sk-bienvenida')) return;
+		hasta = performance.now() + 900;
+		finalizar();
+		if (corriendo) return;
+		corriendo = true;
+		requestAnimationFrame(bucle);
+	});
+})();
+
+/*
+ * Teléfono: barra lateral del lienzo "Barra lateral móvil · diseño final". Arriba la identidad y tu cuenta (tu avatar
+ * abre el menú de tu cuenta), debajo "Buscar chats" y los accesos, en medio los chats y abajo, al alcance del pulgar,
+ * el modelo activo y "Nuevo chat". Los botones nuevos solo pasan el toque a los de Open WebUI y del tema (que quedan
+ * ocultos), así todo sigue funcionando igual: el modelo abre el selector del tema (en hoja inferior), "Nuevo chat" y
+ * "Buscar chats" tocan los de Open WebUI y el avatar abre el menú de usuario (también en hoja inferior).
+ * El diseño no tiene botón de cerrar: la barra se cierra deslizando a la izquierda (o al elegir un chat, como siempre).
+ */
+(() => {
+	const telefono = matchMedia('(max-width: 767px)');
+	const LAPIZ =
+		'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 20h4L19 9l-4-4L4 16z"/></svg>';
+	const FLECHA =
+		'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg>';
+	const LUPA =
+		'<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/></svg>';
+	let pendiente = false;
+
+	const tocar = (el) => {
+		if (!el) return;
+		el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerType: 'mouse' }));
+		el.click();
+	};
+
+	const crear = (tag, clase, html, etiqueta) => {
+		const e = document.createElement(tag);
+		e.className = clase;
+		if (tag === 'button') e.type = 'button';
+		if (etiqueta) e.setAttribute('aria-label', etiqueta);
+		e.innerHTML = html;
+		return e;
+	};
+
+	// "Fijados" alineado con "Carpetas": se mide dónde empieza el texto de Carpetas y se corrige el relleno de Fijados.
+	// Corre al cambiar la barra, al terminar de abrirse (carbono.js lo llama desde la entrada) y al cambiar el tamaño.
+	const alinearFijados = () => {
+		const s = document.getElementById('sidebar');
+		const carpetas = s && [...s.querySelectorAll('#sidebar-folders-button span')].find((e) => !e.children.length && e.textContent.trim());
+		const fijados = s?.querySelector('#sidebar-pinned-chats-button');
+		const texto = fijados?.querySelector(':scope > div:not(:has(svg))');
+		if (!carpetas || !texto || !carpetas.getClientRects().length || !texto.getClientRects().length) return;
+		const delta = Math.round(carpetas.getBoundingClientRect().left - texto.getBoundingClientRect().left);
+		if (!delta) return;
+		const actual = parseFloat(getComputedStyle(fijados).paddingLeft) || 0;
+		fijados.style.setProperty('padding-left', `${Math.max(0, actual + delta)}px`, 'important');
+	};
+	window.skAlinearFijados = alinearFijados;
+	addEventListener('resize', () => requestAnimationFrame(alinearFijados));
+
+	const montar = () => {
+		pendiente = false;
+		const s = document.getElementById('sidebar');
+		const caja = s?.firstElementChild;
+		if (!caja) return;
+
+		// tu cuenta en la cabecera
+		const cabeza = caja.querySelector(':scope > div.sidebar');
+		const disparador = s.querySelector(".sk-barra-usuario button[aria-haspopup='true']");
+		if (cabeza && disparador) {
+			let cuenta = cabeza.querySelector('.sk-barra-cuenta');
+			if (!cuenta) {
+				cuenta = crear('button', 'sk-barra-cuenta', '<img alt=""><i aria-hidden="true"></i>', 'Tu cuenta');
+				cuenta.addEventListener('click', (e) => {
+					e.stopPropagation();
+					tocar(s.querySelector(".sk-barra-usuario button[aria-haspopup='true']"));
+				});
+				const cerrar = cabeza.querySelector("button[aria-label='Cerrar Barra Lateral'], button[aria-label='Close Sidebar']");
+				(cerrar?.parentElement || cabeza).insertBefore(cuenta, cerrar || null);
+			}
+			const src = disparador.querySelector('img')?.getAttribute('src');
+			const img = cuenta.querySelector('img');
+			if (src && img.getAttribute('src') !== src) img.src = src;
+		}
+
+		// "Buscar chats" arriba, fijo (en el espacio de la tarjeta del modelo)
+		const extra = caja.querySelector(':scope > .sk-barra-extra');
+		if (extra && !extra.querySelector('.sk-barra-buscar')) {
+			const buscar = crear('button', 'sk-barra-buscar', `${LUPA}<span>Buscar chats</span><kbd>Ctrl K</kbd>`, 'Buscar chats');
+			buscar.addEventListener('click', () => tocar(document.getElementById('sidebar-search-button')));
+			extra.appendChild(buscar);
+		}
+
+		// abajo: modelo activo y "Nuevo chat"
+		let dock = caja.querySelector(':scope > .sk-barra-dock');
+		if (!dock) {
+			dock = crear(
+				'div',
+				'sk-barra-dock',
+				`<button type="button" class="sk-barra-pastilla" aria-haspopup="dialog"><img alt=""><b></b>${FLECHA}</button>` +
+					`<button type="button" class="sk-barra-nuevo">${LAPIZ}<span>Nuevo chat</span></button>`
+			);
+			const pastilla = dock.querySelector('.sk-barra-pastilla');
+			pastilla.addEventListener('click', (e) => {
+				e.stopPropagation();
+				window.skSelectorModelo?.alternar(pastilla);
+			});
+			dock.querySelector('.sk-barra-nuevo').addEventListener('click', () => document.getElementById('sidebar-new-chat-button')?.click());
+			caja.appendChild(dock);
+		} else if (dock !== caja.lastElementChild) caja.appendChild(dock);
+		alinearFijados();
+
+		const tarjeta = s.querySelector('.sk-barra-modelo');
+		if (tarjeta) {
+			const pastilla = dock.querySelector('.sk-barra-pastilla');
+			const nombre = tarjeta.querySelector('.sk-barra-modelo-texto b')?.textContent.trim() || '';
+			const foto = tarjeta.querySelector('img')?.getAttribute('src');
+			const img = pastilla.querySelector('img');
+			if (pastilla.querySelector('b').textContent !== nombre) {
+				pastilla.querySelector('b').textContent = nombre;
+				pastilla.setAttribute('aria-label', `Modelo activo: ${nombre}. Cambiar de modelo`);
+			}
+			if (foto && img.getAttribute('src') !== foto) img.src = foto;
+		}
+	};
+
+	skVigilar(() => {
+		if (pendiente || !document.getElementById('sidebar')) return;
+		pendiente = true;
+		requestAnimationFrame(montar);
+	});
+
+	// cerrar deslizando a la izquierda (teléfono): la barra sigue al dedo y al soltar termina de salir (o regresa si no
+	// se deslizó lo suficiente). Se mueve con la propiedad translate, que se suma al transform de Open WebUI.
+	let arrastre = null;
+	const BOTON_CERRAR = "#sidebar button[aria-label='Cerrar Barra Lateral'], #sidebar button[aria-label='Close Sidebar']";
+	document.addEventListener(
+		'touchstart',
+		(e) => {
+			const s = document.getElementById('sidebar');
+			arrastre = null;
+			if (!telefono.matches || !s?.contains(e.target) || e.touches.length !== 1) return;
+			if (/translateX\(-100%\)/.test(s.getAttribute('style') || '')) return;
+			if (e.target.closest?.('.sk-selector, [role="menu"], input, textarea')) return;
+			arrastre = { s, x: e.touches[0].clientX, y: e.touches[0].clientY, t: performance.now(), dx: 0, modo: null };
+		},
+		{ passive: true, capture: true }
+	);
+	document.addEventListener(
+		'touchmove',
+		(e) => {
+			const a = arrastre;
+			if (!a) return;
+			const dx = e.touches[0].clientX - a.x;
+			const dy = e.touches[0].clientY - a.y;
+			if (!a.modo && (Math.abs(dx) > 8 || Math.abs(dy) > 8)) a.modo = dx < 0 && Math.abs(dx) > Math.abs(dy) * 1.2 ? 'cerrar' : 'nada';
+			if (a.modo !== 'cerrar') return;
+			a.dx = Math.min(0, dx);
+			a.s.style.setProperty('translate', `${a.dx}px 0`);
+		},
+		{ passive: true, capture: true }
+	);
+	// la barra sale con una animación que el navegador mueve aparte (fluida aunque la página esté ocupada cargando el
+	// chat); cuando Open WebUI ya la cerró se quita. Si al final no se cerró, regresa a su lugar.
+	const salir = (s, desde = 0, alTerminar) => {
+		if (s.skSaliendo) return;
+		s.skSaliendo = true;
+		const anim = s.animate([{ translate: `${desde}px 0` }, { translate: '-105vw 0' }], {
+			duration: desde ? 180 : 230,
+			easing: 'cubic-bezier(0.4, 0, 1, 1)',
+			fill: 'forwards'
+		});
+		s.style.removeProperty('translate');
+		anim.onfinish = () => {
+			alTerminar?.();
+			// se suelta solo cuando Open WebUI ya la ocultó (o a los 2 s si no llegó a cerrarse)
+			const t0 = performance.now();
+			const revisar = () => {
+				const cerrada = /translateX\(-100%\)/.test(s.getAttribute('style') || '') && getComputedStyle(s).visibility === 'hidden';
+				if (cerrada || performance.now() - t0 > 2000) {
+					anim.cancel();
+					s.skSaliendo = false;
+				} else setTimeout(revisar, 80);
+			};
+			setTimeout(revisar, 80);
+		};
+	};
+
+	// tocar un chat, un acceso o "Nuevo chat" cierra la barra en el teléfono: la salida empieza en el mismo toque
+	document.addEventListener(
+		'click',
+		(e) => {
+			if (!telefono.matches || e.defaultPrevented || e.button > 0) return;
+			const s = document.getElementById('sidebar');
+			if (!s || /translateX\(-100%\)/.test(s.getAttribute('style') || '')) return;
+			const destino = e.target.closest?.('#sidebar a[href], .sk-barra-nuevo');
+			if (!destino || !s.contains(destino) || e.target.closest('#sidebar-chat-item-menu, [role="menu"]')) return;
+			salir(s);
+		},
+		true
+	);
+
+	const soltar = () => {
+		const a = arrastre;
+		arrastre = null;
+		if (!a || a.modo !== 'cerrar') return;
+		const rapido = a.dx / Math.max(1, performance.now() - a.t) < -0.5;
+		if (a.dx < -70 || rapido) {
+			salir(a.s, a.dx, () => document.querySelector(BOTON_CERRAR)?.click());
+		} else {
+			a.s.animate([{ translate: `${a.dx}px 0` }, { translate: '0 0' }], { duration: 200, easing: 'cubic-bezier(0.22, 1, 0.36, 1)' });
+			a.s.style.removeProperty('translate');
+		}
+	};
+	document.addEventListener('touchend', soltar, { passive: true, capture: true });
+	document.addEventListener('touchcancel', soltar, { passive: true, capture: true });
+})();
+
+/* Tu cuenta (teléfono, diseño final): "En línea · n sesión activa" bajo tu nombre, con el número de sesiones que
+   Open WebUI muestra en su globito */
+(() => {
+	let pendiente = false;
+	skVigilar(() => {
+		if (pendiente) return;
+		pendiente = true;
+		requestAnimationFrame(() => {
+			pendiente = false;
+			const fila = document.querySelector("[role='menu']:has(.user-menu-status) [role='menuitem']:has(img)");
+			const nombre = fila?.querySelector('div.truncate');
+			if (!nombre) return;
+			const n = parseInt(fila.querySelector('.bg-green-500 + span')?.textContent || '1', 10) || 1;
+			const texto = `En línea · ${n} ${n === 1 ? 'sesión activa' : 'sesiones activas'}`;
+			let estado = nombre.querySelector('.sk-cuenta-estado');
+			if (!estado) {
+				const n0 = nombre.textContent;
+				nombre.textContent = '';
+				const b = document.createElement('span');
+				b.textContent = n0.trim();
+				estado = document.createElement('span');
+				estado.className = 'sk-cuenta-estado';
+				nombre.append(b, estado);
+			}
+			if (estado.textContent !== texto) estado.textContent = texto;
+		});
+	});
+})();
+
+/* Escritorio: la barra abierta mide 320 px como en el lienzo "Barra escritorio · diseño final". Se aplica una sola vez
+   (después puedes arrastrar el borde y Open WebUI guarda tu ancho como siempre). */
+(() => {
+	try {
+		if (matchMedia('(min-width: 768px)').matches && !localStorage.getItem('sk-barra-320')) {
+			localStorage.setItem('sidebarWidth', '320');
+			document.documentElement.style.setProperty('--sidebar-width', '320px');
+			localStorage.setItem('sk-barra-320', '1');
+		}
+	} catch {}
 })();

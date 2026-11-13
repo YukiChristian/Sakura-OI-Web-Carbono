@@ -1,5 +1,5 @@
 /*
- * Carbono 0.95.1 — tema para Open WebUI (probado con 0.13.3).
+ * Carbono 0.95.2 — tema para Open WebUI (probado con 0.13.3).
  * https://github.com/YukiChristian/Sakura-OI-Web-Carbono
  *
  * El lanzador lo sirve en /static/custom.css mientras exista carbono/ACTIVO (ver README).
@@ -506,7 +506,7 @@ div:has(> input#model-search-input) svg {
 	color: var(--sk-ink);
 }
 
-#model-selector-list [role='option'] :is(div, span):not(:has(*)) {
+#model-selector-list [role='option'] :is(div, span):is([role='option'] *):not(:has(> *)) {
 	font-size: 16px;
 }
 
@@ -570,7 +570,7 @@ div:has(> input#model-search-input) svg {
 @media (min-width: 768px) {
 	#messages-container .markdown-prose,
 	#messages-container .markdown-prose :is(p, li, td, th, blockquote),
-	#messages-container .user-message .rounded-3xl :is(p, div, span):not(:has(*)) {
+	#messages-container .user-message .rounded-3xl :is(p, div, span):is(.user-message *):not(:has(> *)) {
 		font-size: 16px;
 		line-height: 26px;
 	}
@@ -2547,7 +2547,7 @@ div:has(> #workspace-container) > nav a:has(> span + span) > span + span {
 		line-height: 20px;
 	}
 
-	#model-selector-list [role='option'] :is(div, span):not(:has(*)) {
+	#model-selector-list [role='option'] :is(div, span):is([role='option'] *):not(:has(> *)) {
 		font-size: 14px;
 	}
 
@@ -2656,7 +2656,7 @@ input#model-search-input:focus-visible {
 		line-height: 18px;
 	}
 
-	#model-selector-list [role='option'] :is(div, span):not(:has(*)) {
+	#model-selector-list [role='option'] :is(div, span):is([role='option'] *):not(:has(> *)) {
 		font-size: 13px;
 	}
 
@@ -6462,7 +6462,7 @@ div.items-center.justify-center.h-full > div.pb-16 > div.flex.justify-center > s
 		line-height: 20px;
 	}
 
-	#model-selector-list [role='option'] :is(div, span):not(:has(*)) {
+	#model-selector-list [role='option'] :is(div, span):is([role='option'] *):not(:has(> *)) {
 		font-size: 14.5px;
 	}
 
@@ -8641,9 +8641,9 @@ div.flex-col:has(> [role='status'][aria-live]:not([data-sonner-toast]) > button)
 	white-space: nowrap;
 }
 
+/* apagado: el botón gris ya lo dice, sin etiqueta */
 .sk-voz-razonar.sk-apagada .sk-voz-razonar-nivel {
-	color: var(--sk-ink-muted);
-	box-shadow: 0 0 0 1.5px var(--sk-ins-apagado);
+	display: none;
 }
 
 .sk-voz-razonar-nivel:empty {
@@ -10283,7 +10283,7 @@ html.dark [role='dialog']:has(input[aria-label='Nombre del control']) form > div
 	gap: 6px;
 }
 
-#messages-container div.rounded-3xl:has(> div > textarea[id^='message-edit-']) > div:last-child > div:last-child > * + * {
+#messages-container div.rounded-3xl:has(> div > textarea[id^='message-edit-']) > div:last-child > div:last-child > :is(div.rounded-3xl > div:last-child > div:last-child > *) + * {
 	margin-left: 0 !important;
 }
 
@@ -11749,7 +11749,7 @@ html.dark .sk-img-prompt > div {
 		color: var(--sk-ink);
 	}
 
-	[role='menu']:has(.user-menu-status) [role='menuitem'] :is(div, span):not(:has(*)) {
+	[role='menu']:has(.user-menu-status) [role='menuitem'] :is(div, span):is([role='menuitem'] *):not(:has(> *)) {
 		font-size: 16px !important;
 		line-height: 22px !important;
 	}
@@ -11788,7 +11788,7 @@ html.dark .sk-img-prompt > div {
 		font-weight: 500;
 	}
 
-	[role='menu']:has(.user-menu-status) .app-dropdown-menu > div:first-child [role='menuitem'] > div:last-child * {
+	[role='menu']:has(.user-menu-status) .app-dropdown-menu > div:first-child [role='menuitem'] > div:last-child :is([role='menuitem'] *) {
 		font-size: 13px !important;
 	}
 
@@ -13334,8 +13334,10 @@ html.sk-barra-c #sidebar-chat-item > a > div.shrink-0.self-center.pr-2 {
 	padding: 0 !important;
 }
 
-/* pensando: anillo que gira alrededor del avatar en el color del modelo y tres puntos que saltan */
-html.sk-barra-c #sidebar-chat-item:has(svg.animate-spin) > a::after {
+/* pensando: anillo que gira alrededor del avatar en el color del modelo y tres puntos que saltan. Desde Open WebUI
+   0.13.3 su indicador es el componente Spinner (div.size-3 > div.flex > svg con el trazo .spinner_ajPY), ya no un
+   svg.animate-spin: se reconoce por ese trazo y el div.flex hace de punto del medio */
+html.sk-barra-c #sidebar-chat-item:has(.spinner_ajPY) > a::after {
 	content: '';
 	position: absolute;
 	top: calc(50% - 13px);
@@ -13349,12 +13351,12 @@ html.sk-barra-c #sidebar-chat-item:has(svg.animate-spin) > a::after {
 	animation: sk-anillo 1.1s linear infinite;
 }
 
-html.sk-barra-c #sidebar-chat-item:has(:is(svg.animate-spin, .bg-sky-500)) > a div[dir='auto'],
+html.sk-barra-c #sidebar-chat-item:has(:is(.spinner_ajPY, .bg-sky-500)) > a div[dir='auto'],
 html.sk-barra-c #sidebar-chat-item.selected > a div[dir='auto'] {
 	font-weight: 600;
 }
 
-html.sk-barra-c #sidebar-chat-item a > div.pr-2 > div:has(> svg.animate-spin) {
+html.sk-barra-c #sidebar-chat-item a > div.pr-2 > div:has(.spinner_ajPY) {
 	display: inline-flex;
 	align-items: center;
 	gap: 3px;
@@ -13366,9 +13368,9 @@ html.sk-barra-c #sidebar-chat-item a > div.pr-2 > div:has(> svg.animate-spin) {
 	color: hsl(var(--sk-m));
 }
 
-html.sk-barra-c #sidebar-chat-item a > div.pr-2 > div:has(> svg.animate-spin)::before,
-html.sk-barra-c #sidebar-chat-item a > div.pr-2 > div:has(> svg.animate-spin)::after,
-html.sk-barra-c #sidebar-chat-item a > div.pr-2 svg.animate-spin {
+html.sk-barra-c #sidebar-chat-item a > div.pr-2 > div:has(.spinner_ajPY)::before,
+html.sk-barra-c #sidebar-chat-item a > div.pr-2 > div:has(.spinner_ajPY)::after,
+html.sk-barra-c #sidebar-chat-item a > div.pr-2 > div:has(.spinner_ajPY) > div {
 	content: '';
 	display: block;
 	width: 4px !important;
@@ -13378,15 +13380,15 @@ html.sk-barra-c #sidebar-chat-item a > div.pr-2 svg.animate-spin {
 	animation: sk-punto 1.2s ease-in-out infinite;
 }
 
-html.sk-barra-c #sidebar-chat-item a > div.pr-2 svg.animate-spin {
+html.sk-barra-c #sidebar-chat-item a > div.pr-2 > div:has(.spinner_ajPY) > div {
 	animation-delay: 0.15s;
 }
 
-html.sk-barra-c #sidebar-chat-item a > div.pr-2 > div:has(> svg.animate-spin)::after {
+html.sk-barra-c #sidebar-chat-item a > div.pr-2 > div:has(.spinner_ajPY)::after {
 	animation-delay: 0.3s;
 }
 
-html.sk-barra-c #sidebar-chat-item a > div.pr-2 svg.animate-spin > * {
+html.sk-barra-c #sidebar-chat-item a > div.pr-2 > div:has(.spinner_ajPY) > div > svg {
 	display: none;
 }
 
@@ -13721,6 +13723,9 @@ html.dark.sk-barra-c :is(#sidebar-chat-item, #pinned-menu-items-list a) {
 		transform: translateX(calc(-100% - 24px)) !important;
 		box-shadow: none !important;
 		visibility: hidden;
+		/* al cerrar se desliza hacia fuera y solo al final se oculta (antes desaparecía de golpe mientras el fondo
+		   se desvanecía) */
+		transition: transform 210ms cubic-bezier(0.4, 0, 1, 1), visibility 0s linear 210ms, box-shadow 0s linear 210ms !important;
 	}
 }
 
@@ -14201,7 +14206,7 @@ html.dark .sk-vista button[aria-checked='true'] {
 		align-items: start;
 	}
 
-	html.sk-vista-compacta .chat-assistant > div:has(> div > .sk-img-hecha:not(.sk-img-escondida)) > * {
+	html.sk-vista-compacta .chat-assistant > div:is(.chat-assistant > div):has(> div > .sk-img-hecha:not(.sk-img-escondida)) > * {
 		grid-column: 1 / -1;
 	}
 
@@ -15274,7 +15279,8 @@ html.dark .sk-met-tarjeta dt > :is(i, .sk-met-ctx) {
 .modal[role='dialog']:is([aria-label='Pestañas'], [aria-label='Tabs']):has(.sk-voz-boton, button:is([aria-label='Llamada de voz'], [aria-label='Interrumpir al asistente'], [aria-label='Voice call'], [aria-label='Stop speaking'])) > div.relative {
 	transform: none !important;
 	transition: none !important;
-	animation: sk-voz-entra 0.26s cubic-bezier(0.2, 0.8, 0.2, 1) both;
+	/* se abre en círculo desde el botón de llamada (carbono.js guarda dónde está en --sk-voz-x / --sk-voz-y) */
+	animation: sk-voz-revela 480ms cubic-bezier(0.4, 0, 0.2, 1) both !important; /* !important: tapa la salida animada de Open WebUI */
 	-webkit-backdrop-filter: blur(24px) saturate(1.4);
 	backdrop-filter: blur(24px) saturate(1.4);
 }
@@ -15478,7 +15484,7 @@ html.dark .sk-voz-titulo small {
 		line-height: 20px;
 	}
 
-	html.sk-barra-c #sidebar-chat-item:has(svg.animate-spin) > a::after {
+	html.sk-barra-c #sidebar-chat-item:has(.spinner_ajPY) > a::after {
 		top: calc(50% - 12px);
 		width: 24px;
 		height: 24px;
@@ -15588,7 +15594,7 @@ html.dark .sk-voz-titulo small {
 		height: 22px;
 	}
 
-	html.sk-barra-c #sidebar-chat-item:has(svg.animate-spin) > a::after {
+	html.sk-barra-c #sidebar-chat-item:has(.spinner_ajPY) > a::after {
 		top: calc(50% - 14px);
 		width: 28px;
 		height: 28px;
@@ -16007,5 +16013,3874 @@ html.sk-barra-c #sidebar > div > div:first-child button[data-inbox-trigger] :is(
 		display: flex;
 		align-items: center;
 		min-height: 40px;
+	}
+}
+
+/* Menú de usuario: Administración, Ajustes y Cerrar Sesión no traen role=menuitem y quedaban 2 px más a la izquierda;
+   en escritorio el menú va alineado con la tarjeta del usuario, con el mismo margen a cada lado de la barra */
+/* en @layer theme: Open WebUI les pone un px-2 con !important dentro de una capa, y entre !important gana la capa anterior */
+@layer theme {
+	[role='menu']:has(.user-menu-status) :is(a, button)[class*='h-[1.6875rem]'] {
+		gap: 10px !important;
+		padding-inline: 10px !important;
+	}
+
+	@media (max-width: 767px) {
+		[role='menu']:has(.user-menu-status) :is(a, button)[class*='h-[1.6875rem]'] {
+			gap: 12px !important;
+			padding-inline: 12px !important;
+		}
+	}
+}
+
+@media (min-width: 768px) {
+	html.sk-barra-c [role='menu']:has(.user-menu-status) {
+		left: 12px !important;
+		right: auto !important;
+		width: calc(var(--sk-barra-ancho, 262px) - 24px) !important;
+	}
+
+	html.sk-barra-c [role='menu']:has(.user-menu-status) .app-dropdown-menu {
+		width: 100% !important;
+		min-width: 0 !important;
+	}
+}
+
+/* Tercera píldora: "Calendario" de Open WebUI fijado en la barra, rotulado "Agenda" como en el lienzo (abre /calendar) */
+html.sk-barra-c #sidebar-calendar-button > div:last-child > div {
+	font-size: 0 !important;
+}
+
+html.sk-barra-c #sidebar-calendar-button > div:last-child > div::after {
+	content: 'Agenda';
+	font-size: 13px;
+	line-height: 16px;
+}
+
+@media (max-width: 767px) {
+	html.sk-barra-c #sidebar-calendar-button > div:last-child > div::after {
+		font-size: 14px;
+		line-height: 18px;
+	}
+}
+
+/* Teléfono: Nuevo Chat, Buscar, Notas, Espacio y Agenda más fáciles de tocar sin equivocarse: 48 px de alto (Buscar de
+   48 × 48), más separación entre ellos (10 px entre Nuevo Chat y Buscar, 8 px entre píldoras, 10 px entre filas) y una
+   respuesta visible al tocar (se hunden un poco y se oscurecen). */
+@media (max-width: 767px) {
+	html.sk-barra-c #sidebar div.pb-1:has(> div > #sidebar-new-chat-button) {
+		grid-template-columns: 1fr 48px;
+		column-gap: 10px !important;
+	}
+
+	html.sk-barra-c #sidebar-new-chat-button,
+	html.sk-barra-c #sidebar-search-button {
+		height: 48px;
+		border-radius: 14px !important;
+	}
+
+	html.sk-barra-c #sidebar-search-button {
+		width: 48px;
+	}
+
+	html.sk-barra-c #sidebar-search-button > div,
+	html.sk-barra-c #sidebar-search-button svg {
+		width: 20px !important;
+		height: 20px !important;
+	}
+
+	html.sk-barra-c #sidebar-new-chat-button div {
+		font-size: 16px !important;
+		line-height: 20px !important;
+	}
+
+	html.sk-barra-c #sidebar-new-chat-button svg {
+		width: 17px;
+		height: 17px;
+	}
+
+	html.sk-barra-c #sidebar div.pb-1 > #pinned-menu-items-list {
+		gap: 8px;
+		margin-top: 10px;
+	}
+
+	html.sk-barra-c #pinned-menu-items-list a {
+		height: 48px;
+		border-radius: 14px !important;
+	}
+
+	html.sk-barra-c #pinned-menu-items-list a div,
+	html.sk-barra-c :is(#sidebar-workspace-button, #sidebar-calendar-button) > div:last-child > div::after {
+		font-size: 15px !important;
+		line-height: 20px !important;
+	}
+
+	html.sk-barra-c #pinned-menu-items-list a svg {
+		width: 18px;
+		height: 18px;
+	}
+
+	html.sk-barra-c :is(#sidebar-new-chat-button, #sidebar-search-button, #pinned-menu-items-list a) {
+		touch-action: manipulation;
+		-webkit-tap-highlight-color: transparent;
+		transition: transform 0.12s ease, background-color 0.12s ease;
+	}
+
+	html.sk-barra-c :is(#sidebar-search-button, #pinned-menu-items-list a):active {
+		transform: scale(0.96);
+		background: #c4c4c8 !important;
+	}
+
+	html.sk-barra-c #sidebar-new-chat-button:active {
+		transform: scale(0.97);
+		background: #3f3f46 !important;
+	}
+
+	html.dark.sk-barra-c #sidebar-new-chat-button:active {
+		background: #d4d4d8 !important;
+	}
+
+	html.dark.sk-barra-c :is(#sidebar-search-button, #pinned-menu-items-list a):active {
+		background: rgba(255, 255, 255, 0.18) !important;
+	}
+}
+
+@media (max-width: 767px) and (prefers-reduced-motion: reduce) {
+	html.sk-barra-c :is(#sidebar-new-chat-button, #sidebar-search-button, #pinned-menu-items-list a):active {
+		transform: none;
+	}
+}
+
+/* ===== Correcciones de las pruebas en varios tamaños ===== */
+
+/* Escritorio: Espacio y Agenda no cabían en un tercio fijo de la fila (ícono + texto = 67 px en 63 px útiles) y se
+   comían el relleno. Ahora cada píldora parte del ancho de su contenido y el sobrante se reparte por igual. */
+@media (min-width: 768px) {
+	html.sk-barra-c #pinned-menu-items-list > div {
+		flex: 1 1 auto;
+	}
+
+	html.sk-barra-c #pinned-menu-items-list a {
+		gap: 5px;
+		padding: 0 5px !important;
+	}
+}
+
+/* Teléfono: la barra es un panel flotante a 8 px del borde, así que el menú de usuario se alinea con la tarjeta
+   "Modelo activo" (12 px dentro del panel a cada lado) en lugar de quedar a 2 px de un lado y 18 px del otro. */
+@media (max-width: 767px) {
+	html.sk-barra-c [role='menu']:has(.user-menu-status) {
+		left: 20px !important;
+		width: calc(var(--sk-barra-ancho, 300px) - 24px) !important;
+		max-width: calc(100vw - 40px);
+	}
+}
+
+/* Menú + del teléfono: la ruta de Workspace tomaba el ancho de todo su texto (la rejilla alinea al inicio) y pasaba
+   por debajo de la flecha sin puntos suspensivos; ahora ocupa solo su columna y se recorta con "…". */
+.sk-menu-mas.sk-menu-mas [role='menuitem'] > div.justify-between {
+	justify-items: stretch;
+}
+
+.sk-menu-mas.sk-menu-mas [role='menuitem'] > div.justify-between > :first-child,
+.sk-menu-mas.sk-menu-mas [role='menuitem'] > div.justify-between > :last-child > :first-child {
+	max-width: 100%;
+}
+
+/* Barra contraída en oscuro: el engrane de Ajustes quedaba gris oscuro sobre negro (1.9:1) */
+@media (min-width: 768px) {
+	html.dark #sidebar[class*='w-[calc(42px'] .sk-barra-ajustes {
+		color: var(--sk-ink);
+	}
+
+	html.dark #sidebar[class*='w-[calc(42px'] .sk-barra-ajustes:hover {
+		background: rgba(255, 255, 255, 0.08);
+	}
+}
+
+/* Agenda (calendario): en Open WebUI 0.13.3 los días del mes son <div> y no <button>, así que se quedaban sin fondo y
+   se veía el gris de las líneas en toda la rejilla. */
+div.h-screen:has(.grid-cols-7.auto-rows-fr) .grid-cols-7.auto-rows-fr > div {
+	padding: 8px 10px;
+	border: 0;
+	background: var(--sk-surface);
+}
+
+div.h-screen:has(.grid-cols-7.auto-rows-fr) .grid-cols-7.auto-rows-fr > :is(button, div):hover {
+	background: var(--sk-sidebar);
+}
+
+div.h-screen:has(.grid-cols-7.auto-rows-fr) .grid-cols-7.auto-rows-fr > div > div:first-child :is(span, div):not(:has(*)) {
+	font-size: 15px;
+	font-weight: 500;
+}
+
+/* teléfono: sin la columna del mini calendario la rejilla quedaba pegada al borde izquierdo (0 px) y a 24 px del
+   derecho; ahora 12 px a cada lado, y la cabecera con el mismo margen */
+@media (max-width: 767px) {
+	div.h-screen:has(.grid-cols-7.auto-rows-fr) div.flex-1.flex.flex-col.min-h-0.px-3.pb-3 {
+		padding: 8px 12px 16px;
+	}
+
+	div.h-screen:has(.grid-cols-7.auto-rows-fr) .grid-cols-7.auto-rows-fr > :is(button, div) {
+		padding: 6px 4px;
+	}
+}
+
+/* Agenda en el teléfono: el mes se partía a media palabra ("Novembe / r 2026") y "Dom" quedaba en "D…". El título ya
+   no se corta (si no cabe junto a Mes y Crear, esos botones bajan a otra línea) y los días de la semana caben. */
+@media (max-width: 767px) {
+	div.h-screen:has(.grid-cols-7.auto-rows-fr) > nav {
+		padding: 12px 12px 6px;
+	}
+
+	div.h-screen:has(.grid-cols-7.auto-rows-fr) > nav div.flex.w-full.items-center {
+		flex-wrap: wrap;
+		row-gap: 6px;
+	}
+
+	div.h-screen:has(.grid-cols-7.auto-rows-fr) > nav span.select-none {
+		font-size: 20px;
+		line-height: 28px;
+		white-space: nowrap;
+	}
+
+	div.h-screen:has(.grid-cols-7.auto-rows-fr) div.grid.grid-cols-7:has(+ .auto-rows-fr) > div {
+		padding: 8px 2px;
+		overflow: visible;
+		text-align: center;
+		text-overflow: clip;
+	}
+}
+
+/* Notas, Modelos, Indicaciones… en el teléfono: los filtros (Todos, Escribir, Lista) se salían de la pantalla porque el
+   tema les quita el desplazamiento lateral, y el buscador quedaba en ~60 px. Ahora el buscador ocupa toda la fila y los
+   filtros van debajo, en una franja que se desplaza de lado si no caben. */
+@media (max-width: 767px) {
+	main div.space-y-1 > div.flex.h-8 {
+		flex-wrap: wrap;
+		height: auto;
+		row-gap: 8px;
+	}
+
+	main div.space-y-1 > div.flex.h-8 > div:first-child {
+		flex: 1 0 100%;
+	}
+
+	main div.space-y-1 > div.flex.h-8 > div:last-child {
+		width: 100%;
+		max-width: 100%;
+		overflow-x: auto;
+		overscroll-behavior-x: contain;
+	}
+}
+
+/* Teléfono: "Nuevo Chat" sube un poco; entre los modelos fijados y Nuevo Chat quedaban 18 px. Ahora 10 px, igual que
+   entre Nuevo Chat y las píldoras (y 8 px entre la tarjeta y los fijados), para que el bloque se vea parejo. */
+@media (max-width: 767px) {
+	html.sk-barra-c #sidebar .sk-barra-fijados {
+		padding-bottom: 4px;
+	}
+
+	html.sk-barra-c #sidebar div.pb-1:has(> div > #sidebar-new-chat-button) {
+		padding-top: 0 !important;
+	}
+}
+
+/* Teléfono: los íconos de la cabecera del chat (barra lateral, chat nuevo, chat temporal, acciones y pestañas) con el
+   mismo tono y tamaño que la campana de la barra: 22 px, trazo de 1.7 y gris #3f3f46 (en oscuro, el color del texto).
+   Al pasar el dedo o el cursor toman el color de su botón como antes. */
+@media (max-width: 767px) {
+	nav.sticky.top-0 :is(button, a) svg {
+		width: 22px !important;
+		height: 22px !important;
+		stroke-width: 1.7 !important;
+	}
+
+	nav.sticky.top-0 :is(button, a):not(:hover, :active) svg {
+		color: #3f3f46 !important;
+	}
+
+	html.dark nav.sticky.top-0 :is(button, a):not(:hover, :active) svg {
+		color: var(--sk-ink) !important;
+	}
+}
+
+/* Pantallas táctiles: los globos de ayuda de Open WebUI se abren al tocar un botón y se quedan pegados (por ejemplo
+   "Chat Temporal"); ahí no aportan nada, así que no se muestran. Con ratón siguen igual. */
+@media (hover: none) {
+	[data-tippy-root]:has(> .tippy-box[role='tooltip'][data-theme~='dark']) {
+		display: none !important;
+	}
+}
+
+/* Chat temporal: además del ícono, una franja bajo la cabecera avisa que el chat no se guarda. Open WebUI cambia el
+   ícono del botón a una burbuja con palomita cuando está activo; eso es lo que se detecta. */
+html.sk-chat-temporal :is(nav.sticky.top-0, [data-panel-tab-bar]) {
+	position: relative;
+}
+
+html.sk-chat-temporal :is(nav.sticky.top-0, [data-panel-tab-bar])::after {
+	content: 'Chat temporal · no se guarda en tu historial';
+	position: absolute;
+	top: 100%;
+	left: 0;
+	right: 0;
+	z-index: 5;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	height: 28px;
+	padding: 0 12px;
+	overflow: hidden;
+	border-bottom: 1px solid #f1dca0;
+	background: #fff4d6;
+	color: #7a4b00;
+	font-size: 12.5px;
+	line-height: 16px;
+	font-weight: 600;
+	letter-spacing: 0.01em;
+	white-space: nowrap;
+	text-overflow: ellipsis;
+	pointer-events: none;
+}
+
+html.dark.sk-chat-temporal :is(nav.sticky.top-0, [data-panel-tab-bar])::after {
+	border-bottom-color: #4a3c17;
+	background: #2a2312;
+	color: #f5cf6b;
+}
+
+/* en el teléfono la cabecera es más alta y el texto un poco más grande */
+@media (max-width: 767px) {
+	html.sk-chat-temporal nav.sticky.top-0::after {
+		height: 32px;
+		font-size: 13.5px;
+		line-height: 18px;
+	}
+}
+
+/* la franja va bajo la barra de pestañas en escritorio y bajo la cabecera en el teléfono (no en las dos) */
+@media (min-width: 768px) {
+	html.sk-chat-temporal nav.sticky.top-0::after {
+		content: none;
+	}
+}
+
+@media (max-width: 767px) {
+	html.sk-chat-temporal :is(nav.sticky.top-0, [data-panel-tab-bar])[data-panel-tab-bar]::after {
+		content: none;
+	}
+}
+
+/* "Modelos fijados" ahora va dentro de la lista que se desliza (carbono.js la mueve ahí): se oculta junto con Nuevo
+   Chat y las píldoras. Al deslizar, un degradado de 28 px arriba desvanece los chats bajo la tarjeta "Modelo activo"
+   en lugar de cortarlos de golpe. */
+html.sk-barra-c #sidebar .overflow-y-auto > .sk-barra-fijados {
+	flex: none;
+	margin: 0 !important;
+	padding-left: 12px;
+	padding-right: 12px;
+}
+
+html.sk-barra-c #sidebar .overflow-y-auto.sk-lista-desplazada {
+	-webkit-mask-image: linear-gradient(to bottom, transparent 0, #000 28px);
+	mask-image: linear-gradient(to bottom, transparent 0, #000 28px);
+}
+
+/* mismos espacios que antes de moverla: 8 px desde la tarjeta y 10 px hasta Nuevo Chat (en el teléfono) */
+html.sk-barra-c #sidebar .overflow-y-auto:has(> .sk-barra-fijados) {
+	padding-top: 0 !important;
+}
+
+@media (max-width: 767px) {
+	html.sk-barra-c #sidebar .overflow-y-auto > .sk-barra-fijados {
+		padding-bottom: 10px;
+	}
+}
+
+/* Teléfono: el panel de la barra era vidrio al 78 % y dejaba ver, desenfocado, lo que hay detrás; arriba queda la
+   cabecera blanca del chat y la franja del título salía más clara que el resto del panel. Casi opaco (94 %) el tono es
+   parejo de arriba abajo, en claro y en oscuro. */
+@media (max-width: 767px) {
+	html.sk-barra-c #sidebar {
+		background: rgba(244, 244, 246, 0.94) !important;
+	}
+
+	html.dark.sk-barra-c #sidebar {
+		background: rgba(24, 24, 27, 0.95) !important;
+	}
+
+	/* casi opaco, el desenfoque de fondo ya no se nota y obligaba al teléfono a recalcularlo en cada cuadro al abrir
+	   y deslizar la barra */
+	html.sk-barra-c #sidebar {
+		-webkit-backdrop-filter: none !important;
+		backdrop-filter: none !important;
+	}
+}
+
+/* Barra contraída: dentro del botón negro "Nuevo Chat" Open WebUI tiene un cuadrito que al pasar el cursor o tocarlo
+   se pintaba gris claro y tapaba el lápiz blanco. Se queda transparente (el botón ya cambia de tono él solo). */
+@media (min-width: 768px) {
+	#sidebar[class*='w-[calc(42px'] a[aria-label='Nuevo Chat'] > div {
+		background: transparent !important;
+	}
+}
+
+/* Modo voz en escritorio: la barra de pestañas tapa los primeros 16 px del panel y se comía el título "Modo voz" */
+@media (min-width: 768px) {
+	.sk-voz-cabeza-panel {
+		top: 16px;
+	}
+}
+
+/* la X de la pestaña Voz (termina la llamada) igual que la de las demás pestañas: 22 px, ícono de 16 px con trazo de
+   2.1, tenue si la pestaña no está elegida */
+#controls-container [data-panel-tab-bar] .panel-tab :is(button[aria-label='Finalizar llamada'], button[aria-label='End call']) {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 22px !important;
+	height: 22px !important;
+	border-radius: 6px;
+	color: color-mix(in srgb, var(--sk-ink) 70%, var(--sk-surface));
+	/* su panel siempre está a la vista, así que se ve como la X de la pestaña elegida */
+	opacity: 1;
+}
+
+#controls-container [data-panel-tab-bar] .panel-tab:has([role='tab'][aria-selected='true']) :is(button[aria-label='Finalizar llamada'], button[aria-label='End call']),
+#controls-container [data-panel-tab-bar] .panel-tab :is(button[aria-label='Finalizar llamada'], button[aria-label='End call']):hover {
+	opacity: 1;
+}
+
+#controls-container [data-panel-tab-bar] .panel-tab :is(button[aria-label='Finalizar llamada'], button[aria-label='End call']):hover {
+	background: rgba(120, 120, 128, 0.14);
+	color: var(--sk-ink);
+}
+
+#controls-container [data-panel-tab-bar] .panel-tab :is(button[aria-label='Finalizar llamada'], button[aria-label='End call']) svg {
+	width: 16px !important;
+	height: 16px !important;
+	stroke-width: 2.1;
+}
+
+/* botón "Modo de Voz" de la caja mientras la llamada sigue: aro del color del modelo (tocarlo de nuevo la termina) */
+:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) button.sk-voz-en-curso {
+	box-shadow: 0 0 0 2px var(--sk-surface), 0 0 0 4px hsl(var(--sk-m, 220 60% 46%));
+}
+
+/* Pestaña Voz: su panel siempre está a la vista, así que se ve siempre elegida (negrita y raya abajo) aunque se toque
+   otra pestaña, y la raya y el ícono van en negro (blanco en oscuro) en lugar de azul */
+#controls-container [data-panel-tab-bar] .panel-tab:has(:is(button[aria-label='Finalizar llamada'], button[aria-label='End call'])) {
+	--sk-pestana: var(--sk-ink);
+	color: var(--sk-ink);
+	font-weight: 600;
+	box-shadow: inset 0 -3px 0 var(--sk-ink);
+}
+
+#controls-container [data-panel-tab-bar] .panel-tab:has(:is(button[aria-label='Finalizar llamada'], button[aria-label='End call'])) [role='tab'] > svg {
+	color: var(--sk-ink);
+}
+
+/* Modo voz junto al chat (escritorio): si con la llamada abierta eliges otra pestaña del mismo grupo (por ejemplo
+   "Inicio", los archivos), su panel ocupaba todo el ancho, transparente: se veía el chat detrás y se metía debajo del
+   panel de voz. Ahora ocupa solo la columna del chat (a la izquierda de la voz) y con fondo sólido. */
+@media (min-width: 900px) {
+	div[data-sk-voz-junto] > div.contents > #controls-container [role='tabpanel']:not(:has(.sk-voz-boton)) {
+		left: var(--sk-voz-l, 0%) !important;
+		right: auto !important;
+		width: calc(var(--sk-voz-w, 100%) - 420px) !important;
+		background: var(--sk-surface);
+		pointer-events: auto;
+	}
+
+	/* y el chat, que el modo voz deja a la vista, se oculta mientras esa otra pestaña está elegida (carbono.js marca el panel de voz con
+	   data-sk-panel-voz: un :has() dentro de otro no es válido) */
+	div[data-sk-voz-junto]:has(> div.contents > #controls-container [role='tabpanel']:not(.hidden):not([data-sk-panel-voz])) > #chat-panel-main-chat-view {
+		display: none !important;
+	}
+}
+
+/* ---------- Ventana "Añadir Usuario" (Administración · Usuarios) ----------
+   Open WebUI la deja con título de 14 px, pestañas de texto suelto, campos sin borde y un "Guardar" de 28 px. Aquí,
+   con las reglas de las demás ventanas del tema ("Añadir control"): tarjeta de 460 px con esquinas de 22 px, título de
+   17 px y cerrar en círculo, "Formulario | Importar CSV" como control segmentado, etiquetas de 12.5 px, campos de 40 px
+   con filo y aro al enfocarse, y "Guardar" como botón principal de 40 px. */
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) {
+	--sk-campo-filo: #d4d4d8;
+}
+
+html.dark :is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) {
+	--sk-campo-filo: #3f3f46;
+}
+
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) > div {
+	width: min(460px, calc(100vw - 24px)) !important;
+	border-radius: 22px !important;
+	background: var(--sk-surface) !important;
+	box-shadow: 0 18px 44px rgba(24, 24, 27, 0.2) !important;
+}
+
+/* cabecera */
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) > div > div > div:first-child {
+	align-items: center;
+	padding: 18px 20px 6px !important;
+}
+
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) > div > div > div:first-child > div {
+	color: var(--sk-ink);
+	font-size: 17px !important;
+	line-height: 24px !important;
+	font-weight: 700 !important;
+}
+
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) button[aria-label='Cerrar'] {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 30px;
+	height: 30px;
+	padding: 0 !important;
+	border-radius: 9999px !important;
+	background: rgba(120, 120, 128, 0.12);
+	color: var(--sk-ink) !important;
+}
+
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) button[aria-label='Cerrar']:hover {
+	background: rgba(120, 120, 128, 0.2);
+}
+
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) button[aria-label='Cerrar'] svg {
+	width: 14px !important;
+	height: 14px !important;
+}
+
+/* cuerpo */
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) > div > div > div:nth-child(2) {
+	padding: 8px 20px 20px !important;
+}
+
+/* Formulario | Importar CSV: control segmentado */
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) form > div:first-child {
+	gap: 2px !important;
+	margin: 0 0 16px !important;
+	padding: 2px;
+	border-radius: 10px;
+	background: color-mix(in srgb, var(--sk-sidebar) 85%, transparent);
+	box-shadow: inset 0 0 0 1px var(--sk-border);
+}
+
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) form > div:first-child > button {
+	height: 30px;
+	padding: 0 14px !important;
+	border-radius: 8px;
+	background: transparent;
+	color: var(--sk-ink-muted) !important;
+	font-size: 13.5px;
+	line-height: 18px;
+	font-weight: 600;
+}
+
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) form > div:first-child > button:not([class*='text-gray-300']) {
+	background: var(--sk-surface);
+	box-shadow: 0 1px 2px rgba(24, 24, 27, 0.12), 0 0 0 1px var(--sk-border);
+	color: var(--sk-ink) !important;
+}
+
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) form > div:first-child > button:hover {
+	color: var(--sk-ink) !important;
+}
+
+/* bloques: 14 px entre campos; la raya entre Nombre y Correo sobra */
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) form > div.px-1 {
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	padding: 0 !important;
+}
+
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) form > div.px-1 > div {
+	margin: 0 !important;
+}
+
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) form > div.px-1 > hr {
+	display: none;
+}
+
+/* etiquetas */
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) form div.text-xs.text-gray-500 {
+	margin-bottom: 6px !important;
+	color: var(--sk-ink-muted) !important;
+	font-size: 12.5px !important;
+	line-height: 16px !important;
+	font-weight: 600;
+}
+
+/* campos de 40 px con filo; la contraseña lleva el filo en su caja (el ojo va dentro) */
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) form :is(select, input:not([type='checkbox'], [type='radio'], [type='file'])),
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) form div.relative.flex:has(> button) {
+	height: 40px;
+	padding: 0 12px !important;
+	border: 0 !important;
+	border-radius: 10px !important;
+	background-color: var(--sk-surface) !important;
+	box-shadow: inset 0 0 0 1px var(--sk-campo-filo);
+	color: var(--sk-ink) !important;
+	font-size: 14.5px !important;
+	line-height: 20px;
+	outline: none !important;
+	transition: box-shadow 0.15s;
+}
+
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) form div.relative.flex:has(> button) {
+	align-items: center;
+	padding: 0 6px 0 12px !important;
+}
+
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) form div.relative.flex:has(> button) > input {
+	height: 100%;
+	padding: 0 !important;
+	background: transparent !important;
+	box-shadow: none !important;
+}
+
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) form :is(select, input:not([type='checkbox'], [type='radio'], [type='file'])):focus,
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) form div.relative.flex:has(> button):focus-within {
+	box-shadow: inset 0 0 0 1.5px var(--sk-ink), 0 0 0 3px color-mix(in srgb, var(--sk-ink) 12%, transparent);
+}
+
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) form div.relative.flex:has(> button) > input:focus {
+	box-shadow: none !important;
+}
+
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) form input::placeholder {
+	color: var(--sk-ink-subtle, #a1a1aa) !important;
+}
+
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) form select {
+	-webkit-appearance: none;
+	appearance: none;
+	padding-right: 34px !important;
+	background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2371717a' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E") !important;
+	background-position: right 12px center !important;
+	background-size: 14px !important;
+	background-repeat: no-repeat !important;
+	cursor: pointer;
+}
+
+/* ojo de la contraseña: botón de 30 px */
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) form div.relative.flex > button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 30px;
+	height: 30px;
+	min-width: 30px;
+	padding: 0 !important;
+	border-radius: 8px;
+	color: var(--sk-ink-muted);
+}
+
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) form div.relative.flex > button:hover {
+	background: rgba(120, 120, 128, 0.12);
+	color: var(--sk-ink);
+}
+
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) form div.relative.flex > button svg {
+	width: 18px !important;
+	height: 18px !important;
+}
+
+/* Guardar: botón principal de 40 px */
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) form > div.justify-end {
+	padding-top: 20px !important;
+}
+
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) form > div.justify-end > button {
+	height: 40px !important;
+	padding: 0 20px !important;
+	border-radius: 12px !important;
+	background: var(--sk-primary) !important;
+	color: var(--sk-on-primary) !important;
+	font-size: 14px !important;
+	line-height: 20px;
+	font-weight: 600 !important;
+}
+
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) form > div.justify-end > button:hover {
+	opacity: 0.88;
+}
+
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) form > div.justify-end > button:focus-visible {
+	outline: 2px solid var(--sk-ink);
+	outline-offset: 2px;
+}
+
+/* teléfono: el botón Guardar a lo ancho */
+@media (max-width: 767px) {
+	:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) form > div.justify-end > button {
+		flex: 1;
+		height: 44px !important;
+	}
+}
+
+/* Importar CSV: la zona para elegir el archivo como tarjeta punteada con ícono de subir, y la nota de abajo legible */
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) form > div.px-1 > div > div.mb-3 {
+	margin-bottom: 12px !important;
+}
+
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) form button.border-dashed,
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) form > div.px-1 button[class*='border-dashed'] {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	justify-content: center;
+	gap: 8px;
+	min-height: 112px;
+	padding: 18px 20px !important;
+	border: 1.5px dashed var(--sk-campo-filo) !important;
+	border-radius: 14px !important;
+	background: color-mix(in srgb, var(--sk-sidebar) 60%, transparent) !important;
+	color: var(--sk-ink-muted) !important;
+	font-size: 14px !important;
+	line-height: 20px;
+	font-weight: 500 !important;
+	text-align: center;
+	transition: background-color 0.15s, border-color 0.15s;
+}
+
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) form button.border-dashed::before {
+	content: '';
+	width: 22px;
+	height: 22px;
+	background: currentColor;
+	-webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 15V4M7 9l5-5 5 5M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3'/%3E%3C/svg%3E") center / contain no-repeat;
+	mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.9' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 15V4M7 9l5-5 5 5M4 15v3a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-3'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) form button.border-dashed:hover {
+	border-color: var(--sk-ink-subtle) !important;
+	background: var(--sk-sidebar) !important;
+	color: var(--sk-ink) !important;
+}
+
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) form > div.px-1 div.text-xs.text-gray-500:not(:has(+ div)) {
+	margin: 0 !important;
+	font-weight: 400;
+	line-height: 18px !important;
+}
+
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) form > div.px-1 div.text-xs a {
+	color: var(--sk-ink);
+	font-weight: 600;
+}
+
+/* aro de foco del tema (no el azul de Open WebUI) en cerrar y en las pestañas */
+:is(.modal[role='dialog'][aria-label='Añadir Usuario'], .modal[role='dialog'][aria-label='Add User']) :is(button[aria-label='Cerrar'], form > div:first-child > button):focus-visible {
+	outline: 2px solid var(--sk-ink) !important;
+	outline-offset: 2px;
+}
+
+/* Administración (Usuarios, Evaluaciones…): el menú lateral ("Vista General", "Grupos"…) alineado con las pestañas de arriba (mismo borde
+   izquierdo de la tarjeta y mismo inicio del texto); antes quedaban 14 px más a la izquierda */
+@media (min-width: 1024px) {
+	div.tabs:has(> a[href^='/admin/']) {
+		padding-left: 14px !important;
+		padding-right: 0 !important;
+	}
+
+	div.tabs:has(> a[href^='/admin/']) > a {
+		padding-left: 16px !important;
+	}
+}
+
+/* Círculo de carga de los paneles de pestañas (al abrir un chat con las pestañas de Open WebUI): era de 20 px y salía
+   antes o en lugar del de 44 px; ahora es el mismo círculo grande */
+div.absolute.inset-0.flex.items-center.justify-center > div.flex.justify-center > svg:has(.spinner_ajPY) {
+	width: 44px;
+	height: 44px;
+	color: var(--sk-ink-muted);
+}
+
+/* El indicador de estado (tres puntos, punto de respuesta nueva) se corre a la izquierda cuando el botón "···" del chat
+   está a la vista (al pasar el cursor, en el chat abierto y siempre en el teléfono), para que no quede debajo de él */
+html.sk-barra-c #sidebar-chat-group:is(:hover, :focus-within, :has(> #sidebar-chat-item-menu.selected)) > #sidebar-chat-item > a > div.shrink-0.self-center.pr-2 {
+	margin-right: 30px;
+}
+
+@media (max-width: 767px) {
+	html.sk-barra-c #sidebar-chat-group > #sidebar-chat-item > a > div.shrink-0.self-center.pr-2 {
+		margin-right: 34px;
+	}
+}
+
+/* Teléfono: el filo del panel de la barra era una sombra interior del propio panel y, al deslizar la lista (que lleva
+   la máscara del degradado), el navegador dejaba de pintarlo junto al encabezado. Ahora va en una capa encima de todo
+   el panel, así que se ve siempre, se deslice o no. */
+@media (max-width: 767px) {
+	html.sk-barra-c #sidebar {
+		box-shadow: 0 20px 50px rgba(24, 24, 27, 0.18), 0 0 0 0.5px rgba(24, 24, 27, 0.12) !important;
+	}
+
+	html.sk-barra-c #sidebar::after {
+		content: '';
+		position: absolute;
+		inset: 0;
+		z-index: 60;
+		border-radius: inherit;
+		box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.6);
+		pointer-events: none;
+	}
+}
+
+/* ===================================================================================================================
+   Mensaje en vidrio (lienzos "Mensaje en vidrio · Más sólido + editar mensaje + métricas" y "Editar mensaje ·
+   escritorio y móvil"). La tarjeta cubre todo el mensaje: la IA en vidrio casi blanco (88 %) con filo gris, tú en un
+   azul casi blanco (95 %) con filo azul; nombres y texto en #09090b, hora en gris oscuro. Las métricas bajan a la fila
+   de las acciones, sin caja y en gris; la gráfica abre el detalle dentro de la misma tarjeta. El color es fijo para
+   todos los modelos.
+   =================================================================================================================== */
+
+/* ---------- respuesta de la IA ---------- */
+#messages-container [id^='message-']:not(.user-message) > div.flex-auto.relative {
+	flex: 0 1 auto !important;
+	width: auto !important;
+	min-width: 0;
+	margin-top: 0;
+	padding: 12px 16px 6px !important;
+	border-radius: 6px 20px 20px 20px;
+	background: rgba(255, 255, 255, 0.88);
+	-webkit-backdrop-filter: blur(18px) saturate(1.6);
+	backdrop-filter: blur(18px) saturate(1.6);
+	box-shadow: inset 0 0 0 1px #c4c4ca;
+}
+
+/* en la vista Compacta la tarjeta llega a 640 px (las respuestas con imagen generada usan todo el ancho) */
+@media (min-width: 768px) {
+	html.sk-vista-compacta #messages-container [id^='message-']:not(.user-message) > div.flex-auto.relative:not(:has(.sk-img-hecha, .sk-img-variaciones)) {
+		max-width: 640px;
+	}
+
+	html:not(.sk-vista-compacta) #messages-container [id^='message-']:not(.user-message) > div.flex-auto.relative {
+		flex: 1 1 auto !important;
+	}
+}
+
+#messages-container [id^='message-']:not(.user-message) > div.flex-auto.relative > h3 {
+	gap: 10px !important;
+	margin-bottom: 8px !important;
+	padding: 0 !important;
+}
+
+#messages-container [id^='message-']:not(.user-message) #response-message-model-name {
+	color: #09090b;
+	font-size: 16.5px;
+	line-height: 22px;
+	font-weight: 700;
+}
+
+#messages-container [id^='message-']:not(.user-message) > div.flex-auto.relative > h3 .sk-hora {
+	color: #3f3f46;
+	font-size: 13px;
+	line-height: 18px;
+	font-weight: 500;
+}
+
+#messages-container .chat-assistant .markdown-prose :is(p, li) {
+	color: #09090b;
+	font-size: 16px;
+	line-height: 1.55;
+}
+
+#messages-container .chat-assistant .markdown-prose :not(pre) > code {
+	padding: 2px 6px;
+	border-radius: 6px;
+	background: rgba(24, 24, 27, 0.06);
+	font-family: 'JetBrains Mono', ui-monospace, monospace;
+	font-size: 13.5px;
+	font-weight: 500;
+}
+
+/* fila de las acciones con las métricas al lado (carbono.js marca el contenedor con .sk-pie) */
+#messages-container .sk-pie {
+	display: flex;
+	flex-wrap: wrap;
+	align-items: center;
+	column-gap: 10px;
+}
+
+#messages-container .sk-pie > .chat-assistant {
+	flex: 1 1 100%;
+	min-width: 0;
+}
+
+#messages-container .sk-pie > .buttons {
+	flex: none;
+	gap: 2px;
+	margin: 6px 0 0 -8px !important;
+	overflow: visible;
+}
+
+#messages-container .sk-pie > .buttons button {
+	width: 32px !important;
+	height: 32px !important;
+	border-radius: 9px !important;
+	color: #52525b;
+}
+
+#messages-container .sk-pie > .buttons button svg {
+	width: 16px !important;
+	height: 16px !important;
+	stroke-width: 1.8;
+}
+
+#messages-container .sk-pie > .sk-metricas {
+	display: inline-flex;
+	flex: 0 1 auto;
+	flex-wrap: nowrap;
+	align-items: center;
+	gap: 10px;
+	min-width: 0;
+	margin: 6px 0 0 !important;
+	overflow: hidden;
+}
+
+#messages-container .sk-pie > .sk-metricas > .sk-met-barra-datos {
+	flex-wrap: nowrap;
+	gap: 8px 10px;
+	min-width: 0;
+	padding: 0;
+	overflow: hidden;
+	border-radius: 0;
+	background: transparent !important;
+	box-shadow: none !important;
+	color: #3f3f46;
+	font-size: 12px;
+	line-height: 18px;
+	font-weight: 500;
+}
+
+#messages-container .sk-pie > .sk-metricas .sk-met-sep {
+	display: none;
+}
+
+#messages-container .sk-pie > .sk-metricas > .sk-met-detalle {
+	width: 24px;
+	height: 24px;
+	margin: -3px 0;
+	background: rgba(255, 255, 255, 0.3);
+	box-shadow: inset 0 0 0 1px rgba(24, 24, 27, 0.14);
+	color: #3f3f46;
+}
+
+#messages-container .sk-pie > .sk-metricas > .sk-met-detalle svg {
+	width: 12px;
+	height: 12px;
+	stroke-width: 2;
+}
+
+/* al tocar la gráfica el botón se vuelve negro */
+#messages-container .sk-pie > .sk-metricas > .sk-met-detalle[aria-expanded='true'] {
+	background: #18181b;
+	box-shadow: none;
+	color: #ffffff;
+}
+
+/* detalle "Rendimiento de la respuesta" dentro de la tarjeta: dos columnas en escritorio */
+#messages-container .sk-pie > .sk-met-tarjeta {
+	flex: 1 1 100%;
+	box-sizing: border-box;
+	max-width: none;
+	margin: 10px 0 10px;
+	padding: 12px 14px;
+	border-radius: 14px;
+	background: rgba(250, 250, 250, 0.9);
+	box-shadow: inset 0 0 0 1px #e4e4e7;
+}
+
+#messages-container .sk-pie > .sk-met-tarjeta:not([hidden]) {
+	display: grid;
+	grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+	column-gap: 24px;
+	align-items: start;
+}
+
+#messages-container .sk-pie > .sk-met-tarjeta .sk-met-tarjeta-titulo {
+	display: block;
+	grid-column: 1 / -1;
+	margin-bottom: 6px;
+	color: #18181b;
+	font-size: 13px;
+	line-height: 18px;
+	font-weight: 700;
+}
+
+#messages-container .sk-pie > .sk-met-tarjeta .sk-met-reparto {
+	margin-top: 0;
+	padding-top: 0;
+	border: 0;
+}
+
+/* ---------- tu mensaje ---------- */
+#messages-container .user-message .chat-user {
+	width: fit-content !important;
+	min-width: 0 !important;
+	max-width: 70%;
+	margin-left: auto;
+	box-sizing: border-box;
+	padding: 10px 14px 6px;
+	border-radius: 20px 6px 20px 20px;
+	background: rgba(247, 250, 255, 0.95);
+	-webkit-backdrop-filter: blur(18px) saturate(1.6);
+	backdrop-filter: blur(18px) saturate(1.6);
+	box-shadow: inset 0 0 0 1px rgba(35, 97, 199, 0.32);
+}
+
+#messages-container .user-message .chat-user > .sk-usuario-cabeza {
+	gap: 10px;
+	margin-bottom: 6px;
+}
+
+#messages-container .user-message .chat-user > .sk-usuario-cabeza .sk-hora {
+	color: #3f3f46;
+	font-size: 13px;
+	line-height: 18px;
+	font-weight: 500;
+}
+
+#messages-container .user-message .chat-user > .sk-usuario-cabeza b {
+	color: #09090b;
+	font-size: 16.5px;
+	line-height: 22px;
+	font-weight: 700;
+}
+
+/* la burbuja de Open WebUI se funde con la tarjeta */
+#messages-container .user-message .chat-user .flex.justify-end.pb-1 {
+	padding: 0 !important;
+}
+
+#messages-container .user-message .chat-user .rounded-3xl:not(.sk-img-pedido):not(:has(textarea)) {
+	max-width: 100% !important;
+	padding: 0 !important;
+	border-radius: 0 !important;
+	background: transparent !important;
+	box-shadow: none !important;
+}
+
+#messages-container .user-message .chat-user .markdown-prose :is(p, li) {
+	color: #09090b;
+	font-size: 16px;
+	line-height: 1.5;
+	text-align: right;
+}
+
+/* acciones de tu mensaje: a la derecha, dentro de la tarjeta, en azul; la hora repetida sobra */
+#messages-container .user-message .chat-user > div.flex.items-center.justify-end {
+	gap: 2px;
+	margin: 4px -6px -6px 0;
+}
+
+#messages-container .user-message .chat-user > div.flex.items-center.justify-end > div.self-center {
+	display: none;
+}
+
+#messages-container .user-message .chat-user > div.flex.items-center.justify-end button {
+	width: 30px !important;
+	height: 30px !important;
+	border-radius: 8px !important;
+	color: #2f4a8a;
+}
+
+#messages-container .user-message .chat-user > div.flex.items-center.justify-end button svg {
+	width: 16px !important;
+	height: 16px !important;
+}
+
+/* el lápiz se enciende en vidrio líquido al pasar el cursor o tocarlo */
+#messages-container .user-message .chat-user > div.flex.items-center.justify-end button:is(.edit-user-message-button, [aria-label='Editar']):is(:hover, :focus-visible, :active) {
+	border-radius: 9999px !important;
+	background: rgba(255, 255, 255, 0.58) !important;
+	-webkit-backdrop-filter: blur(14px) saturate(1.8);
+	backdrop-filter: blur(14px) saturate(1.8);
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.75), inset 0 1px 0 #ffffff, inset 0 -1px 1px rgba(24, 24, 27, 0.08), 0 0 0 0.5px rgba(24, 24, 27, 0.18), 0 2px 6px rgba(24, 24, 27, 0.1);
+	color: #2361c7;
+}
+
+#messages-container .user-message .chat-user > div.flex.items-center.justify-end button:not(:is(.edit-user-message-button, [aria-label='Editar'])):hover {
+	background: rgba(35, 97, 199, 0.08) !important;
+}
+
+/* tu avatar a 10 px de la tarjeta */
+@media (min-width: 1024px) {
+	#messages-container .user-message::after {
+		margin-left: 10px;
+		margin-top: 4px;
+	}
+}
+
+/* ---------- editando tu mensaje ---------- */
+#messages-container .user-message .chat-user:has(textarea[id^='message-edit-']) {
+	width: 62% !important;
+	max-width: none;
+	padding: 10px 12px 12px;
+}
+
+#messages-container .user-message .chat-user:has(textarea[id^='message-edit-']) > .sk-usuario-cabeza {
+	display: none;
+}
+
+#messages-container .user-message .chat-user .rounded-3xl:has(> div > textarea[id^='message-edit-']) {
+	margin: 0 !important;
+	padding: 0 !important;
+	border-radius: 0 !important;
+	background: transparent !important;
+	box-shadow: none !important;
+	outline: none !important;
+}
+
+#messages-container .user-message .chat-user .rounded-3xl:has(> div > textarea[id^='message-edit-'])::before {
+	content: 'Editando mensaje';
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin: 0 2px 8px;
+	padding-left: 20px;
+	background: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%232361c7' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M4 20h4L19 9l-4-4L4 16z'/%3E%3C/svg%3E") left center / 14px no-repeat;
+	color: #2f4a8a;
+	font-size: 12.5px;
+	line-height: 16px;
+	font-weight: 600;
+}
+
+#messages-container .user-message .chat-user .rounded-3xl > div:has(> textarea[id^='message-edit-']) {
+	min-height: 64px;
+	box-sizing: border-box;
+	padding: 10px 12px;
+	border-radius: 14px;
+	background: rgba(255, 255, 255, 0.9);
+	box-shadow: inset 0 0 0 1.5px #2361c7, 0 0 0 3px rgba(35, 97, 199, 0.15);
+}
+
+#messages-container .user-message textarea[id^='message-edit-'] {
+	color: #18181b;
+	font-size: 16px !important;
+	line-height: 1.5 !important;
+	caret-color: #2361c7;
+}
+
+/* fila de abajo: "Lain volverá a responder desde aquí" · Cancelar · Guardar y enviar */
+#messages-container .user-message .chat-user .rounded-3xl:has(> div > textarea[id^='message-edit-']) > div.mt-2 {
+	align-items: center;
+	gap: 8px;
+	margin: 10px 0 0 !important;
+}
+
+#messages-container .user-message .chat-user .rounded-3xl:has(> div > textarea[id^='message-edit-']) > div.mt-2 > div:first-child {
+	flex: 1;
+	min-width: 0;
+}
+
+#messages-container .user-message .chat-user .rounded-3xl:has(> div > textarea[id^='message-edit-']) > div.mt-2 > div:first-child::before {
+	content: var(--sk-responde, 'Volverá a responder desde aquí');
+	color: #3f5a8a;
+	font-size: 12.5px;
+	line-height: 17px;
+	font-weight: 500;
+}
+
+#messages-container #save-edit-message-button {
+	display: none !important;
+}
+
+#messages-container .user-message .chat-user .rounded-3xl:has(> div > textarea[id^='message-edit-']) > div.mt-2 > div:last-child {
+	gap: 8px;
+}
+
+#messages-container .user-message .chat-user .rounded-3xl:has(> div > textarea[id^='message-edit-']) > div.mt-2 > div:last-child > * + * {
+	margin-left: 0 !important;
+}
+
+#messages-container :is(#close-edit-message-button, #confirm-edit-message-button) {
+	height: 36px !important;
+	padding: 0 16px !important;
+	border: 0 !important;
+	border-radius: 9999px !important;
+	font-size: 14px !important;
+	line-height: 1 !important;
+	font-weight: 600 !important;
+}
+
+#messages-container #close-edit-message-button {
+	background: rgba(255, 255, 255, 0.58) !important;
+	-webkit-backdrop-filter: blur(14px) saturate(1.8);
+	backdrop-filter: blur(14px) saturate(1.8);
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.75), inset 0 1px 0 #ffffff, inset 0 -1px 1px rgba(24, 24, 27, 0.08), 0 0 0 0.5px rgba(24, 24, 27, 0.18), 0 2px 6px rgba(24, 24, 27, 0.1) !important;
+	color: #18181b !important;
+}
+
+#messages-container #confirm-edit-message-button {
+	background: #2361c7 !important;
+	box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.25) !important;
+	color: #ffffff !important;
+	font-size: 0 !important;
+}
+
+#messages-container #confirm-edit-message-button::after {
+	content: 'Guardar y enviar';
+	font-size: 14px;
+	line-height: 1;
+	font-weight: 600;
+}
+
+#messages-container #confirm-edit-message-button:hover {
+	background: #1d54ad !important;
+}
+
+/* las respuestas que se van a reemplazar, atenuadas, con su nota; la caja de mensaje también se atenúa */
+#messages-container .sk-se-reemplaza {
+	opacity: 0.45;
+	filter: saturate(0.6);
+	transition: opacity 0.2s ease;
+}
+
+#messages-container .sk-se-reemplaza-nota {
+	flex-wrap: wrap;
+}
+
+#messages-container .sk-se-reemplaza-nota::after {
+	content: 'Esta respuesta se reemplazará al guardar';
+	flex: 1 1 100%;
+	margin: 6px 0 0 40px;
+	color: #3f5a8a;
+	font-size: 12px;
+	line-height: 16px;
+	font-weight: 600;
+}
+
+html.sk-editando #message-input-container {
+	opacity: 0.5;
+	transition: opacity 0.2s ease;
+}
+
+/* ---------- modo oscuro ---------- */
+html.dark #messages-container [id^='message-']:not(.user-message) > div.flex-auto.relative {
+	background: rgba(30, 30, 33, 0.88);
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.12);
+}
+
+html.dark #messages-container [id^='message-']:not(.user-message) #response-message-model-name,
+html.dark #messages-container .chat-assistant .markdown-prose :is(p, li),
+html.dark #messages-container .user-message .chat-user > .sk-usuario-cabeza b,
+html.dark #messages-container .user-message .chat-user .markdown-prose :is(p, li) {
+	color: #f4f4f5;
+}
+
+html.dark #messages-container [id^='message-']:not(.user-message) > div.flex-auto.relative > h3 .sk-hora,
+html.dark #messages-container .user-message .chat-user > .sk-usuario-cabeza .sk-hora,
+html.dark #messages-container .sk-pie > .sk-metricas > .sk-met-barra-datos {
+	color: #a1a1aa;
+}
+
+html.dark #messages-container .sk-pie > .buttons button {
+	color: #a1a1aa;
+}
+
+html.dark #messages-container .chat-assistant .markdown-prose :not(pre) > code {
+	background: rgba(255, 255, 255, 0.08);
+}
+
+html.dark #messages-container .sk-pie > .sk-metricas > .sk-met-detalle {
+	background: rgba(255, 255, 255, 0.06);
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16);
+	color: #d4d4d8;
+}
+
+html.dark #messages-container .sk-pie > .sk-metricas > .sk-met-detalle[aria-expanded='true'] {
+	background: #fafafa;
+	color: #18181b;
+}
+
+html.dark #messages-container .sk-pie > .sk-met-tarjeta {
+	background: rgba(255, 255, 255, 0.04);
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+
+html.dark #messages-container .sk-pie > .sk-met-tarjeta .sk-met-tarjeta-titulo {
+	color: #f4f4f5;
+}
+
+html.dark #messages-container .user-message .chat-user {
+	background: rgba(28, 38, 60, 0.92);
+	box-shadow: inset 0 0 0 1px rgba(96, 140, 230, 0.38);
+}
+
+html.dark #messages-container .user-message .chat-user > div.flex.items-center.justify-end button {
+	color: #9db7f0;
+}
+
+html.dark #messages-container .user-message .chat-user > div.flex.items-center.justify-end button:is(.edit-user-message-button, [aria-label='Editar']):is(:hover, :focus-visible, :active) {
+	background: rgba(255, 255, 255, 0.1) !important;
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16), 0 2px 6px rgba(0, 0, 0, 0.3);
+	color: #9db7f0;
+}
+
+html.dark #messages-container .user-message .chat-user .rounded-3xl:has(> div > textarea[id^='message-edit-'])::before,
+html.dark #messages-container .user-message .chat-user .rounded-3xl:has(> div > textarea[id^='message-edit-']) > div.mt-2 > div:first-child::before,
+html.dark #messages-container .sk-se-reemplaza-nota::after {
+	color: #9db7f0;
+}
+
+html.dark #messages-container .user-message .chat-user .rounded-3xl > div:has(> textarea[id^='message-edit-']) {
+	background: rgba(0, 0, 0, 0.25);
+	box-shadow: inset 0 0 0 1.5px #5b8def, 0 0 0 3px rgba(91, 141, 239, 0.2);
+}
+
+html.dark #messages-container .user-message textarea[id^='message-edit-'] {
+	color: #f4f4f5;
+}
+
+html.dark #messages-container #close-edit-message-button {
+	background: rgba(255, 255, 255, 0.08) !important;
+	box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.16) !important;
+	color: #f4f4f5 !important;
+}
+
+/* ---------- teléfono ---------- */
+@media (max-width: 767px) {
+	/* avatar de la IA de 26 px con su aro, fuera de la tarjeta; el tuyo de 30 px a la derecha */
+	#messages-container [id^='message-']:not(.user-message) > div.shrink-0:has(> .assistant-message-profile-image) {
+		display: flex !important;
+		margin-right: 8px !important;
+	}
+
+	#messages-container .assistant-message-profile-image {
+		width: 26px !important;
+		height: 26px !important;
+		margin-top: 4px;
+		border-radius: 9999px !important;
+		box-shadow: 0 0 0 2px #ffffff, 0 0 0 3.5px hsl(var(--sk-m) / 0.45);
+	}
+
+	html.dark #messages-container .assistant-message-profile-image {
+		box-shadow: 0 0 0 2px #18181b, 0 0 0 3.5px hsl(var(--sk-m) / 0.6);
+	}
+
+	#messages-container .user-message::after {
+		content: '';
+		flex: none;
+		width: 30px;
+		height: 30px;
+		margin: 4px 0 0 10px;
+		border-radius: 9999px;
+		background: var(--sk-yo-avatar, none) center / cover no-repeat, #e4e4e7;
+	}
+
+	#messages-container .user-message:has(textarea[id^='message-edit-'])::after {
+		display: none;
+	}
+
+	#messages-container [id^='message-']:not(.user-message) > div.flex-auto.relative {
+		flex: 1 1 auto !important;
+		padding: 10px 14px 4px !important;
+	}
+
+	#messages-container [id^='message-']:not(.user-message) > div.flex-auto.relative > h3 {
+		margin-bottom: 6px !important;
+	}
+
+	#messages-container [id^='message-']:not(.user-message) #response-message-model-name {
+		font-size: 16px;
+	}
+
+	#messages-container [id^='message-']:not(.user-message) > div.flex-auto.relative > h3 .sk-hora {
+		font-size: 12.5px;
+	}
+
+	#messages-container .sk-pie > .buttons {
+		margin: 4px 0 0 -8px !important;
+	}
+
+	/* métricas: solo el tiempo y la gráfica al final de la fila; al tocarla, el detalle en una columna */
+	#messages-container .sk-pie > .sk-metricas {
+		gap: 4px;
+		margin: 4px -6px 0 auto !important;
+	}
+
+	#messages-container .sk-pie > .sk-metricas > .sk-met-corta {
+		height: auto;
+		padding: 0;
+		box-shadow: none;
+		background: transparent;
+		color: #52525b;
+		font-size: 11.5px;
+		line-height: 16px;
+	}
+
+	#messages-container .sk-pie > .sk-metricas .sk-met-c:not(.sk-met-c-tiempo) {
+		display: none !important;
+	}
+
+	#messages-container .sk-pie > .sk-met-tarjeta:not([hidden]) {
+		grid-template-columns: minmax(0, 1fr);
+	}
+
+	#messages-container .user-message .chat-user {
+		max-width: 82%;
+	}
+
+	#messages-container .user-message .chat-user > .sk-usuario-cabeza {
+		gap: 8px;
+		margin-bottom: 4px;
+	}
+
+	#messages-container .user-message .chat-user > .sk-usuario-cabeza .sk-hora {
+		font-size: 12px;
+		line-height: 16px;
+	}
+
+	#messages-container .user-message .chat-user > .sk-usuario-cabeza b {
+		font-size: 14px;
+		line-height: 20px;
+	}
+
+	#messages-container .user-message .chat-user > div.flex.items-center.justify-end button {
+		width: 32px !important;
+		height: 32px !important;
+	}
+
+	#messages-container .user-message .chat-user:has(textarea[id^='message-edit-']) {
+		width: 100% !important;
+	}
+
+	/* en el teléfono la nota de quién responde no cabe junto a los botones */
+	#messages-container .user-message .chat-user .rounded-3xl:has(> div > textarea[id^='message-edit-']) > div.mt-2 > div:first-child::before {
+		content: none;
+	}
+}
+
+/* datos cortos de las métricas (teléfono y escritorio angosto) */
+.sk-met-c {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+}
+
+/* escritorio: si la barra completa no cabe junto a las acciones, se compacta a tiempo y contexto */
+@media (min-width: 768px) {
+	#messages-container .sk-pie > .sk-metricas.sk-met-compacta > .sk-met-barra-datos {
+		display: none !important;
+	}
+
+	#messages-container .sk-pie > .sk-metricas.sk-met-compacta > .sk-met-corta {
+		display: inline-flex !important;
+		align-items: center;
+		gap: 6px;
+		height: auto;
+		padding: 0;
+		background: transparent;
+		box-shadow: none;
+		color: #3f3f46;
+		font-size: 12px;
+		line-height: 18px;
+		font-weight: 500;
+	}
+
+	#messages-container .sk-pie > .sk-metricas.sk-met-compacta .sk-met-c:not(.sk-met-c-tiempo, .sk-met-c-contexto) {
+		display: none;
+	}
+
+	html.dark #messages-container .sk-pie > .sk-metricas.sk-met-compacta > .sk-met-corta {
+		color: #a1a1aa;
+	}
+}
+
+/* Mensaje en vidrio: la hora que Open WebUI enseña al pasar el cursor al final de las acciones sobra (ya está en el
+   encabezado) y dejaba un hueco de 66 px antes de las métricas; la burbuja original de tu mensaje traía un borde */
+#messages-container .sk-pie > .buttons > div.self-center:has(> time) {
+	display: none !important;
+}
+
+#messages-container .user-message .chat-user .rounded-3xl:not(.sk-img-pedido):not(:has(textarea)) {
+	border: 0 !important;
+}
+
+/* editando: la caja de Open WebUI traía su propio borde (doble filo) y los botones se encogían hasta partir el texto */
+#messages-container .user-message .chat-user .rounded-3xl:has(> div > textarea[id^='message-edit-']) {
+	border: 0 !important;
+}
+
+#messages-container .user-message .chat-user .rounded-3xl:has(> div > textarea[id^='message-edit-']) > div.mt-2 > div:last-child {
+	display: flex;
+	flex: none;
+}
+
+#messages-container :is(#close-edit-message-button, #confirm-edit-message-button) {
+	flex: none;
+	white-space: nowrap;
+}
+
+#messages-container .user-message .chat-user :is(#close-edit-message-button, #confirm-edit-message-button) {
+	width: auto !important;
+	min-width: 0 !important;
+}
+
+/* Mensaje en vidrio: la píldora de tu pedido de imagen ("Pediste variaciones de la imagen") no se sale de la tarjeta:
+   se ajusta a su ancho (el texto pasa a dos renglones si hace falta) y toma el tono de tu tarjeta */
+#messages-container .user-message .chat-user .sk-img-pedido {
+	max-width: 100% !important;
+	min-width: 0;
+}
+
+#messages-container .user-message .chat-user .sk-img-chip {
+	max-width: 100%;
+	min-width: 0;
+	box-sizing: border-box;
+	height: auto;
+	min-height: 36px;
+	padding-block: 5px;
+	background: rgba(255, 255, 255, 0.75);
+	box-shadow: inset 0 0 0 1px rgba(35, 97, 199, 0.2);
+	white-space: normal;
+	text-align: left;
+}
+
+html.dark #messages-container .user-message .chat-user .sk-img-chip {
+	background: rgba(255, 255, 255, 0.06);
+	box-shadow: inset 0 0 0 1px rgba(96, 140, 230, 0.3);
+}
+
+/* Teléfono: el avatar, el nombre y la hora van encima de la tarjeta (no a un lado), así la tarjeta usa todo el ancho
+   y no se pierde espacio a la izquierda (IA) ni a la derecha (tú) */
+@media (max-width: 767px) {
+	#messages-container [id^='message-']:not(.user-message):has(> div.flex-auto.relative > h3) {
+		position: relative;
+	}
+
+	#messages-container [id^='message-']:not(.user-message) > div.shrink-0:has(> .assistant-message-profile-image) {
+		position: absolute !important;
+		top: 0;
+		left: 2px;
+		margin: 0 !important;
+	}
+
+	#messages-container .assistant-message-profile-image {
+		margin-top: 2px;
+	}
+
+	#messages-container [id^='message-']:not(.user-message) > div.flex-auto.relative:has(> h3) {
+		width: 100% !important;
+		margin-top: 36px !important;
+	}
+
+	#messages-container [id^='message-']:not(.user-message) > div.flex-auto.relative > h3 {
+		position: absolute;
+		top: -32px;
+		left: 34px;
+		right: 0;
+		margin: 0 !important;
+	}
+
+	/* tú: tu avatar arriba a la derecha y tu hora y nombre a su izquierda, sobre la tarjeta */
+	#messages-container .user-message {
+		position: relative;
+	}
+
+	#messages-container .user-message::after {
+		position: absolute;
+		top: 0;
+		right: 0;
+		width: 26px;
+		height: 26px;
+		margin: 0;
+	}
+
+	#messages-container .user-message .chat-user {
+		position: relative;
+		max-width: 88%;
+		margin-top: 34px;
+	}
+
+	#messages-container .user-message .chat-user > .sk-usuario-cabeza {
+		position: absolute;
+		top: -31px;
+		right: 34px;
+		margin: 0;
+		white-space: nowrap;
+	}
+
+	#messages-container .user-message .chat-user:has(textarea[id^='message-edit-']) {
+		margin-top: 0;
+	}
+}
+
+/* Teléfono: tu burbuja se ajusta al texto, a la derecha y con su margen, y como mucho ocupa el 70 % del ancho; el
+   texto siempre va alineado a la izquierda (centrado a la derecha costaba leerlo) */
+@media (max-width: 767px) {
+	#messages-container .user-message .chat-user {
+		width: fit-content !important;
+		max-width: 70%;
+	}
+
+	#messages-container .user-message .chat-user .flex.justify-end.pb-1 {
+		justify-content: flex-start !important;
+	}
+
+	#messages-container .user-message .chat-user .markdown-prose :is(p, li) {
+		text-align: left;
+	}
+}
+
+/* Final del chat: Open WebUI deja 72 px vacíos (pb-18) para que la caja de mensaje no tape el último mensaje, pero con
+   el tema la lista ya termina donde empieza la caja, así que ese hueco sobraba; queda un respiro de 16 px */
+#messages-container div.w-full.pt-2 > div.pb-18:last-child {
+	padding-bottom: 16px !important;
+}
+
+/* El botón de la gráfica no se corta: la caja de métricas ya no recorta ni se sale con margen negativo; si falta sitio
+   se acorta la barra de datos, nunca el botón */
+#messages-container .sk-pie > .sk-metricas {
+	overflow: visible;
+}
+
+#messages-container .sk-pie > .sk-metricas > .sk-met-detalle {
+	flex: none;
+}
+
+@media (max-width: 767px) {
+	#messages-container .sk-pie > .sk-metricas {
+		margin: 4px 0 0 auto !important;
+	}
+}
+
+/* teléfono: los ocho botones de la respuesta a 30 px de ancho para que el tiempo y la gráfica quepan en su misma fila */
+@media (max-width: 767px) {
+	#messages-container .sk-pie > .buttons button {
+		width: 30px !important;
+	}
+
+	#messages-container .sk-pie {
+		column-gap: 6px;
+	}
+}
+
+/* teléfono: sin el cronómetro, solo el botón de la gráfica (el tiempo sigue en el detalle al tocarla) */
+@media (max-width: 767px) {
+	#messages-container .sk-pie > .sk-metricas > .sk-met-corta {
+		display: none !important;
+	}
+}
+
+/* teléfono: un respiro más corto al final del chat (8 px) y sin el brillo nativo al tirar, que choca con el rebote del
+   tema (carbono.js) */
+@media (max-width: 767px) {
+	#messages-container div.w-full.pt-2 > div.pb-18:last-child {
+		padding-bottom: 8px !important;
+	}
+
+	#messages-container {
+		overscroll-behavior-y: none;
+	}
+}
+
+/* visor de imágenes: el tema maneja los gestos (zoom con límites); el navegador no debe desplazar ni ampliar la página */
+.modal[role='dialog'][aria-modal='true'].bg-black {
+	touch-action: none;
+}
+
+.modal[role='dialog'][aria-modal='true'].bg-black img {
+	will-change: transform;
+	user-select: none;
+	-webkit-user-drag: none;
+}
+
+/* teléfono: el texto de los mensajes a 17 px (16 px se quedaba chico) */
+@media (max-width: 767px) {
+	#messages-container .chat-assistant .markdown-prose :is(p, li),
+	#messages-container .user-message .chat-user .markdown-prose :is(p, li),
+	#messages-container .user-message textarea[id^='message-edit-'] {
+		font-size: 17px !important;
+		line-height: 1.55 !important;
+	}
+}
+
+/* Renglones del chat: alineado a la izquierda (en pantalla el justificado abre huecos entre palabras), pero con el
+ * reparto de palabras del navegador: evita que una palabra quede sola en el último renglón y empareja el borde
+ * derecho. Los títulos se equilibran. En el teléfono (unos 40 caracteres por renglón) además se cortan con guion solo
+ * las palabras largas (10 letras o más, al menos 4 de cada lado), con las reglas del español de la página. */
+:is(.chat-assistant, .user-message .chat-user) :is(p, li, blockquote, td, th) {
+	text-wrap: pretty;
+}
+
+:is(.chat-assistant, .user-message .chat-user) :is(h1, h2, h3, h4, h5, h6) {
+	text-wrap: balance;
+}
+
+@media (max-width: 767px) {
+	:is(.chat-assistant, .user-message .chat-user) :is(p, li, blockquote) {
+		-webkit-hyphens: auto;
+		hyphens: auto;
+		hyphenate-limit-chars: 10 4 4;
+	}
+
+	:is(.chat-assistant, .user-message .chat-user) :is(p, li, blockquote) :is(code, kbd, a, pre) {
+		-webkit-hyphens: manual;
+		hyphens: manual;
+	}
+}
+
+/* Teléfono: menos margen a los lados del chat. Las tarjetas quedan a 8 px del borde (igual que el cuadro de escribir)
+ * y el texto a 12 px dentro de la tarjeta; antes eran 14 + 14. Tu tarjeta además quedaba 4 px más adentro que la de
+ * la IA: ahora las dos empiezan en el mismo borde. */
+@media (max-width: 767px) {
+	/* 16 px como en el lienzo "Generación de imagen · móvil" (contenido de 358 de 390 px); el cuadro de escribir va
+	   a 8 px */
+	#messages-container .message-listitem {
+		padding-left: 16px;
+		padding-right: 16px;
+	}
+
+	#messages-container .user-message > div.flex-auto {
+		padding-left: 0 !important;
+	}
+
+	#messages-container [id^='message-']:not(.user-message) > div.flex-auto.relative {
+		padding: 10px 12px 4px !important;
+	}
+
+	#messages-container .user-message .chat-user {
+		padding-left: 12px;
+		padding-right: 12px;
+	}
+}
+
+/* Párrafos del chat: Open WebUI dejaba 8 px entre párrafos (con renglones de 26 px casi no se notaba) y convierte cada
+ * salto de línea suelto en <br>, así que cuando el modelo empieza una idea nueva en el renglón de abajo todo se veía
+ * como un solo bloque. Ahora: entre párrafos 0.85em y en cada salto de línea un respiro de 0.5em, menor que el de un
+ * párrafo para que se distingan (en el salto lo pone carbono.js). En la capa theme para ganarle al !my-0 que Open WebUI pone a algunos párrafos. */
+@layer theme {
+	:is(.chat-assistant, .user-message .chat-user) .markdown-prose > p:not(:last-child) {
+		margin-bottom: 0.85em !important;
+	}
+}
+
+/* Chrome no respeta márgenes en <br>: carbono.js pone un span vacío detrás de cada salto */
+:is(.chat-assistant, .user-message .chat-user) .markdown-prose p > .sk-salto {
+	display: block;
+	height: 0.5em;
+}
+
+/* Formato del texto en el chat. Open WebUI deja todo casi igual que el texto normal: títulos y negritas en peso 500,
+ * el h3 del mismo tamaño que el texto, 8 px sobre un título y 4 px debajo, viñetas gris claro, citas con una raya casi
+ * invisible y bloques de código sin borde ni fondo pegados al párrafo siguiente. Aquí cada cosa se distingue:
+ * jerarquía de títulos con aire arriba, negritas reales, viñetas legibles, citas y código como bloques. Los tamaños
+ * salen de --sk-texto (el tamaño del texto del chat: 16 px, 17 px en el teléfono). */
+#messages-container .markdown-prose {
+	--sk-texto: 16px;
+}
+
+@media (max-width: 767px) {
+	#messages-container .markdown-prose {
+		--sk-texto: 17px;
+	}
+}
+
+#messages-container .markdown-prose :is(h1, h2, h3, h4, h5, h6) {
+	color: var(--sk-ink, #09090b);
+	letter-spacing: -0.005em;
+}
+
+#messages-container .markdown-prose h1 {
+	margin: 1.3em 0 0.5em;
+	font-size: calc(var(--sk-texto) * 1.45);
+	line-height: 1.3;
+	font-weight: 700;
+}
+
+#messages-container .markdown-prose h2 {
+	margin: 1.25em 0 0.45em;
+	font-size: calc(var(--sk-texto) * 1.28);
+	line-height: 1.3;
+	font-weight: 700;
+}
+
+#messages-container .markdown-prose h3 {
+	margin: 1.15em 0 0.35em;
+	font-size: calc(var(--sk-texto) * 1.12);
+	line-height: 1.35;
+	font-weight: 650;
+}
+
+#messages-container .markdown-prose :is(h4, h5, h6) {
+	margin: 1em 0 0.3em;
+	font-size: var(--sk-texto);
+	line-height: 1.4;
+	font-weight: 650;
+}
+
+#messages-container .markdown-prose > :is(h1, h2, h3, h4, h5, h6):first-child {
+	margin-top: 0;
+}
+
+#messages-container .markdown-prose :is(strong, b) {
+	font-weight: 650;
+	color: inherit;
+}
+
+/* listas: un poco de aire entre puntos y viñetas que se vean */
+#messages-container .markdown-prose :is(ul, ol) {
+	margin-top: 0.4em;
+	margin-bottom: 0.85em;
+}
+
+#messages-container .markdown-prose :is(ul, ol):last-child {
+	margin-bottom: 0;
+}
+
+#messages-container .markdown-prose li {
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+}
+
+#messages-container .markdown-prose li > :is(ul, ol) {
+	margin-top: 0.3em;
+	margin-bottom: 0.3em;
+}
+
+#messages-container .markdown-prose ul > li::marker {
+	color: #71717a;
+}
+
+#messages-container .markdown-prose ol > li::marker {
+	color: #52525b;
+	font-weight: 650;
+}
+
+/* citas: bloque con raya y fondo suave; el texto un tono más claro que el normal */
+#messages-container .markdown-prose blockquote {
+	margin: 0.9em 0;
+	padding: 0.55em 1em;
+	border-left: 3px solid #a1a1aa;
+	border-radius: 0 12px 12px 0;
+	background: rgba(24, 24, 27, 0.035);
+	color: #3f3f46;
+}
+
+#messages-container .chat-assistant .markdown-prose blockquote :is(p, li) {
+	color: #3f3f46;
+}
+
+#messages-container .markdown-prose blockquote > :last-child {
+	margin-bottom: 0 !important;
+}
+
+/* bloques de código: borde y fondo propios y separados del texto de arriba y de abajo */
+#messages-container .markdown-prose > div > div.relative.flex.flex-col.rounded-2xl.border {
+	margin: 0.9em 0 !important;
+	border: 1px solid rgba(24, 24, 27, 0.1);
+	background: #f6f6f7;
+}
+
+#messages-container .markdown-prose > div > div.relative.flex.flex-col.rounded-2xl.border .cm-editor {
+	background: transparent;
+}
+
+#messages-container .markdown-prose hr {
+	margin: 1.4em 0;
+}
+
+/* encabezado de tablas: más chico y en negrita para que no compita con el contenido */
+#messages-container .markdown-prose th {
+	font-size: calc(var(--sk-texto) * 0.8);
+	font-weight: 650;
+	letter-spacing: 0.03em;
+	color: #52525b;
+}
+
+html.dark #messages-container .markdown-prose ul > li::marker {
+	color: #a1a1aa;
+}
+
+html.dark #messages-container .markdown-prose ol > li::marker {
+	color: #d4d4d8;
+}
+
+html.dark #messages-container .markdown-prose blockquote {
+	border-left-color: #71717a;
+	background: rgba(255, 255, 255, 0.045);
+	color: #d4d4d8;
+}
+
+html.dark #messages-container .chat-assistant .markdown-prose blockquote :is(p, li) {
+	color: #d4d4d8;
+}
+
+html.dark #messages-container .markdown-prose > div > div.relative.flex.flex-col.rounded-2xl.border {
+	border-color: rgba(255, 255, 255, 0.1);
+	background: rgba(255, 255, 255, 0.04);
+}
+
+html.dark #messages-container .markdown-prose th {
+	color: #a1a1aa;
+}
+
+/* La respuesta llega partida en varios bloques de texto cuando hay una herramienta en medio (generar imagen, buscar...).
+ * Si la herramienta está oculta (la de imagen: la foto ya va arriba) los dos bloques quedaban pegados sin espacio de
+ * párrafo; ahora entre bloques seguidos va el mismo espacio que entre párrafos. */
+#messages-container .chat-assistant :is(.markdown-prose + .markdown-prose, .markdown-prose + .sk-img-herramienta + .markdown-prose) {
+	margin-top: calc(var(--sk-texto, 16px) * 0.85);
+}
+
+/* ===== Teléfono: entrada de la barra lateral =====
+ * Al poner el dedo en el botón sale al instante un panel con la forma de la barra (carbono.js copia fondo, esquinas y
+ * sombra del #sidebar) con el mismo deslizamiento que Open WebUI (210 ms) y el fondo se oscurece. Debajo, Open WebUI
+ * arma la barra real oculta, así no se ve cómo se completa por partes. En cuanto tiene sus piezas la barra real toma
+ * el lugar del panel y su contenido aparece rápido (≈0.2 s en total). */
+@keyframes sk-fantasma-entra {
+	from {
+		transform: translateX(calc(-100% - 24px));
+	}
+	to {
+		transform: none;
+	}
+}
+
+@keyframes sk-fantasma-sale {
+	from {
+		transform: none;
+	}
+	to {
+		transform: translateX(calc(-100% - 24px));
+	}
+}
+
+@keyframes sk-velo-entra {
+	from {
+		opacity: 0;
+	}
+	to {
+		opacity: 0.6;
+	}
+}
+
+@keyframes sk-velo-sale {
+	from {
+		opacity: 0.6;
+	}
+	to {
+		opacity: 0;
+	}
+}
+
+@keyframes sk-barra-aparece {
+	from {
+		opacity: 0;
+		transform: translateY(4px);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+/* creados una vez por carbono.js; solo se ven mientras se abre la barra */
+.sk-barra-velo:not([data-sk-activo]),
+.sk-barra-fantasma:not([data-sk-activo]) {
+	display: none;
+}
+
+/* entre la página y la barra (z 50): encima de la barra la oscurecía mientras entraba y se iluminaba de golpe al final */
+.sk-barra-velo {
+	position: fixed;
+	inset: 0;
+	z-index: 45;
+	background: #000;
+	pointer-events: none;
+	animation: sk-velo-entra 210ms ease-out both;
+}
+
+.sk-barra-fantasma {
+	position: fixed;
+	z-index: 61;
+	box-sizing: border-box;
+	pointer-events: none;
+	will-change: transform;
+	animation: sk-fantasma-entra 210ms cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.sk-barra-velo[data-sk-activo='sale'] {
+	animation: sk-velo-sale 180ms ease-in both;
+}
+
+.sk-barra-fantasma[data-sk-activo='sale'] {
+	animation: sk-fantasma-sale 180ms cubic-bezier(0.4, 0, 1, 1) both;
+}
+
+/* mientras se arma, la barra real y su fondo oscuro no se ven (el panel ocupa su lugar) y la barra no hace su propio
+   deslizamiento: llega directo a su lugar */
+html[data-sk-barra='cargando'] #sidebar {
+	opacity: 0 !important;
+}
+
+/* el fondo oscuro de Open WebUI se oculta sin tocar su opacidad: Open WebUI la anima de 0 a 0.6 y, si se forzaba a
+   0, al soltarlo el gris desaparecía un instante y volvía (parpadeo) */
+html:is([data-sk-barra='cargando'], [data-sk-barra='desliza']) div.fixed.z-40.bg-black {
+	visibility: hidden !important;
+}
+
+html[data-sk-barra='cargando'] #sidebar {
+	transition: none !important;
+	pointer-events: none !important;
+}
+
+/* entrada del contenido: aparece rápido, de arriba abajo con 20 ms entre bloques */
+html[data-sk-barra='revela'] #sidebar > div > :is(div.sidebar, .sk-barra-extra, div.sticky),
+html[data-sk-barra='revela'] #sidebar > div > div.overflow-y-auto > * {
+	animation: sk-barra-aparece 160ms ease-out backwards;
+}
+
+html[data-sk-barra='revela'] #sidebar > div > .sk-barra-extra {
+	animation-delay: 20ms;
+}
+
+html[data-sk-barra='revela'] #sidebar > div > div.overflow-y-auto > .sk-barra-fijados {
+	animation-delay: 40ms;
+}
+
+html[data-sk-barra='revela'] #sidebar > div > div.overflow-y-auto > :is(.pb-1, .relative),
+html[data-sk-barra='revela'] #sidebar > div > div.sticky {
+	animation-delay: 60ms;
+}
+
+/* modo directo (la barra ya estaba armada): la barra misma entra desde el toque con su contenido. Se mueve con
+   translate porque, cerrada, el tema le fija transform con !important; el fondo oscuro es el velo del tema mientras
+   Open WebUI no la da por abierta */
+@keyframes sk-barra-desliza {
+	from {
+		translate: calc(-100% - 24px) 0;
+	}
+	to {
+		translate: 0 0;
+	}
+}
+
+html[data-sk-barra='desliza'] #sidebar {
+	visibility: visible !important;
+	opacity: 1 !important;
+	transform: none !important;
+	transition: none !important;
+	box-shadow: var(--sk-barra-sombra, 0 20px 50px rgba(24, 24, 27, 0.18), 0 0 0 0.5px rgba(24, 24, 27, 0.12)) !important;
+	animation: sk-barra-desliza 210ms cubic-bezier(0.22, 1, 0.36, 1) both;
+	pointer-events: none !important; /* el soltar llega al botón y Open WebUI la abre */
+}
+
+
+/* Teléfono: la respuesta de la IA va sin tarjeta, directo sobre el fondo y a todo el ancho (solo tu mensaje lleva
+ * burbuja). El texto va al mismo borde que el cuadro de escribir; las imágenes, tablas y código conservan su propio marco. */
+@media (max-width: 767px) {
+	#messages-container [id^='message-']:not(.user-message) > div.flex-auto.relative,
+	#messages-container [id^='message-']:not(.user-message) > div.flex-auto.relative:has(> h3),
+	html.dark #messages-container [id^='message-']:not(.user-message) > div.flex-auto.relative {
+		flex: 1 1 auto !important;
+		width: 100% !important;
+		max-width: 100%;
+		padding-left: 0 !important; /* el texto empieza en el borde del chat (16 px de la pantalla) */
+		padding-right: 0 !important;
+		border-radius: 0 !important;
+		background: transparent !important;
+		box-shadow: none !important;
+		-webkit-backdrop-filter: none !important;
+		backdrop-filter: none !important;
+	}
+
+	/* texto arriba y acciones abajo en una cuadrícula: así la tarjeta mide lo más ancho de los dos (en la fila
+	   flexible el navegador sumaba el ancho del texto y el de las acciones) */
+	#messages-container .sk-pie {
+		display: grid !important;
+		grid-template-columns: auto 1fr;
+		align-items: center;
+		column-gap: 6px;
+	}
+
+	#messages-container .sk-pie > * {
+		grid-column: 1 / -1;
+	}
+
+	#messages-container .sk-pie > .buttons {
+		grid-column: 1;
+		justify-self: start;
+	}
+
+	#messages-container .sk-pie > .sk-metricas {
+		grid-column: 2;
+		justify-self: end;
+	}
+}
+
+/* ===== Teléfono: entrada de la pantalla de llamada =====
+ * Antes aparecía de golpe (un fundido de 0.26 s). Ahora se abre en círculo desde el botón negro de llamada y, ya
+ * abierta, entran en cascada la cabecera, la foto (crece con un pequeño rebote), el estado y los cuatro botones.
+ * La cascada solo corre al abrir (html[data-sk-voz-entrada], 1.3 s) para que no se repita si el tema mueve algo
+ * durante la llamada. */
+@keyframes sk-voz-revela {
+	from {
+		clip-path: circle(22px at var(--sk-voz-x, calc(100% - 40px)) var(--sk-voz-y, calc(100% - 46px)));
+	}
+	to {
+		clip-path: circle(150vmax at var(--sk-voz-x, calc(100% - 40px)) var(--sk-voz-y, calc(100% - 46px)));
+	}
+}
+
+@keyframes sk-voz-sube-suave {
+	from {
+		opacity: 0;
+		transform: translateY(14px);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+@keyframes sk-voz-foto-entra {
+	from {
+		opacity: 0;
+		transform: scale(0.86);
+	}
+	to {
+		opacity: 1;
+		transform: none;
+	}
+}
+
+html[data-sk-voz-entrada] .modal[role='dialog'] :is(.sk-voz-cabeza, .sk-voz-cabeza-panel) {
+	animation: sk-voz-sube-suave 360ms cubic-bezier(0.22, 1, 0.36, 1) 140ms backwards;
+}
+
+html[data-sk-voz-entrada] .modal[role='dialog'] button.sk-voz-boton {
+	animation: sk-voz-foto-entra 560ms cubic-bezier(0.34, 1.36, 0.64, 1) 180ms backwards;
+}
+
+html[data-sk-voz-entrada] .modal[role='dialog'] [role='status'][aria-live][data-sk-voz] {
+	animation: sk-voz-sube-suave 380ms cubic-bezier(0.22, 1, 0.36, 1) 300ms backwards;
+}
+
+html[data-sk-voz-entrada] div.flex-col:has(> [role='status'][aria-live]:not([data-sonner-toast]) > button) > div:last-child > * {
+	animation: sk-voz-sube-suave 380ms cubic-bezier(0.22, 1, 0.36, 1) 360ms backwards;
+}
+
+html[data-sk-voz-entrada] div.flex-col:has(> [role='status'][aria-live]:not([data-sonner-toast]) > button) > div:last-child > :nth-child(2) {
+	animation-delay: 400ms;
+}
+
+html[data-sk-voz-entrada] div.flex-col:has(> [role='status'][aria-live]:not([data-sonner-toast]) > button) > div:last-child > :nth-child(3) {
+	animation-delay: 440ms;
+}
+
+html[data-sk-voz-entrada] div.flex-col:has(> [role='status'][aria-live]:not([data-sonner-toast]) > button) > div:last-child > :nth-child(4) {
+	animation-delay: 480ms;
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.modal[role='dialog'] > div.relative {
+		animation-duration: 1ms !important;
+	}
+}
+
+
+/* Teléfono: cuadro de escribir con las medidas del lienzo "Móvil · 3 · Imagen lista": 8 px a los lados, 16 px abajo,
+ * 6 px de relleno, renglón de texto de 46 px y la fila de botones 4 px bajo la línea (antes 20 px abajo, 4 px de relleno
+ * arriba y renglón de 44 px). */
+@media (max-width: 767px) {
+	#message-input-container {
+		margin-bottom: 0 !important;
+		padding: 6px !important;
+	}
+
+	/* Open WebUI deja 4 px sobre el renglón y otros 4 dentro: se descuentan para que mida 46 con el texto centrado */
+	#message-input-container > div.px-2.relative {
+		margin-top: -4px !important;
+	}
+
+	#message-input-container > div.px-2.relative > div.scrollbar-hidden {
+		min-height: 46px !important;
+		padding-top: 7px !important;
+		padding-bottom: 7px !important;
+	}
+
+	#message-input-container div.self-end.flex.space-x-1 {
+		padding-top: 4px !important;
+	}
+}
+
+/* Modo voz: el medidor de tu micrófono (las barras azules junto a "Te escucho…") latía en 0.7–1.1 s y deslumbraba.
+ * Ahora va a menos de la mitad de velocidad, con menos recorrido, y cambia de alto despacio; las ondas del avatar
+ * también se calman. */
+@keyframes sk-vz-bar-suave {
+	0%,
+	100% {
+		transform: scaleY(0.6);
+	}
+	50% {
+		transform: scaleY(1);
+	}
+}
+
+.sk-voz-medidor i {
+	animation: sk-vz-bar-suave 1.8s ease-in-out infinite;
+	transition: height 0.45s ease-out;
+}
+
+.sk-voz-medidor i:nth-child(4n + 2) { animation-duration: 2.1s; }
+.sk-voz-medidor i:nth-child(4n + 3) { animation-duration: 2.4s; }
+.sk-voz-medidor i:nth-child(4n) { animation-duration: 2.7s; }
+.sk-voz-medidor i:nth-child(2) { animation-delay: 0.15s; }
+.sk-voz-medidor i:nth-child(3) { animation-delay: 0.3s; }
+.sk-voz-medidor i:nth-child(4) { animation-delay: 0.45s; }
+.sk-voz-medidor i:nth-child(5) { animation-delay: 0.6s; }
+.sk-voz-medidor i:nth-child(6) { animation-delay: 0.75s; }
+.sk-voz-medidor i:nth-child(7) { animation-delay: 0.9s; }
+.sk-voz-medidor i:nth-child(8) { animation-delay: 1.05s; }
+.sk-voz-medidor i:nth-child(9) { animation-delay: 1.2s; }
+
+[role='status'][aria-live][data-sk-voz='silenciado'] > .sk-voz-medidor i {
+	animation: none;
+}
+
+.sk-voz-ondas i {
+	animation-duration: 2.8s;
+}
+
+.sk-voz-ondas i:nth-child(2) { animation-delay: 0.93s; }
+.sk-voz-ondas i:nth-child(3) { animation-delay: 1.86s; }
+
+.sk-voz-respondiendo .sk-voz-ondas i {
+	animation-duration: 2.2s;
+}
+
+.sk-voz-respondiendo .sk-voz-ondas i:nth-child(2) { animation-delay: 0.55s; }
+.sk-voz-respondiendo .sk-voz-ondas i:nth-child(3) { animation-delay: 1.1s; }
+
+/* Pantalla de llamada: al volver al chat ("‹ Chat" oculta las pestañas) se cierra al instante; Open WebUI la sacaba
+   con un fundido y desplazamiento. La entrada en círculo de arriba no se toca. */
+.modal[role='dialog']:is([aria-label='Pestañas'], [aria-label='Tabs']):has(.sk-voz-boton, button:is([aria-label='Llamada de voz'], [aria-label='Interrumpir al asistente'], [aria-label='Voice call'], [aria-label='Stop speaking'])),
+.modal[role='dialog']:is([aria-label='Pestañas'], [aria-label='Tabs']):has(.sk-voz-boton, button:is([aria-label='Llamada de voz'], [aria-label='Interrumpir al asistente'], [aria-label='Voice call'], [aria-label='Stop speaking'])) > div.absolute {
+	animation: none !important;
+	transition: none !important;
+}
+
+/* La ventana que mostró la llamada no tiene fondo oscuro ni animación hasta que desaparece (antes, al salir, el
+   contenido se iba primero y se veía el fondo negro semitransparente de Open WebUI desvanecerse) */
+.modal[role='dialog'][data-sk-fue-voz],
+.modal[role='dialog'][data-sk-fue-voz] > div.absolute {
+	animation: none !important;
+	transition: none !important;
+}
+
+.modal[role='dialog'][data-sk-fue-voz] {
+	background: transparent !important;
+}
+
+.modal[role='dialog'][data-sk-fue-voz] > div.absolute {
+	background: transparent !important;
+	opacity: 0 !important;
+}
+
+/* Teléfono: la ventana de pestañas (archivos, navegador, terminal…) ocupa toda la pantalla, así que va sin las
+ * esquinas redondeadas que el tema pone a las ventanas */
+@media (max-width: 767px) {
+	.modal[role='dialog']:is([aria-label='Pestañas'], [aria-label='Tabs']) > div.relative {
+		border-radius: 0 !important;
+	}
+
+	/* sin el fondo negro al 60 % de detrás: la ventana ya tapa toda la pantalla y solo se veía al abrir o cerrar */
+	.modal[role='dialog']:is([aria-label='Pestañas'], [aria-label='Tabs']) {
+		background: transparent !important;
+	}
+
+	.modal[role='dialog']:is([aria-label='Pestañas'], [aria-label='Tabs']) > div.absolute {
+		background: transparent !important;
+		opacity: 0 !important;
+		transition: none !important;
+		animation: none !important;
+	}
+}
+
+
+/* Teléfono: renglones de chats de la barra de 48 px (antes 40, uno pegado al otro) para tocarlos con el dedo sin
+ * equivocarse; el avatar, el título y el menú ⋯ siguen centrados */
+@media (max-width: 767px) {
+	html.sk-barra-c #sidebar-chat-item {
+		height: 48px !important;
+	}
+}
+
+/* Teléfono: más aire entre los elementos de arriba de la barra para tocarlos sin equivocarse: 14 px entre la tarjeta
+ * del modelo, los fijados, Nuevo Chat y las píldoras (antes 8–10), y 14 / 12 px entre botones de una misma fila */
+@media (max-width: 767px) {
+	#sidebar .sk-barra-fijados {
+		padding-top: 6px !important;
+		padding-bottom: 14px !important;
+	}
+
+	html.sk-barra-c #sidebar div.pb-1:has(> div > #sidebar-new-chat-button) {
+		column-gap: 14px !important;
+	}
+
+	#sidebar .overflow-y-auto > .pb-1 > div:last-child {
+		margin-top: 14px !important;
+		gap: 12px !important;
+	}
+}
+
+/* Barra: el "+" de Nueva carpeta (junto a CARPETAS) y el "⋯" de CHATS estaban en #d4d4d8, casi invisibles sobre el
+ * fondo; ahora con el gris de los ⋯ de cada chat y un trazo un poco más grueso */
+#sidebar button.w-7.h-7.rounded-lg:is([aria-label='Nueva Carpeta'], [aria-label='New Folder'], [aria-label='Más'], [aria-label='More']) {
+	color: #52525b !important;
+}
+
+#sidebar button.w-7.h-7.rounded-lg:is([aria-label='Nueva Carpeta'], [aria-label='New Folder'], [aria-label='Más'], [aria-label='More']) svg {
+	color: currentColor !important;
+	stroke-width: 2 !important;
+}
+
+html.dark #sidebar button.w-7.h-7.rounded-lg:is([aria-label='Nueva Carpeta'], [aria-label='New Folder'], [aria-label='Más'], [aria-label='More']) {
+	color: #a1a1aa !important;
+}
+
+/* Teléfono: la barra lateral es una pantalla completa (antes una tarjeta flotante a 8 px con esquinas y sombra):
+ * de borde a borde, fondo sólido para que no se transparente el chat de atrás y sin el fondo negro detrás (ni el de
+ * Open WebUI ni el velo de la entrada). Se sigue deslizando desde la izquierda al abrir y al cerrar. */
+@media (max-width: 767px) {
+	html #sidebar#sidebar {
+		left: 0 !important;
+		top: 0 !important;
+		width: 100vw !important;
+		max-width: 100vw !important;
+		height: 100dvh !important;
+		max-height: 100dvh !important;
+		margin: 0 !important;
+		border-radius: 0 !important;
+		box-shadow: none !important;
+		background-color: rgb(244, 244, 246) !important;
+		-webkit-backdrop-filter: none !important;
+		backdrop-filter: none !important;
+	}
+
+	html.dark #sidebar#sidebar {
+		background-color: rgb(24, 24, 27) !important;
+	}
+
+	/* el contenido llena el ancho de la pantalla (Open WebUI le deja los 360 px de la barra) */
+	html #sidebar#sidebar > div {
+		width: 100% !important;
+		max-width: none !important;
+	}
+
+	/* la tarjeta del usuario al pie con el mismo margen que la del modelo (12 px) */
+	html #sidebar#sidebar > div > div.sticky.bottom-0 {
+		padding-left: 12px !important;
+		padding-right: 12px !important;
+	}
+
+	html #sidebar#sidebar .sk-barra-usuario {
+		margin-left: 0 !important;
+		margin-right: 0 !important;
+	}
+
+	div.fixed.z-40.bg-black:has(+ #sidebar),
+	#sidebar ~ div.fixed.z-40.bg-black,
+	body div.fixed.md\:hidden.z-40.bg-black {
+		display: none !important;
+	}
+
+	.sk-barra-velo {
+		display: none !important;
+	}
+}
+
+/* Teléfono: el "+" de CARPETAS y el "⋯" de CHATS alineados con su rótulo (la fila medía 24 px y el botón 40, así que
+ * quedaba más arriba) y más grandes y visibles: botón de 36 px con fondo suave e ícono de 20 px */
+@media (max-width: 767px) {
+	#sidebar :has(> button.w-7.h-7.rounded-lg:is([aria-label='Nueva Carpeta'], [aria-label='New Folder'], [aria-label='Más'], [aria-label='More'])) {
+		height: 40px !important;
+		align-items: center !important;
+	}
+
+	#sidebar button.w-7.h-7.rounded-lg:is([aria-label='Nueva Carpeta'], [aria-label='New Folder'], [aria-label='Más'], [aria-label='More']) {
+		width: 36px !important;
+		height: 36px !important;
+		align-self: center !important;
+		margin-right: 3px !important; /* centrado a 24 px del borde, como en el lienzo */
+		border-radius: 12px !important;
+		background: transparent !important; /* como en el lienzo: solo el ícono */
+		color: #3f3f46 !important;
+	}
+
+	html.dark #sidebar button.w-7.h-7.rounded-lg:is([aria-label='Nueva Carpeta'], [aria-label='New Folder'], [aria-label='Más'], [aria-label='More']) {
+		background: transparent !important;
+		color: #d4d4d8 !important;
+	}
+
+	#sidebar button.w-7.h-7.rounded-lg:is([aria-label='Nueva Carpeta'], [aria-label='New Folder'], [aria-label='Más'], [aria-label='More']) svg {
+		width: 20px !important;
+		height: 20px !important;
+		stroke-width: 2.2 !important;
+	}
+}
+
+/* ===== Teléfono: barra lateral · diseño final (lienzo "Barra lateral móvil · rediseño en dos iteraciones") =====
+ * Arriba: logo, "Sakura OI Web" (19 px · 700), campana y tu avatar. Debajo: "Buscar chats" y Notas · Espacio ·
+ * Agenda. En medio: rótulos de 12.5 px en mayúsculas y chats de 48 px (avatar de 24, título de 16), el abierto en
+ * blanco con la barra de su modelo y su ⋯, "Respuesta nueva" con tinte del 7 %, título en seminegrita y un punto que
+ * late tres veces, "Pensando…" con un anillo de 1.4 s y el texto en el color del modelo. Abajo: el modelo activo y
+ * "Nuevo chat" (52 px). El selector de modelo y tu cuenta salen desde abajo como hojas. Sin la tarjeta del modelo,
+ * los fijados, el pie con tu tarjeta ni el botón de cerrar (se cierra deslizando a la izquierda). */
+.sk-barra-cuenta,
+.sk-barra-buscar,
+.sk-barra-dock,
+.sk-sel-titulo {
+	display: none;
+}
+
+@media (max-width: 767px) {
+	/* cabecera */
+	html #sidebar#sidebar > div > div.sidebar {
+		align-items: center;
+		height: 56px;
+		padding: 0 6px 0 16px !important;
+		margin: 0 !important;
+	}
+
+	/* título de 19 / 24 · 700 y sin la versión debajo */
+	#sidebar > div > div.sidebar div.self-center.truncate {
+		font-size: 19px !important;
+		line-height: 24px !important;
+		font-weight: 700 !important;
+	}
+
+	#sidebar > div > div.sidebar div.self-center.truncate::after {
+		content: none !important;
+		display: none !important;
+	}
+
+	/* el mismo botón pasa a "Abrir Barra Lateral" mientras la barra se desliza al cerrarse: oculto con los dos nombres */
+	#sidebar > div > div.sidebar button:is([aria-label='Cerrar Barra Lateral'], [aria-label='Close Sidebar'], [aria-label='Abrir Barra Lateral'], [aria-label='Open Sidebar']) {
+		display: none !important;
+	}
+
+	#sidebar > div > div.sidebar button[aria-label='Notificaciones'] {
+		width: 44px !important;
+		height: 44px !important;
+	}
+
+	#sidebar > div > div.sidebar button[aria-label='Notificaciones'] svg {
+		width: 20px !important;
+		height: 20px !important;
+		color: #27272a;
+	}
+
+	.sk-barra-cuenta {
+		position: relative;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		flex: none;
+		width: 44px;
+		height: 44px;
+		padding: 0;
+		border: 0;
+		border-radius: 12px;
+		background: transparent;
+	}
+
+	.sk-barra-cuenta img {
+		width: 32px;
+		height: 32px;
+		border-radius: 9999px;
+		object-fit: cover;
+		background: #e4e4e7;
+	}
+
+	.sk-barra-cuenta i {
+		position: absolute;
+		right: 7px;
+		bottom: 7px;
+		width: 10px;
+		height: 10px;
+		border-radius: 9999px;
+		background: #2b8a5a;
+		box-shadow: 0 0 0 2px rgb(244, 244, 246);
+	}
+
+	html.dark .sk-barra-cuenta i {
+		box-shadow: 0 0 0 2px rgb(24, 24, 27);
+	}
+
+	/* fuera: tarjeta del modelo, fijados, Nuevo Chat y buscar de arriba, y el pie con tu tarjeta (se queda en la página,
+	   invisible, porque su botón es el que abre el menú de tu cuenta) */
+	#sidebar .sk-barra-extra > .sk-barra-modelo,
+	#sidebar .sk-barra-fijados,
+	#sidebar .overflow-y-auto > .pb-1 > div:has(> #sidebar-new-chat-button),
+	#sidebar .overflow-y-auto > .pb-1 > div:has(> #sidebar-search-button) {
+		display: none !important;
+	}
+
+	html #sidebar#sidebar > div > div.sticky.bottom-0 {
+		position: absolute !important;
+		width: 1px !important;
+		height: 1px !important;
+		padding: 0 !important;
+		overflow: hidden !important;
+		opacity: 0 !important;
+		pointer-events: none !important;
+	}
+
+	/* Buscar chats */
+	#sidebar .sk-barra-extra {
+		padding: 0 16px !important;
+	}
+
+	.sk-barra-buscar {
+		display: flex;
+		align-items: center;
+		gap: 10px;
+		width: 100%;
+		height: 44px;
+		padding: 0 14px;
+		border: 0;
+		border-radius: 12px;
+		background: #ffffff;
+		box-shadow: inset 0 0 0 1px #e1e1e5;
+		color: #6b6b73;
+		font-size: 16px;
+		line-height: 1;
+		text-align: left;
+		cursor: pointer;
+	}
+
+	.sk-barra-buscar svg {
+		flex: none;
+		color: #52525b;
+	}
+
+	.sk-barra-buscar kbd {
+		display: none;
+	}
+
+	html.dark .sk-barra-buscar {
+		background: rgba(255, 255, 255, 0.06);
+		box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+		color: #a1a1aa;
+	}
+
+	html.dark .sk-barra-buscar svg {
+		color: #a1a1aa;
+	}
+
+	/* Notas · Espacio · Agenda */
+	html.sk-barra-c #sidebar div.pb-1:has(> div > #sidebar-new-chat-button) {
+		padding: 8px 16px 0 !important;
+	}
+
+	#sidebar .overflow-y-auto > .pb-1 > div:last-child {
+		margin-top: 0 !important;
+		gap: 8px !important;
+	}
+
+	#sidebar .overflow-y-auto > .pb-1 > div:last-child > * {
+		height: 40px !important;
+		min-height: 40px !important;
+		border-radius: 12px !important;
+		background: #ffffff !important;
+		box-shadow: inset 0 0 0 1px #e1e1e5 !important;
+		color: #27272a !important;
+		font-size: 15px !important;
+		font-weight: 500 !important;
+	}
+
+	#sidebar .overflow-y-auto > .pb-1 > div:last-child svg {
+		width: 18px !important;
+		height: 18px !important;
+		color: #3f3f46 !important;
+		stroke-width: 1.9 !important;
+	}
+
+	html.dark #sidebar .overflow-y-auto > .pb-1 > div:last-child > * {
+		background: rgba(255, 255, 255, 0.06) !important;
+		box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+		color: #e4e4e7 !important;
+	}
+
+	/* rótulos de sección: 12.5 px · 700 · mayúsculas, gris #52525b */
+	html.sk-barra-c [id='sidebar-folder-button'] > h3 > button,
+	html.sk-barra-c #sidebar-chat-group [class~='text-[0.6875rem]']:has(+ [role='list']),
+	html.sk-barra-c #sidebar :is(button, div):is(.text-xs, [class~='text-[0.6875rem]'], [class~='text-[0.75rem]']) > span:not(:has(*)):not(#sidebar-chat-item *, [role='menu'] *, [role='menuitem'] *) {
+		color: #52525b !important;
+		font-size: 12.5px !important;
+		line-height: 16px !important;
+		font-weight: 700 !important;
+		letter-spacing: 0.06em !important;
+	}
+
+	html.dark.sk-barra-c [id='sidebar-folder-button'] > h3 > button,
+	html.dark.sk-barra-c #sidebar :is(button, div):is(.text-xs, [class~='text-[0.6875rem]'], [class~='text-[0.75rem]']) > span:not(:has(*)):not(#sidebar-chat-item *, [role='menu'] *, [role='menuitem'] *) {
+		color: #a1a1aa !important;
+	}
+
+	/* chats: 48 px, avatar de 24, título de 16 · 400 */
+	html.sk-barra-c #sidebar-chat-item {
+		height: 48px !important;
+		margin: 0 8px !important;
+		padding: 0 8px !important;
+		border-radius: 12px !important;
+	}
+
+	html.sk-barra-c #sidebar-chat-item > a {
+		gap: 12px !important;
+	}
+
+	html.sk-barra-c #sidebar-chat-item > a::before {
+		width: 24px !important;
+		height: 24px !important;
+	}
+
+	html.sk-barra-c #sidebar-chat-item > a div[dir='auto'] {
+		font-size: 16px !important;
+		line-height: 22px !important;
+		font-weight: 400;
+		color: #18181b;
+	}
+
+	html.dark.sk-barra-c #sidebar-chat-item > a div[dir='auto'] {
+		color: #ececee;
+	}
+
+	/* el ⋯ solo en el chat abierto (es el hermano #sidebar-chat-item-menu del renglón) */
+	html.sk-barra-c #sidebar-chat-item:not(.selected) + #sidebar-chat-item-menu {
+		display: none !important;
+	}
+
+	/* abierto: blanco con la barra de 3 px de su modelo y un borde fino; título en seminegrita */
+	html.sk-barra-c #sidebar-chat-item.selected {
+		padding-right: 4px !important;
+		background: #ffffff !important;
+		box-shadow: inset 3px 0 0 hsl(var(--sk-m)), 0 0 0 1px #e1e1e5 !important;
+	}
+
+	html.dark.sk-barra-c #sidebar-chat-item.selected {
+		background: rgba(255, 255, 255, 0.08) !important;
+		box-shadow: inset 3px 0 0 hsl(var(--sk-m)), 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+	}
+
+	/* respuesta nueva: tinte del 7 %, título en seminegrita y punto de 8 px que late tres veces y se queda */
+	html.sk-barra-c #sidebar-chat-item:has(.bg-sky-500) {
+		background: hsl(var(--sk-m) / 0.07) !important;
+	}
+
+	html.sk-barra-c #sidebar-chat-item .bg-sky-500 {
+		width: 8px !important;
+		height: 8px !important;
+		margin-right: 6px !important;
+		box-shadow: 0 0 0 3px hsl(var(--sk-m) / 0.22) !important;
+		animation: sk-aparece 0.35s ease-out both, sk-punto-halo 1.6s ease-out 0.35s 3 !important;
+	}
+
+	/* pensando: solo el anillo (1.4 s, sin desplazar el título) y el texto "Pensando…" en el color del modelo */
+	html.sk-barra-c #sidebar-chat-item:has(.spinner_ajPY) > a::after {
+		top: calc(50% - 16px) !important;
+		left: -4px !important;
+		width: 32px !important;
+		height: 32px !important;
+		-webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2.5px)) !important;
+		mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2.5px)) !important;
+		animation: sk-anillo 1.4s linear infinite !important;
+	}
+
+	html.sk-barra-c #sidebar-chat-item a > div.pr-2 > div:has(.spinner_ajPY) {
+		height: auto !important;
+		padding: 0 !important;
+		background: transparent !important;
+		color: color-mix(in srgb, hsl(var(--sk-m)) 72%, #000) !important;
+	}
+
+	html.sk-barra-c #sidebar-chat-item a > div.pr-2 > div:has(.spinner_ajPY)::before {
+		content: 'Pensando…' !important;
+		width: auto !important;
+		height: auto !important;
+		border-radius: 0 !important;
+		background: none !important;
+		font-size: 13px;
+		line-height: 18px;
+		font-weight: 500;
+		white-space: nowrap;
+		animation: none !important;
+	}
+
+	html.sk-barra-c #sidebar-chat-item a > div.pr-2 > div:has(.spinner_ajPY)::after,
+	html.sk-barra-c #sidebar-chat-item a > div.pr-2 > div:has(.spinner_ajPY) > div {
+		display: none !important;
+	}
+
+	html.dark.sk-barra-c #sidebar-chat-item a > div.pr-2 > div:has(.spinner_ajPY) {
+		color: color-mix(in srgb, hsl(var(--sk-m)) 60%, #fff) !important;
+	}
+
+	/* abajo: modelo activo y Nuevo chat */
+	.sk-barra-dock {
+		display: flex;
+		flex: none;
+		gap: 8px;
+		padding: 10px 12px max(12px, env(safe-area-inset-bottom)); /* el navegador ya deja la barra de gestos fuera */
+		background: rgba(250, 250, 252, 0.88);
+		-webkit-backdrop-filter: blur(20px) saturate(1.6);
+		backdrop-filter: blur(20px) saturate(1.6);
+		box-shadow: inset 0 1px 0 #e1e1e5;
+	}
+
+	html.dark .sk-barra-dock {
+		background: rgba(24, 24, 27, 0.88);
+		box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+	}
+
+	.sk-barra-pastilla {
+		display: inline-flex;
+		align-items: center;
+		flex: none;
+		gap: 8px;
+		max-width: 46%;
+		height: 52px;
+		padding: 0 10px 0 6px;
+		border: 0;
+		border-radius: 9999px;
+		background: hsl(var(--sk-m-tinte, var(--sk-m) / 0.12));
+		box-shadow: inset 0 0 0 1px hsl(var(--sk-m) / 0.35);
+		color: #18181b;
+		font-size: 16px;
+		line-height: 1;
+		cursor: pointer;
+	}
+
+	.sk-barra-pastilla img {
+		flex: none;
+		width: 40px;
+		height: 40px;
+		border-radius: 9999px;
+		object-fit: cover;
+	}
+
+	.sk-barra-pastilla b {
+		overflow: hidden;
+		font-weight: 700;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+	}
+
+	.sk-barra-pastilla svg {
+		flex: none;
+		color: hsl(var(--sk-m-oscuro, var(--sk-m)));
+	}
+
+	html.dark .sk-barra-pastilla {
+		background: hsl(var(--sk-m) / 0.18);
+		color: #ececee;
+	}
+
+	.sk-barra-nuevo {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		flex: 1;
+		gap: 8px;
+		min-width: 0;
+		height: 52px;
+		border: 0;
+		border-radius: 9999px;
+		background: #18181b;
+		color: #ffffff;
+		font-size: 16px;
+		line-height: 1;
+		font-weight: 600;
+		cursor: pointer;
+	}
+
+	html.dark .sk-barra-nuevo {
+		background: #ececee;
+		color: #18181b;
+	}
+
+	html[data-sk-barra='revela'] #sidebar > div > .sk-barra-dock {
+		animation: sk-barra-aparece 160ms ease-out 60ms backwards;
+	}
+
+	/* hojas inferiores: selector de modelo y tu cuenta */
+	.sk-selector {
+		position: fixed !important;
+		top: auto !important;
+		left: 8px !important;
+		right: 8px !important;
+		bottom: 8px !important;
+		z-index: 9999 !important;
+		max-height: min(78dvh, 640px) !important;
+		padding: 8px 0 12px !important;
+		border-radius: 28px !important;
+		background: rgba(250, 250, 252, 0.94) !important;
+		-webkit-backdrop-filter: blur(28px) saturate(1.8);
+		backdrop-filter: blur(28px) saturate(1.8);
+		box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.25), inset 0 0 0 1px rgba(255, 255, 255, 0.6), 0 0 0 100vmax rgba(24, 24, 27, 0.38) !important;
+		animation: sk-hoja-sube 0.24s cubic-bezier(0.22, 1, 0.36, 1) both !important;
+	}
+
+	html.dark .sk-selector {
+		background: rgba(32, 32, 36, 0.94) !important;
+		box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 0 0 100vmax rgba(0, 0, 0, 0.5) !important;
+	}
+
+	.sk-selector::before {
+		content: '';
+		flex: none;
+		width: 40px;
+		height: 5px;
+		margin: 0 auto 10px;
+		border-radius: 9999px;
+		background: #c4c4ca;
+	}
+
+	.sk-sel-titulo {
+		display: block;
+		padding: 0 16px 8px;
+		color: var(--sk-ink);
+		font-size: 17px;
+		line-height: 22px;
+		font-weight: 700;
+	}
+
+	.sk-selector .sk-sel-buscar {
+		height: 44px !important;
+		margin: 0 16px 4px !important;
+		border-radius: 12px !important;
+		font-size: 16px !important;
+	}
+
+	.sk-selector .sk-sel-buscar input {
+		font-size: 16px !important;
+	}
+
+	.sk-selector .sk-sel-rotulo {
+		height: 36px !important;
+		margin-top: 8px !important;
+		padding: 0 16px !important;
+		color: #52525b !important;
+		font-size: 12.5px !important;
+		line-height: 16px !important;
+		font-weight: 700 !important;
+		letter-spacing: 0.06em !important;
+		text-transform: uppercase;
+	}
+
+	.sk-selector .sk-sel-fila {
+		gap: 12px !important;
+		min-height: 56px !important;
+		height: 56px;
+		margin: 0 8px !important;
+		padding: 0 16px !important;
+		border-radius: 14px !important;
+	}
+
+	.sk-selector .sk-sel-fila > :is(img, .sk-sel-letra) {
+		width: 36px !important;
+		height: 36px !important;
+		font-size: 15px !important;
+	}
+
+	.sk-selector .sk-sel-fila .sk-sel-texto > :first-child {
+		font-size: 16px !important;
+		line-height: 21px !important;
+		font-weight: 400 !important;
+	}
+
+	.sk-selector .sk-sel-fila .sk-sel-texto > :not(:first-child) {
+		color: #52525b !important;
+		font-size: 13px !important;
+		line-height: 18px !important;
+		font-weight: 500 !important;
+	}
+
+	.sk-selector .sk-sel-fila.sk-activo {
+		background: hsl(var(--sk-m) / 0.1) !important;
+	}
+
+	.sk-selector .sk-sel-fila.sk-activo .sk-sel-texto > :first-child {
+		font-weight: 700 !important;
+	}
+
+	html.sk-barra-c [role='menu']:has(.user-menu-status) {
+		inset: auto 8px 8px 8px !important;
+		left: 8px !important;
+		right: 8px !important;
+		width: auto !important;
+		max-width: none !important;
+		max-height: min(84dvh, 680px) !important;
+		animation: sk-hoja-sube 0.24s cubic-bezier(0.22, 1, 0.36, 1) both;
+	}
+
+	[role='menu']:has(.user-menu-status) .app-dropdown-menu {
+		padding: 8px 0 10px !important;
+		border-radius: 28px !important;
+		background: rgba(250, 250, 252, 0.94) !important;
+		-webkit-backdrop-filter: blur(28px) saturate(1.8) !important;
+		backdrop-filter: blur(28px) saturate(1.8) !important;
+		box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.25), inset 0 0 0 1px rgba(255, 255, 255, 0.6), 0 0 0 100vmax rgba(24, 24, 27, 0.38) !important;
+	}
+
+	html.dark [role='menu']:has(.user-menu-status) .app-dropdown-menu {
+		background: rgba(32, 32, 36, 0.94) !important;
+		box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.5), inset 0 0 0 1px rgba(255, 255, 255, 0.08), 0 0 0 100vmax rgba(0, 0, 0, 0.5) !important;
+	}
+
+	[role='menu']:has(.user-menu-status) .app-dropdown-menu::before {
+		content: '';
+		display: block;
+		width: 40px;
+		height: 5px;
+		margin: 0 auto 10px;
+		border-radius: 9999px;
+		background: #c4c4ca;
+	}
+
+	[role='menu']:has(.user-menu-status) [role='menuitem'] {
+		gap: 14px !important;
+		height: 52px !important;
+		min-height: 52px !important;
+		padding: 0 16px !important;
+		border-radius: 0 !important;
+		font-weight: 400 !important;
+	}
+
+	[role='menu']:has(.user-menu-status) [role='menuitem'] svg {
+		width: 20px !important;
+		height: 20px !important;
+		color: #3f3f46 !important;
+		stroke-width: 1.9 !important;
+	}
+
+	/* fila de tu perfil: avatar de 44 y nombre de 17 · 700 */
+	[role='menu']:has(.user-menu-status) [role='menuitem']:has(img) {
+		height: 60px !important;
+		min-height: 60px !important;
+		gap: 12px !important;
+		padding: 4px 16px 10px !important;
+	}
+
+	[role='menu']:has(.user-menu-status) [role='menuitem']:has(img) :is(div:has(> img), img) {
+		width: 44px !important;
+		height: 44px !important;
+	}
+
+	[role='menu']:has(.user-menu-status) [role='menuitem']:has(img) div.truncate {
+		font-size: 17px !important;
+		line-height: 22px !important;
+		font-weight: 700 !important;
+	}
+
+	/* Espacio de trabajo, Notas y Calendario ya están en la barra */
+	[role='menu']:has(.user-menu-status) a[role='menuitem']:is([href='/workspace'], [href^='/workspace/'], [href='/notes'], [href='/calendar']) {
+		display: none !important;
+	}
+
+	[role='menu']:has(.user-menu-status) hr {
+		margin: 4px 16px !important;
+		border-color: #e1e1e5 !important;
+	}
+
+	/* Cerrar sesión en rojo, separado */
+	[role='menu']:has(.user-menu-status) .app-dropdown-menu > [role='menuitem']:last-child {
+		margin-top: 4px;
+		border-top: 1px solid #e1e1e5;
+		color: #a32a22 !important;
+	}
+
+	[role='menu']:has(.user-menu-status) .app-dropdown-menu > [role='menuitem']:last-child svg {
+		color: #c0392b !important;
+	}
+
+	[role='menu']:has(.user-menu-status) [role='menuitem'] :is(kbd, .text-xs, [class*='shortcut']) {
+		display: none !important;
+	}
+}
+
+@keyframes sk-hoja-sube {
+	from {
+		transform: translateY(24px);
+		opacity: 0;
+	}
+	to {
+		transform: none;
+		opacity: 1;
+	}
+}
+
+@keyframes sk-punto-halo {
+	0% {
+		box-shadow: 0 0 0 0 hsl(var(--sk-m) / 0.45);
+	}
+	100% {
+		box-shadow: 0 0 0 7px hsl(var(--sk-m) / 0);
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	#sidebar-chat-item:has(.spinner_ajPY) > a::after,
+	#sidebar-chat-item .bg-sky-500 {
+		animation: none !important;
+	}
+}
+
+/* Teléfono · diseño final, ajustes para que coincida con el lienzo */
+@media (max-width: 767px) {
+	/* sin el rótulo "Chats" ni su ⋯ */
+	#sidebar div.h-6:has(> h2 > #sidebar-chats-button) {
+		display: none !important;
+	}
+
+	/* rótulos de 36 px con el texto a 16 px del borde y el botón a la derecha */
+	#sidebar div.h-6:has(> h2 > #sidebar-folders-button) {
+		height: 36px !important;
+		margin-top: 8px !important;
+		padding: 0 0 0 16px !important;
+	}
+
+	/* "Fijados": rótulo como los demás y la flecha a la derecha, sin sangría ni raya a la izquierda */
+	#sidebar #sidebar-pinned-chats-button {
+		display: flex !important;
+		align-items: center !important;
+		justify-content: space-between !important;
+		height: 36px !important;
+		margin-top: 8px !important;
+		padding: 0 4px 0 10px !important; /* el texto a 16 px del borde, como los demás rótulos */
+	}
+
+	#sidebar #sidebar-pinned-chats-button > :has(> svg) {
+		order: 2;
+		display: inline-flex !important;
+		align-items: center;
+		justify-content: center;
+		width: 36px !important;
+		height: 36px !important;
+		margin: 0 -5px 0 auto !important; /* centrada con el + de Carpetas, a 24 px del borde */
+		color: #3f3f46;
+	}
+
+	#sidebar #sidebar-pinned-chats-button svg {
+		width: 20px !important;
+		height: 20px !important;
+		stroke-width: 1.9 !important;
+	}
+
+	#sidebar #sidebar-pinned-chats-button > div:not(:has(svg)) {
+		font-size: 0 !important;
+	}
+
+	#sidebar #sidebar-pinned-chats-button > div:not(:has(svg))::after {
+		content: 'Fijados';
+		color: #52525b;
+		font-size: 12.5px;
+		line-height: 16px;
+		font-weight: 700;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+	}
+
+	html.dark #sidebar #sidebar-pinned-chats-button > div:not(:has(svg))::after {
+		color: #a1a1aa;
+	}
+
+	#sidebar div.ml-3.pl-1:has(#sidebar-chat-item) {
+		margin-left: 0 !important;
+		padding-left: 0 !important;
+		border-left: 0 !important;
+	}
+
+	/* renglones a 8 px de cada borde (la lista ya deja 6) con el avatar a 16, y el abierto ya no se sale por la derecha */
+	html.sk-barra-c #sidebar-chat-item {
+		width: calc(100% - 4px) !important;
+		margin-left: 2px !important;
+		margin-right: 2px !important;
+	}
+
+	/* píldoras de 40 px con letra normal (500) */
+	#sidebar .overflow-y-auto > .pb-1 > div:last-child > *,
+	#sidebar .overflow-y-auto > .pb-1 > div:last-child > * *,
+	#sidebar .overflow-y-auto > .pb-1 > div:last-child > * *::after {
+		font-weight: 500 !important;
+	}
+
+	#sidebar .overflow-y-auto > .pb-1 > div:last-child > * {
+		max-height: 40px !important;
+	}
+
+	/* selector de modelo como en el lienzo: sin buscador, chinchetas, contadores ni modelos ocultos */
+	.sk-selector .sk-sel-buscar,
+	.sk-selector .sk-sel-fijar,
+	.sk-selector .sk-sel-rotulo > :not(:first-child),
+	.sk-selector .sk-sel-fila.sk-apagado {
+		display: none !important;
+	}
+
+	.sk-selector .sk-sel-marca {
+		color: hsl(var(--sk-m-oscuro, var(--sk-m))) !important;
+	}
+
+	/* tu cuenta: avatar de 44 con el punto verde y "En línea · n sesión activa" bajo tu nombre (carbono.js) */
+	[role='menu']:has(.user-menu-status) [role='menuitem']:has(img) {
+		height: auto !important;
+		min-height: 64px !important;
+		align-items: center !important;
+	}
+
+	[role='menu']:has(.user-menu-status) [role='menuitem']:has(img) > div:has(> img) {
+		position: relative;
+	}
+
+	[role='menu']:has(.user-menu-status) [role='menuitem']:has(img) > div:has(> img)::after {
+		content: '';
+		position: absolute;
+		right: -1px;
+		bottom: -1px;
+		width: 12px;
+		height: 12px;
+		border-radius: 9999px;
+		background: #2b8a5a;
+		box-shadow: 0 0 0 2px #ffffff;
+	}
+
+	[role='menu']:has(.user-menu-status) [role='menuitem']:has(img) div.truncate:has(.sk-cuenta-estado) {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.sk-cuenta-estado {
+		color: #1f6b45;
+		font-size: 13px;
+		line-height: 18px;
+		font-weight: 500;
+	}
+
+	html.dark .sk-cuenta-estado {
+		color: #6fcf97;
+	}
+
+	[role='menu']:has(.user-menu-status) [role='menuitem']:has(img) > div.flex:has(.bg-green-500) {
+		display: none !important;
+	}
+}
+
+@media (max-width: 767px) {
+	/* tu cuenta: avatar de 44 px (el menú anterior lo dejaba en 30) */
+	[role='menu']:has(.user-menu-status) .app-dropdown-menu > div:first-child [role='menuitem'] div:has(> img),
+	[role='menu']:has(.user-menu-status) .app-dropdown-menu > div:first-child [role='menuitem'] img {
+		width: 44px !important;
+		height: 44px !important;
+	}
+}
+
+@media (max-width: 767px) {
+	/* la campana y tu avatar sin el círculo gris al tocar (en el teléfono el estado "hover" se queda pegado y parecía
+	   un botón que aparecía de la nada) */
+	#sidebar > div > div.sidebar :is(button, a):is(:hover, :active, :focus),
+	.sk-barra-cuenta:is(:hover, :active, :focus) {
+		background: transparent !important;
+		box-shadow: none !important;
+		outline: none !important;
+	}
+}
+
+/* ===== Escritorio: barra lateral abierta · diseño final (lienzo "Barra escritorio · diseño final") =====
+ * Igual que en el teléfono pero a escala de escritorio: cabecera de 56 px (logo, título de 17 px, campana, tu avatar
+ * de 28 y contraer), "Buscar chats" de 38 px con Ctrl K, accesos de 36, rótulos de 32, chats de 40 (avatar de 22,
+ * título de 15), abajo el modelo y "Nuevo chat" de 44 con la versión y el atajo debajo. El selector de modelo sale
+ * encima del modelo y tu cuenta debajo de tu avatar, como ventanas flotantes. La barra contraída no cambia. */
+@media (min-width: 768px) {
+	#sidebar:not([class*='w-[calc(42px']) > div > div.sidebar {
+		align-items: center;
+		height: 56px;
+		padding: 0 8px 0 14px !important;
+		margin: 0 !important;
+	}
+
+	#sidebar:not([class*='w-[calc(42px']) > div > div.sidebar div.self-center.truncate {
+		font-size: 17px !important;
+		line-height: 22px !important;
+		font-weight: 700 !important;
+	}
+
+	#sidebar:not([class*='w-[calc(42px']) > div > div.sidebar div.self-center.truncate::after {
+		content: none !important;
+		display: none !important;
+	}
+
+	#sidebar:not([class*='w-[calc(42px']) > div > div.sidebar :is(button[aria-label='Notificaciones'], button[aria-label='Cerrar Barra Lateral'], button[aria-label='Close Sidebar']) {
+		width: 36px !important;
+		height: 36px !important;
+	}
+
+	#sidebar:not([class*='w-[calc(42px']) .sk-barra-cuenta {
+		position: relative;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		flex: none;
+		width: 36px;
+		height: 36px;
+		padding: 0;
+		border: 0;
+		border-radius: 10px;
+		background: transparent;
+		cursor: pointer;
+	}
+
+	#sidebar:not([class*='w-[calc(42px']) .sk-barra-cuenta img {
+		width: 28px;
+		height: 28px;
+		border-radius: 9999px;
+		object-fit: cover;
+		background: #e4e4e7;
+	}
+
+	#sidebar:not([class*='w-[calc(42px']) .sk-barra-cuenta i {
+		position: absolute;
+		right: 4px;
+		bottom: 4px;
+		width: 9px;
+		height: 9px;
+		border-radius: 9999px;
+		background: #2b8a5a;
+		box-shadow: 0 0 0 2px #ececee;
+	}
+
+	/* fuera: tarjeta del modelo, fijados, Nuevo Chat y buscar de arriba, el pie con tu tarjeta y el rótulo "Chats" */
+	#sidebar:not([class*='w-[calc(42px']) .sk-barra-extra > .sk-barra-modelo,
+	#sidebar:not([class*='w-[calc(42px']) .sk-barra-fijados,
+	#sidebar:not([class*='w-[calc(42px']) .overflow-y-auto > .pb-1 > div:has(> #sidebar-new-chat-button),
+	#sidebar:not([class*='w-[calc(42px']) .overflow-y-auto > .pb-1 > div:has(> #sidebar-search-button),
+	#sidebar:not([class*='w-[calc(42px']) div.h-6:has(> h2 > #sidebar-chats-button) {
+		display: none !important;
+	}
+
+	#sidebar:not([class*='w-[calc(42px']) > div > div.sticky.bottom-0 {
+		position: absolute !important;
+		width: 1px !important;
+		height: 1px !important;
+		padding: 0 !important;
+		overflow: hidden !important;
+		opacity: 0 !important;
+		pointer-events: none !important;
+	}
+
+	/* Buscar chats */
+	#sidebar:not([class*='w-[calc(42px']) .sk-barra-extra {
+		padding: 0 12px !important;
+	}
+
+	#sidebar:not([class*='w-[calc(42px']) .sk-barra-buscar {
+		display: flex;
+		align-items: center;
+		gap: 8px;
+		width: 100%;
+		height: 38px;
+		padding: 0 10px 0 12px;
+		border: 0;
+		border-radius: 10px;
+		background: #ffffff;
+		box-shadow: inset 0 0 0 1px #e1e1e5;
+		color: #6b6b73;
+		font-size: 15px;
+		line-height: 1;
+		text-align: left;
+		cursor: pointer;
+	}
+
+	#sidebar:not([class*='w-[calc(42px']) .sk-barra-buscar span {
+		flex: 1;
+	}
+
+	#sidebar:not([class*='w-[calc(42px']) .sk-barra-buscar kbd {
+		display: inline-block;
+		padding: 3px 6px;
+		border-radius: 6px;
+		box-shadow: inset 0 0 0 1px #e1e1e5;
+		color: #52525b;
+		font: 500 11.5px/1 'JetBrains Mono', ui-monospace, monospace;
+	}
+
+	html.dark #sidebar:not([class*='w-[calc(42px']) .sk-barra-buscar {
+		background: rgba(255, 255, 255, 0.06);
+		box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+		color: #a1a1aa;
+	}
+
+	/* Notas · Espacio · Agenda */
+	html.sk-barra-c #sidebar:not([class*='w-[calc(42px']) div.pb-1:has(> div > #sidebar-new-chat-button) {
+		padding: 8px 12px 0 !important;
+	}
+
+	#sidebar:not([class*='w-[calc(42px']) .overflow-y-auto > .pb-1 > div:last-child {
+		margin-top: 0 !important;
+		gap: 6px !important;
+	}
+
+	#sidebar:not([class*='w-[calc(42px']) .overflow-y-auto > .pb-1 > div:last-child > * {
+		height: 36px !important;
+		min-height: 36px !important;
+		border-radius: 10px !important;
+		background: #ffffff !important;
+		box-shadow: inset 0 0 0 1px #e1e1e5 !important;
+		color: #27272a !important;
+	}
+
+	#sidebar:not([class*='w-[calc(42px']) .overflow-y-auto > .pb-1 > div:last-child > *,
+	#sidebar:not([class*='w-[calc(42px']) .overflow-y-auto > .pb-1 > div:last-child > * *,
+	#sidebar:not([class*='w-[calc(42px']) .overflow-y-auto > .pb-1 > div:last-child > * *::after {
+		font-weight: 500 !important;
+	}
+
+	html.dark #sidebar:not([class*='w-[calc(42px']) .overflow-y-auto > .pb-1 > div:last-child > * {
+		background: rgba(255, 255, 255, 0.06) !important;
+		box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+		color: #e4e4e7 !important;
+	}
+
+	/* rótulos de 32 px: 12 px · 700 · mayúsculas con el texto a 14 px del borde */
+	#sidebar:not([class*='w-[calc(42px']) div.h-6:has(> h2 > #sidebar-folders-button) {
+		height: 32px !important;
+		margin-top: 6px !important;
+		padding: 0 0 0 14px !important;
+	}
+
+	/* rótulos de fecha (Hoy, Ayer…) también a 14 px del borde */
+	#sidebar:not([class*='w-[calc(42px']) h3.pl-2\.5 {
+		padding-left: 8px !important;
+	}
+
+	html.sk-barra-c #sidebar:not([class*='w-[calc(42px']) [id='sidebar-folder-button'] > h3 > button,
+	html.sk-barra-c #sidebar:not([class*='w-[calc(42px']) :is(button, div):is(.text-xs, [class~='text-[0.6875rem]'], [class~='text-[0.75rem]']) > span:not(:has(*)):not(#sidebar-chat-item *, [role='menu'] *, [role='menuitem'] *) {
+		color: #52525b !important;
+		font-size: 12px !important;
+		line-height: 16px !important;
+		font-weight: 700 !important;
+		letter-spacing: 0.06em !important;
+	}
+
+	#sidebar:not([class*='w-[calc(42px']) button.w-7.h-7.rounded-lg:is([aria-label='Nueva Carpeta'], [aria-label='New Folder']) {
+		width: 28px !important;
+		height: 28px !important;
+		margin-right: 4px;
+		border-radius: 10px !important;
+		background: transparent !important;
+		color: #3f3f46 !important;
+	}
+
+	#sidebar:not([class*='w-[calc(42px']) #sidebar-pinned-chats-button {
+		display: flex !important;
+		align-items: center !important;
+		justify-content: space-between !important;
+		height: 32px !important;
+		margin-top: 6px !important;
+		padding: 0 4px 0 8px !important;
+	}
+
+	#sidebar:not([class*='w-[calc(42px']) #sidebar-pinned-chats-button > :has(> svg) {
+		order: 2;
+		display: inline-flex !important;
+		align-items: center;
+		justify-content: center;
+		width: 28px !important;
+		height: 28px !important;
+		margin: 0 0 0 auto !important;
+		color: #3f3f46;
+	}
+
+	#sidebar:not([class*='w-[calc(42px']) #sidebar-pinned-chats-button svg {
+		width: 18px !important;
+		height: 18px !important;
+		stroke-width: 1.9 !important;
+	}
+
+	#sidebar:not([class*='w-[calc(42px']) #sidebar-pinned-chats-button > div:not(:has(svg)) {
+		font-size: 0 !important;
+	}
+
+	#sidebar:not([class*='w-[calc(42px']) #sidebar-pinned-chats-button > div:not(:has(svg))::after {
+		content: 'Fijados';
+		color: #52525b;
+		font-size: 12px;
+		line-height: 16px;
+		font-weight: 700;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+	}
+
+	#sidebar:not([class*='w-[calc(42px']) div.ml-3.pl-1:has(#sidebar-chat-item) {
+		margin-left: 0 !important;
+		padding-left: 0 !important;
+		border-left: 0 !important;
+	}
+
+	/* chats: 40 px, avatar de 22, título de 15 */
+	html.sk-barra-c #sidebar:not([class*='w-[calc(42px']) #sidebar-chat-item {
+		width: calc(100% - 4px) !important;
+		height: 40px !important;
+		margin: 0 2px !important;
+		padding: 0 8px !important;
+		border-radius: 10px !important;
+	}
+
+	html.sk-barra-c #sidebar:not([class*='w-[calc(42px']) #sidebar-chat-item > a {
+		gap: 10px !important;
+	}
+
+	html.sk-barra-c #sidebar:not([class*='w-[calc(42px']) #sidebar-chat-item > a::before {
+		width: 22px !important;
+		height: 22px !important;
+	}
+
+	html.sk-barra-c #sidebar:not([class*='w-[calc(42px']) #sidebar-chat-item > a div[dir='auto'] {
+		font-size: 15px !important;
+		line-height: 20px !important;
+		color: #18181b;
+	}
+
+	html.dark.sk-barra-c #sidebar:not([class*='w-[calc(42px']) #sidebar-chat-item > a div[dir='auto'] {
+		color: #ececee;
+	}
+
+	html.sk-barra-c #sidebar:not([class*='w-[calc(42px']) #sidebar-chat-item.selected {
+		padding-right: 4px !important;
+		background: #ffffff !important;
+		box-shadow: inset 3px 0 0 hsl(var(--sk-m)), 0 0 0 1px #e1e1e5 !important;
+	}
+
+	html.dark.sk-barra-c #sidebar:not([class*='w-[calc(42px']) #sidebar-chat-item.selected {
+		background: rgba(255, 255, 255, 0.08) !important;
+		box-shadow: inset 3px 0 0 hsl(var(--sk-m)), 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+	}
+
+	html.sk-barra-c #sidebar:not([class*='w-[calc(42px']) #sidebar-chat-item:has(.bg-sky-500) {
+		background: hsl(var(--sk-m) / 0.07) !important;
+	}
+
+	html.sk-barra-c #sidebar:not([class*='w-[calc(42px']) #sidebar-chat-item .bg-sky-500 {
+		width: 8px !important;
+		height: 8px !important;
+		margin-right: 6px !important;
+		box-shadow: 0 0 0 3px hsl(var(--sk-m) / 0.22) !important;
+		animation: sk-aparece 0.35s ease-out both, sk-punto-halo 1.6s ease-out 0.35s 3 !important;
+	}
+
+	html.sk-barra-c #sidebar:not([class*='w-[calc(42px']) #sidebar-chat-item:has(.spinner_ajPY) > a::after {
+		top: calc(50% - 15px) !important;
+		left: -4px !important;
+		width: 30px !important;
+		height: 30px !important;
+		-webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2.5px)) !important;
+		mask: radial-gradient(farthest-side, transparent calc(100% - 2.5px), #000 calc(100% - 2.5px)) !important;
+		animation: sk-anillo 1.4s linear infinite !important;
+	}
+
+	html.sk-barra-c #sidebar:not([class*='w-[calc(42px']) #sidebar-chat-item a > div.pr-2 > div:has(.spinner_ajPY) {
+		height: auto !important;
+		padding: 0 !important;
+		background: transparent !important;
+		color: color-mix(in srgb, hsl(var(--sk-m)) 72%, #000) !important;
+	}
+
+	html.sk-barra-c #sidebar:not([class*='w-[calc(42px']) #sidebar-chat-item a > div.pr-2 > div:has(.spinner_ajPY)::before {
+		content: 'Pensando…' !important;
+		width: auto !important;
+		height: auto !important;
+		border-radius: 0 !important;
+		background: none !important;
+		font-size: 12.5px;
+		line-height: 16px;
+		font-weight: 500;
+		white-space: nowrap;
+		animation: none !important;
+	}
+
+	html.sk-barra-c #sidebar:not([class*='w-[calc(42px']) #sidebar-chat-item a > div.pr-2 > div:has(.spinner_ajPY)::after,
+	html.sk-barra-c #sidebar:not([class*='w-[calc(42px']) #sidebar-chat-item a > div.pr-2 > div:has(.spinner_ajPY) > div {
+		display: none !important;
+	}
+
+	/* abajo: modelo, Nuevo chat y la versión con el atajo */
+	#sidebar:not([class*='w-[calc(42px']) .sk-barra-dock {
+		display: flex;
+		flex: none;
+		flex-wrap: wrap;
+		gap: 8px;
+		padding: 10px 12px 14px;
+		box-shadow: inset 0 1px 0 #dcdce0;
+	}
+
+	#sidebar:not([class*='w-[calc(42px']) .sk-barra-dock::after {
+		content: var(--sk-version, '') ' · Ctrl Shift O para nuevo chat';
+		flex-basis: 100%;
+		color: #52525b;
+		font-size: 12px;
+		line-height: 16px;
+		font-weight: 500;
+		text-align: center;
+	}
+
+	html.dark #sidebar:not([class*='w-[calc(42px']) .sk-barra-dock {
+		box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+	}
+
+	html.dark #sidebar:not([class*='w-[calc(42px']) .sk-barra-dock::after {
+		color: #a1a1aa;
+	}
+
+	#sidebar:not([class*='w-[calc(42px']) .sk-barra-pastilla {
+		display: inline-flex;
+		align-items: center;
+		flex: none;
+		gap: 8px;
+		max-width: 50%;
+		height: 44px;
+		padding: 0 8px 0 5px;
+		border: 0;
+		border-radius: 9999px;
+		background: hsl(var(--sk-m-tinte, var(--sk-m) / 0.12));
+		box-shadow: inset 0 0 0 1px hsl(var(--sk-m) / 0.35);
+		color: #18181b;
+		font-size: 15px;
+		line-height: 1;
+		cursor: pointer;
+	}
+
+	#sidebar:not([class*='w-[calc(42px']) .sk-barra-pastilla img {
+		flex: none;
+		width: 34px;
+		height: 34px;
+		border-radius: 9999px;
+		object-fit: cover;
+	}
+
+	#sidebar:not([class*='w-[calc(42px']) .sk-barra-pastilla b {
+		overflow: hidden;
+		font-weight: 700;
+		white-space: nowrap;
+		text-overflow: ellipsis;
+	}
+
+	#sidebar:not([class*='w-[calc(42px']) .sk-barra-pastilla svg {
+		flex: none;
+		color: hsl(var(--sk-m-oscuro, var(--sk-m)));
+	}
+
+	html.dark #sidebar:not([class*='w-[calc(42px']) .sk-barra-pastilla {
+		background: hsl(var(--sk-m) / 0.18);
+		color: #ececee;
+	}
+
+	#sidebar:not([class*='w-[calc(42px']) .sk-barra-nuevo {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		flex: 1;
+		gap: 8px;
+		min-width: 0;
+		height: 44px;
+		border: 0;
+		border-radius: 9999px;
+		background: #18181b;
+		color: #ffffff;
+		font-size: 15px;
+		line-height: 1;
+		font-weight: 600;
+		cursor: pointer;
+	}
+
+	html.dark #sidebar:not([class*='w-[calc(42px']) .sk-barra-nuevo {
+		background: #ececee;
+		color: #18181b;
+	}
+
+	/* selector de modelo: encima del modelo, ventana de 320 px */
+	html:not(.sk-sel-rail) .sk-selector:not(.sk-selector-rail) {
+		position: fixed !important;
+		top: auto !important;
+		left: 12px !important;
+		right: auto !important;
+		bottom: 92px !important;
+		width: 320px !important;
+		max-height: min(70vh, 560px) !important;
+		padding: 8px 0 !important;
+		border-radius: 18px !important;
+		background: rgba(250, 250, 252, 0.96) !important;
+		-webkit-backdrop-filter: blur(28px) saturate(1.8);
+		backdrop-filter: blur(28px) saturate(1.8);
+		box-shadow: 0 18px 50px rgba(24, 24, 27, 0.22), 0 0 0 1px rgba(24, 24, 27, 0.1) !important;
+	}
+
+	html.dark .sk-selector {
+		background: rgba(32, 32, 36, 0.96) !important;
+	}
+
+	.sk-selector .sk-sel-titulo {
+		display: block;
+		padding: 4px 14px 2px;
+		color: var(--sk-ink);
+		font-size: 15.5px;
+		line-height: 20px;
+		font-weight: 700;
+	}
+
+	.sk-selector .sk-sel-buscar,
+	.sk-selector .sk-sel-fijar,
+	.sk-selector .sk-sel-rotulo > :not(:first-child),
+	.sk-selector .sk-sel-fila.sk-apagado {
+		display: none !important;
+	}
+
+	.sk-selector .sk-sel-rotulo {
+		height: 32px !important;
+		margin-top: 6px !important;
+		padding: 0 14px !important;
+		color: #52525b !important;
+		font-size: 12px !important;
+		line-height: 16px !important;
+		font-weight: 700 !important;
+		letter-spacing: 0.06em !important;
+		text-transform: uppercase;
+	}
+
+	.sk-selector .sk-sel-fila {
+		gap: 10px !important;
+		min-height: 48px !important;
+		height: 48px;
+		margin: 0 6px !important;
+		padding: 0 12px !important;
+		border-radius: 12px !important;
+	}
+
+	.sk-selector .sk-sel-fila > :is(img, .sk-sel-letra) {
+		width: 30px !important;
+		height: 30px !important;
+	}
+
+	.sk-selector .sk-sel-fila .sk-sel-texto > :first-child {
+		font-size: 15px !important;
+		line-height: 20px !important;
+		font-weight: 400 !important;
+	}
+
+	.sk-selector .sk-sel-fila .sk-sel-texto > :not(:first-child) {
+		color: #52525b !important;
+		font-size: 12.5px !important;
+		line-height: 16px !important;
+		font-weight: 500 !important;
+	}
+
+	.sk-selector .sk-sel-fila.sk-activo {
+		background: hsl(var(--sk-m) / 0.1) !important;
+	}
+
+	.sk-selector .sk-sel-fila.sk-activo .sk-sel-texto > :first-child {
+		font-weight: 700 !important;
+	}
+
+	.sk-selector .sk-sel-marca {
+		color: hsl(var(--sk-m-oscuro, var(--sk-m))) !important;
+	}
+
+	/* tu cuenta: ventana de 290 px bajo tu avatar */
+	html.sk-barra-c [role='menu']:has(.user-menu-status) {
+		inset: 50px auto auto max(12px, calc(var(--sidebar-width, 320px) - 120px)) !important; /* junto a tu avatar, como en el lienzo */
+		width: 290px !important;
+		max-width: none !important;
+	}
+
+	[role='menu']:has(.user-menu-status) .app-dropdown-menu {
+		padding: 8px 0 !important;
+		border-radius: 18px !important;
+		background: rgba(250, 250, 252, 0.96) !important;
+		-webkit-backdrop-filter: blur(28px) saturate(1.8) !important;
+		backdrop-filter: blur(28px) saturate(1.8) !important;
+		box-shadow: 0 18px 50px rgba(24, 24, 27, 0.22), 0 0 0 1px rgba(24, 24, 27, 0.1) !important;
+	}
+
+	html.dark [role='menu']:has(.user-menu-status) .app-dropdown-menu {
+		background: rgba(32, 32, 36, 0.96) !important;
+	}
+
+	[role='menu']:has(.user-menu-status) [role='menuitem'] {
+		gap: 12px !important;
+		height: 40px !important;
+		min-height: 40px !important;
+		margin: 0 6px !important;
+		padding: 0 14px !important;
+		border-radius: 10px !important;
+		font-size: 15px !important;
+		font-weight: 400 !important;
+	}
+
+	[role='menu']:has(.user-menu-status) .app-dropdown-menu > div:first-child [role='menuitem'] {
+		height: auto !important;
+		min-height: 50px !important;
+		padding: 4px 14px 8px !important;
+	}
+
+	[role='menu']:has(.user-menu-status) .app-dropdown-menu > div:first-child [role='menuitem'] div:has(> img),
+	[role='menu']:has(.user-menu-status) .app-dropdown-menu > div:first-child [role='menuitem'] img {
+		width: 38px !important;
+		height: 38px !important;
+	}
+
+	[role='menu']:has(.user-menu-status) [role='menuitem']:has(img) div.truncate {
+		font-size: 15.5px !important;
+		line-height: 20px !important;
+		font-weight: 700 !important;
+	}
+
+	[role='menu']:has(.user-menu-status) [role='menuitem']:has(img) div.truncate:has(.sk-cuenta-estado) {
+		display: flex;
+		flex-direction: column;
+	}
+
+	[role='menu']:has(.user-menu-status) .sk-cuenta-estado {
+		color: #1f6b45;
+		font-size: 12.5px;
+		line-height: 16px;
+		font-weight: 500;
+	}
+
+	[role='menu']:has(.user-menu-status) [role='menuitem']:has(img) > div.flex:has(.bg-green-500) {
+		display: none !important;
+	}
+
+	[role='menu']:has(.user-menu-status) a[role='menuitem']:is([href='/workspace'], [href^='/workspace/'], [href='/notes'], [href='/calendar']) {
+		display: none !important;
+	}
+
+	[role='menu']:has(.user-menu-status) hr {
+		margin: 4px 14px !important;
+		border-color: #e4e4e7 !important;
+	}
+
+	[role='menu']:has(.user-menu-status) .app-dropdown-menu > [role='menuitem']:last-child {
+		margin-top: 4px !important;
+		border-top: 1px solid #e4e4e7;
+		border-radius: 0 0 10px 10px !important;
+		color: #a32a22 !important;
+	}
+
+	[role='menu']:has(.user-menu-status) .app-dropdown-menu > [role='menuitem']:last-child svg {
+		color: #c0392b !important;
+	}
+
+	[role='menu']:has(.user-menu-status) [role='menuitem'] :is(kbd, .text-xs, [class*='shortcut']) {
+		display: none !important;
+	}
+}
+
+/* Notas · Espacio · Agenda: el estilo va en el botón real (el enlace de dentro); el contenedor queda transparente.
+ * Antes el contenedor tenía el fondo y el borde (40 px) y el enlace, de 48 px y con su propio fondo y borde, sobresalía
+ * por debajo: se veía como una sombra oscura bajo cada botón. */
+#sidebar .overflow-y-auto > .pb-1 > div:last-child > *,
+#sidebar:not([class*='w-[calc(42px']) .overflow-y-auto > .pb-1 > div:last-child > *,
+html.dark #sidebar .overflow-y-auto > .pb-1 > div:last-child > *,
+html.dark #sidebar:not([class*='w-[calc(42px']) .overflow-y-auto > .pb-1 > div:last-child > * {
+	height: auto !important;
+	min-height: 0 !important;
+	max-height: none !important;
+	padding: 0 !important;
+	background: transparent !important;
+	box-shadow: none !important;
+}
+
+@media (max-width: 767px) {
+	#sidebar .overflow-y-auto > .pb-1 > div:last-child > * > a {
+		justify-content: center !important;
+		height: 40px !important;
+		min-height: 40px !important;
+		padding: 0 8px !important;
+		border-radius: 12px !important;
+		background: #ffffff !important;
+		box-shadow: inset 0 0 0 1px #e1e1e5 !important;
+		color: #27272a !important;
+	}
+
+	html.dark #sidebar .overflow-y-auto > .pb-1 > div:last-child > * > a {
+		background: rgba(255, 255, 255, 0.06) !important;
+		box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+		color: #e4e4e7 !important;
+	}
+}
+
+@media (min-width: 768px) {
+	#sidebar:not([class*='w-[calc(42px']) .overflow-y-auto > .pb-1 > div:last-child > * > a {
+		justify-content: center !important;
+		height: 36px !important;
+		min-height: 36px !important;
+		padding: 0 6px !important;
+		border-radius: 10px !important;
+		background: #ffffff !important;
+		box-shadow: inset 0 0 0 1px #e1e1e5 !important;
+		color: #27272a !important;
+	}
+
+	html.dark #sidebar:not([class*='w-[calc(42px']) .overflow-y-auto > .pb-1 > div:last-child > * > a {
+		background: rgba(255, 255, 255, 0.06) !important;
+		box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1) !important;
+		color: #e4e4e7 !important;
+	}
+}
+
+/* tu cuenta: sin el atajo "Ctrl+." junto a Ajustes (el lienzo no lo lleva) */
+[role='menu']:has(.user-menu-status) [role='menuitem'] .ms-auto:has(> span.rounded-full) {
+	display: none !important;
+}
+
+/* teléfono: la barra deja el desplazamiento vertical al navegador y el horizontal al gesto de cerrar */
+@media (max-width: 767px) {
+	#sidebar {
+		touch-action: pan-y;
+	}
+}
+
+/* modo oscuro: rótulos de la barra de escritorio en gris claro (con el gris del claro casi no se veían) */
+@media (min-width: 768px) {
+	html.dark.sk-barra-c #sidebar:not([class*='w-[calc(42px']) [id='sidebar-folder-button'] > h3 > button,
+	html.dark.sk-barra-c #sidebar:not([class*='w-[calc(42px']) :is(button, div):is(.text-xs, [class~='text-[0.6875rem]'], [class~='text-[0.75rem]']) > span:not(:has(*)):not(#sidebar-chat-item *, [role='menu'] *, [role='menuitem'] *),
+	html.dark #sidebar:not([class*='w-[calc(42px']) #sidebar-pinned-chats-button > div:not(:has(svg))::after,
+	html.dark #sidebar:not([class*='w-[calc(42px']) h3.pl-2\.5,
+	html.dark #sidebar:not([class*='w-[calc(42px']) .sk-barra-dock::after {
+		color: #a1a1aa !important;
+	}
+
+	html.dark #sidebar:not([class*='w-[calc(42px']) :is(button.w-7.h-7.rounded-lg, #sidebar-pinned-chats-button > :has(> svg)) {
+		color: #d4d4d8 !important;
+	}
+}
+
+@media (max-width: 767px) {
+	html.dark #sidebar h3.pl-2\.5 {
+		color: #a1a1aa !important;
+	}
+}
+
+@media (max-width: 767px) {
+	/* modo oscuro: campana, íconos de los accesos y flecha de Fijados en gris claro */
+	html.dark #sidebar > div > div.sidebar button[aria-label='Notificaciones'] svg,
+	html.dark #sidebar .overflow-y-auto > .pb-1 > div:last-child svg,
+	html.dark #sidebar #sidebar-pinned-chats-button > :has(> svg) {
+		color: #d4d4d8 !important;
+	}
+}
+
+@media (min-width: 768px) {
+	html.dark #sidebar:not([class*='w-[calc(42px']) .overflow-y-auto > .pb-1 > div:last-child svg {
+		color: #d4d4d8 !important;
 	}
 }

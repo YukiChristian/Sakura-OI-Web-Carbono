@@ -1,6 +1,6 @@
 # Carbono para Open WebUI
 
-**Versión 0.95.1** · probado con Open WebUI **0.13.3**
+**Versión 0.95.2** · probado con Open WebUI **0.13.3**
 
 Carbono es el tema recomendado para [Sakura OI Web](https://github.com/YukiChristian/Sakura-OI-Web). Deja la interfaz de Open WebUI neutra (superficies en tonos carbón y zinc, acción principal en negro), con más jerarquía en el texto, tipografía Atkinson Hyperlegible, menús de vidrio esmerilado y un composer pensado para el teléfono.
 
@@ -51,6 +51,19 @@ La guía de estilo (principios, colores, tipografía y componentes) está en [do
 - **Rendimiento:** los selectores evitan buscar por el atributo `class` dentro de `:has()`, que obliga al navegador a recalcular toda la página en cada hover.
 
 ## Cambios
+
+### 0.95.2
+
+- **Barra lateral, diseño final (teléfono):** pantalla completa con la identidad arriba (logo, campana y tu avatar, que abre tu cuenta), «Buscar chats» y Notas · Espacio · Agenda debajo, chats de 48 px con avatar de 24 y título de 16, y abajo, al alcance del pulgar, el modelo activo (con su color) y «Nuevo chat». El selector de modelo y el menú de tu cuenta salen desde abajo como hojas. Se cierra deslizando a la izquierda: la barra sigue al dedo y regresa si no se desliza lo suficiente.
+- **Barra lateral, diseño final (escritorio):** la misma estructura a escala de escritorio (320 px, buscador con Ctrl K, chats de 40 px, versión y atajo al pie); el selector de modelo se abre sobre el modelo y tu cuenta junto a tu avatar. La barra contraída no cambia.
+- **Estados de los chats:** «Pensando…» con un solo anillo más lento y el texto en el color del modelo; «Respuesta nueva» con título en seminegrita y un punto que late tres veces; con movimiento reducido todo queda quieto.
+- **Abrir y cerrar la barra en el teléfono:** el panel sale al instante al tocar y el contenido aparece completo; al tocar un chat la barra empieza a salir en el mismo toque, sin esperar a que cargue; sin parpadeos del fondo.
+- **Mensajes en el teléfono:** la respuesta va sin tarjeta y tu mensaje en una burbuja de hasta el 70 % del ancho; márgenes del chat y del cuadro de escribir como en el diseño.
+- **Formato del texto:** jerarquía de títulos, negritas reales, viñetas visibles, citas y bloques de código como bloques, encabezados de tabla discretos, espacio entre párrafos y en cada salto de línea, y renglones mejor repartidos (con guiones en palabras largas en el teléfono).
+- **Editar mensaje y métricas:** tarjetas de vidrio, modo de edición con «Guardar y enviar» y aviso de lo que se reemplaza; en el teléfono solo el botón de la gráfica.
+- **Modo voz:** la pantalla de llamada se abre en círculo desde el botón de llamada con una entrada en cascada; medidor del micrófono más calmado; al volver al chat se cierra sin animación ni fondo oscuro; «Razonar» apagado ya no lleva etiqueta.
+- **Visor de imágenes:** zoom de 1× a 5× (pellizco, rueda o doble toque) sin que la imagen se salga de la pantalla; la X ya no vuelve a abrir la imagen de atrás.
+- **Otros:** bienvenida sin animación en la foto y el saludo; ventana de pestañas del teléfono a pantalla completa sin esquinas ni fondo oscuro; íconos de modelos subidos en WebP se procesan para pesar menos.
 
 ### 0.95.1
 
