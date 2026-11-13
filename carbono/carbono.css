@@ -1,5 +1,5 @@
 /*
- * Carbono 0.95.2 — tema para Open WebUI (probado con 0.13.3).
+ * Carbono 0.95.3 — tema para Open WebUI (probado con 0.13.3).
  * https://github.com/YukiChristian/Sakura-OI-Web-Carbono
  *
  * El lanzador lo sirve en /static/custom.css mientras exista carbono/ACTIVO (ver README).
@@ -15280,7 +15280,6 @@ html.dark .sk-met-tarjeta dt > :is(i, .sk-met-ctx) {
 	transform: none !important;
 	transition: none !important;
 	/* se abre en círculo desde el botón de llamada (carbono.js guarda dónde está en --sk-voz-x / --sk-voz-y) */
-	animation: sk-voz-revela 480ms cubic-bezier(0.4, 0, 0.2, 1) both !important; /* !important: tapa la salida animada de Open WebUI */
 	-webkit-backdrop-filter: blur(24px) saturate(1.4);
 	backdrop-filter: blur(24px) saturate(1.4);
 }
@@ -18117,68 +18116,33 @@ html[data-sk-barra='desliza'] #sidebar {
 	}
 }
 
-/* ===== Teléfono: entrada de la pantalla de llamada =====
- * Antes aparecía de golpe (un fundido de 0.26 s). Ahora se abre en círculo desde el botón negro de llamada y, ya
- * abierta, entran en cascada la cabecera, la foto (crece con un pequeño rebote), el estado y los cuatro botones.
- * La cascada solo corre al abrir (html[data-sk-voz-entrada], 1.3 s) para que no se repita si el tema mueve algo
- * durante la llamada. */
-@keyframes sk-voz-revela {
+/* ===== Teléfono: ventana de pestañas y pantalla de llamada (botón de pestañas y botón negro de llamada) =====
+ * Entran y salen con el mismo movimiento de la barra lateral, desde la derecha (donde están sus botones): 210 ms al
+ * entrar con la curva de la barra y 200 ms al salir (carbono.js anima la salida antes de cerrarla). Se mueve con la
+ * propiedad translate porque el transform de la ventana está fijado con !important. Sin la apertura en círculo ni la
+ * cascada de antes. */
+@keyframes sk-ventana-entra {
 	from {
-		clip-path: circle(22px at var(--sk-voz-x, calc(100% - 40px)) var(--sk-voz-y, calc(100% - 46px)));
+		translate: 100% 0;
 	}
 	to {
-		clip-path: circle(150vmax at var(--sk-voz-x, calc(100% - 40px)) var(--sk-voz-y, calc(100% - 46px)));
+		translate: 0 0;
 	}
 }
 
-@keyframes sk-voz-sube-suave {
-	from {
-		opacity: 0;
-		transform: translateY(14px);
+@media (max-width: 767px) {
+	.modal[role='dialog']:is([aria-label='Pestañas'], [aria-label='Tabs']),
+	.modal[role='dialog']:is([aria-label='Pestañas'], [aria-label='Tabs']) > div.absolute {
+		animation: none !important;
+		transition: none !important;
 	}
-	to {
-		opacity: 1;
-		transform: none;
+
+	.modal[role='dialog']:is([aria-label='Pestañas'], [aria-label='Tabs']) > div.relative {
+		transform: none !important;
+		transition: none !important;
+		will-change: translate;
+		animation: sk-ventana-entra 210ms cubic-bezier(0.22, 1, 0.36, 1) both !important;
 	}
-}
-
-@keyframes sk-voz-foto-entra {
-	from {
-		opacity: 0;
-		transform: scale(0.86);
-	}
-	to {
-		opacity: 1;
-		transform: none;
-	}
-}
-
-html[data-sk-voz-entrada] .modal[role='dialog'] :is(.sk-voz-cabeza, .sk-voz-cabeza-panel) {
-	animation: sk-voz-sube-suave 360ms cubic-bezier(0.22, 1, 0.36, 1) 140ms backwards;
-}
-
-html[data-sk-voz-entrada] .modal[role='dialog'] button.sk-voz-boton {
-	animation: sk-voz-foto-entra 560ms cubic-bezier(0.34, 1.36, 0.64, 1) 180ms backwards;
-}
-
-html[data-sk-voz-entrada] .modal[role='dialog'] [role='status'][aria-live][data-sk-voz] {
-	animation: sk-voz-sube-suave 380ms cubic-bezier(0.22, 1, 0.36, 1) 300ms backwards;
-}
-
-html[data-sk-voz-entrada] div.flex-col:has(> [role='status'][aria-live]:not([data-sonner-toast]) > button) > div:last-child > * {
-	animation: sk-voz-sube-suave 380ms cubic-bezier(0.22, 1, 0.36, 1) 360ms backwards;
-}
-
-html[data-sk-voz-entrada] div.flex-col:has(> [role='status'][aria-live]:not([data-sonner-toast]) > button) > div:last-child > :nth-child(2) {
-	animation-delay: 400ms;
-}
-
-html[data-sk-voz-entrada] div.flex-col:has(> [role='status'][aria-live]:not([data-sonner-toast]) > button) > div:last-child > :nth-child(3) {
-	animation-delay: 440ms;
-}
-
-html[data-sk-voz-entrada] div.flex-col:has(> [role='status'][aria-live]:not([data-sonner-toast]) > button) > div:last-child > :nth-child(4) {
-	animation-delay: 480ms;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -19882,5 +19846,1040 @@ html.dark #sidebar:not([class*='w-[calc(42px']) .overflow-y-auto > .pb-1 > div:l
 @media (min-width: 768px) {
 	html.dark #sidebar:not([class*='w-[calc(42px']) .overflow-y-auto > .pb-1 > div:last-child svg {
 		color: #d4d4d8 !important;
+	}
+}
+
+/* Carpetas con el mismo estilo que los chats: renglón de 48 px en el teléfono (40 en escritorio), ícono de carpeta en
+ * el lugar del avatar (24 / 22 px), título de 16 / 15 px, esquinas de 12 / 10 px y el ⋯ de opciones siempre visible en
+ * el teléfono (allí no hay "pasar el cursor"). Antes eran renglones de 30 px con letra de 13. */
+#sidebar [id^='folder-'][id$='-button'] {
+	display: flex !important;
+	align-items: center !important;
+	gap: 12px !important;
+	width: calc(100% - 4px) !important;
+	margin: 0 2px !important;
+	padding: 0 8px !important;
+	border-radius: 12px !important;
+}
+
+#sidebar [id^='folder-'][id$='-button'] > button:first-child {
+	display: inline-flex !important;
+	align-items: center;
+	justify-content: center;
+	flex: none;
+	width: 24px !important;
+	height: 24px !important;
+	padding: 0 !important;
+	color: #3f3f46 !important;
+}
+
+#sidebar [id^='folder-'][id$='-button'] > button:first-child svg {
+	width: 20px !important;
+	height: 20px !important;
+	stroke-width: 1.8 !important;
+}
+
+#sidebar [id^='folder-'][id$='-button'] a .truncate {
+	color: #18181b;
+	font-weight: 400 !important;
+}
+
+html.dark #sidebar [id^='folder-'][id$='-button'] a .truncate {
+	color: #ececee;
+}
+
+html.dark #sidebar [id^='folder-'][id$='-button'] > button:first-child {
+	color: #d4d4d8 !important;
+}
+
+@media (max-width: 767px) {
+	#sidebar [id^='folder-'][id$='-button'] {
+		height: 48px !important;
+	}
+
+	#sidebar [id^='folder-'][id$='-button'] a .truncate {
+		font-size: 16px !important;
+		line-height: 22px !important;
+	}
+
+	#sidebar [id^='folder-'][id$='-button'] > .hover-reveal {
+		position: static !important;
+		opacity: 1 !important;
+		margin-left: auto;
+		color: #3f3f46;
+	}
+
+	#sidebar [id^='folder-'][id$='-button'] > .hover-reveal button {
+		width: 36px !important;
+		height: 36px !important;
+		display: inline-flex !important;
+		align-items: center;
+		justify-content: center;
+	}
+}
+
+@media (min-width: 768px) {
+	#sidebar:not([class*='w-[calc(42px']) [id^='folder-'][id$='-button'] {
+		gap: 10px !important;
+		height: 40px !important;
+		border-radius: 10px !important;
+	}
+
+	#sidebar:not([class*='w-[calc(42px']) [id^='folder-'][id$='-button'] > button:first-child {
+		width: 22px !important;
+		height: 22px !important;
+	}
+
+	#sidebar:not([class*='w-[calc(42px']) [id^='folder-'][id$='-button'] a .truncate {
+		font-size: 15px !important;
+		line-height: 20px !important;
+	}
+}
+
+@media (max-width: 767px) {
+	/* ventana de pestañas: la X a la derecha, alineada con los ⋯ de la lista (la barra le reservaba 50 px al
+	   interruptor de ancho del chat, que en el teléfono no se muestra) */
+	.modal[role='dialog']:is([aria-label='Pestañas'], [aria-label='Tabs']) div:has(> button:is([aria-label='Ocultar pestañas'], [aria-label='Hide tabs'])) {
+		padding-right: 14px !important;
+	}
+
+	/* carpetas: el título en la misma columna que el de los chats */
+	#sidebar [id^='folder-'][id$='-button'] {
+		gap: 8px !important;
+	}
+}
+
+@media (min-width: 768px) {
+	#sidebar:not([class*='w-[calc(42px']) [id^='folder-'][id$='-button'] {
+		gap: 6px !important;
+	}
+}
+
+/* ---------- Barra comprimida · diseño final (escritorio) ----------
+   64 px de vidrio gris claro con línea a la derecha. Arriba logo, campana y tu cuenta; en medio Buscar, los accesos y
+   Chats (con sus estados); abajo el modelo activo y "Nuevo chat" negro. Botones de 44 px, radio 12, íconos de 20 px.
+   Los botones de Open WebUI quedan ocultos (carbono.js les pasa el toque). */
+@keyframes sk-riel-gira {
+	to {
+		transform: rotate(360deg);
+	}
+}
+
+@keyframes sk-riel-pop {
+	0% {
+		transform: scale(0.6);
+		opacity: 0;
+	}
+
+	60% {
+		transform: scale(1.08);
+		opacity: 1;
+	}
+
+	100% {
+		transform: scale(1);
+	}
+}
+
+@keyframes sk-riel-halo {
+	0% {
+		box-shadow: 0 0 0 2px #ececee, 0 0 0 2px rgba(214, 51, 108, 0.45);
+	}
+
+	100% {
+		box-shadow: 0 0 0 2px #ececee, 0 0 0 9px rgba(214, 51, 108, 0);
+	}
+}
+
+@media (min-width: 768px) {
+	#sidebar[class*='w-[calc(42px'] {
+		width: 64px !important;
+		min-width: 64px !important;
+		padding: 0 !important;
+		border: 0 !important;
+		background: rgba(236, 236, 238, 0.92) !important;
+		-webkit-backdrop-filter: blur(20px);
+		backdrop-filter: blur(20px);
+		box-shadow: inset -1px 0 0 #d4d4d8;
+		cursor: default;
+	}
+
+	html.dark #sidebar[class*='w-[calc(42px'] {
+		background: rgba(28, 28, 30, 0.92) !important;
+		box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.08);
+	}
+
+	#sidebar[class*='w-[calc(42px']:has(> .sk-riel) > :not(.sk-riel) {
+		display: none !important;
+	}
+
+	.sk-riel {
+		flex: 1;
+		min-height: 0;
+		width: 100%;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 4px;
+		padding: 8px 0 14px;
+		box-sizing: border-box;
+		overflow-y: auto;
+		scrollbar-width: none;
+	}
+
+	.sk-riel .sk-riel-b {
+		position: relative;
+		flex: none;
+		width: 44px;
+		height: 44px;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0;
+		border: 0;
+		border-radius: 12px;
+		background: transparent;
+		color: #27272a;
+		cursor: pointer;
+		transition: background-color 0.15s ease, color 0.15s ease;
+	}
+
+	.sk-riel .sk-riel-b:hover {
+		background: #e4e4e7;
+		color: #18181b;
+	}
+
+	.sk-riel .sk-riel-b:focus-visible {
+		outline: 2px solid #2361c7;
+		outline-offset: 1px;
+	}
+
+	.sk-riel .sk-riel-b[aria-expanded='true'] {
+		background: #e6eefb;
+		color: #2361c7;
+	}
+
+	.sk-riel .sk-riel-logo img {
+		width: 26px;
+		height: 26px;
+		object-fit: contain;
+	}
+
+	.sk-riel .sk-riel-logo:hover,
+	.sk-riel .sk-riel-yo:hover,
+	.sk-riel .sk-riel-modelo:hover {
+		background: transparent;
+	}
+
+	.sk-riel .sk-riel-logo:hover img {
+		transform: scale(1.06);
+	}
+
+	.sk-riel-cuenta-avisos {
+		position: absolute;
+		right: 4px;
+		top: 4px;
+		min-width: 16px;
+		height: 16px;
+		padding: 0 4px;
+		box-sizing: border-box;
+		border-radius: 9999px;
+		background: #e5484d;
+		color: #ffffff;
+		font: 700 10.5px/16px Figtree, system-ui, sans-serif;
+		text-align: center;
+		box-shadow: 0 0 0 2px #ececee;
+	}
+
+	.sk-riel-cuenta-avisos:empty {
+		display: none;
+	}
+
+	.sk-riel .sk-riel-yo img {
+		width: 30px;
+		height: 30px;
+		border-radius: 9999px;
+		object-fit: cover;
+		background: #d4d4d8;
+	}
+
+	.sk-riel .sk-riel-yo i {
+		position: absolute;
+		right: 7px;
+		bottom: 7px;
+		width: 9px;
+		height: 9px;
+		border-radius: 9999px;
+		background: #2b8a5a;
+		box-shadow: 0 0 0 2px #ececee;
+	}
+
+	.sk-riel-div {
+		flex: none;
+		width: 28px;
+		height: 1px;
+		margin: 6px 0;
+		background: #d9d9de;
+	}
+
+	.sk-riel-punto,
+	.sk-riel-aro {
+		display: none;
+	}
+
+	.sk-riel-chats.sk-con-nuevo .sk-riel-punto {
+		display: block;
+		position: absolute;
+		right: 6px;
+		top: 6px;
+		width: 9px;
+		height: 9px;
+		border-radius: 9999px;
+		background: #d6336c;
+		box-shadow: 0 0 0 2px #ececee;
+		animation: sk-riel-pop 0.35s ease-out both, sk-riel-halo 1.6s ease-out 0.35s 3;
+	}
+
+	.sk-riel-chats.sk-con-pensando .sk-riel-aro {
+		display: block;
+		position: absolute;
+		left: 4px;
+		bottom: 4px;
+		width: 14px;
+		height: 14px;
+		border-radius: 9999px;
+		background: conic-gradient(from 0deg, #3d5a9e, rgba(255, 255, 255, 0) 72%);
+		-webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+		mask: radial-gradient(farthest-side, transparent calc(100% - 2px), #000 calc(100% - 2px));
+		animation: sk-riel-gira 1.4s linear infinite;
+	}
+
+	.sk-riel-hueco {
+		flex: 1;
+		min-height: 8px;
+	}
+
+	.sk-riel-pie {
+		flex: none;
+		width: 48px;
+		display: flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 10px;
+		padding-top: 10px;
+		box-shadow: inset 0 1px 0 #d9d9de;
+	}
+
+	.sk-riel .sk-riel-modelo img {
+		width: 36px;
+		height: 36px;
+		border-radius: 9999px;
+		object-fit: cover;
+		background: #d4d4d8;
+	}
+
+	.sk-riel-chev {
+		position: absolute;
+		right: 0;
+		bottom: 0;
+		width: 18px;
+		height: 18px;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 9999px;
+		background: hsl(var(--sk-m-tinte, 217 80% 96%));
+		color: hsl(var(--sk-m-oscuro, var(--sk-m, 220 45% 40%)));
+		box-shadow: 0 0 0 1.5px hsl(var(--sk-m, 220 45% 43%) / 0.3), 0 0 0 3px #ececee;
+	}
+
+	.sk-riel .sk-riel-nuevo {
+		border-radius: 9999px;
+		background: #18181b;
+		color: #ffffff;
+	}
+
+	.sk-riel .sk-riel-nuevo:hover {
+		background: #27272a;
+		color: #ffffff;
+	}
+
+	.sk-riel-tip {
+		position: fixed;
+		z-index: 80;
+		transform: translateY(-50%);
+		white-space: nowrap;
+		padding: 6px 10px;
+		border-radius: 8px;
+		background: #18181b;
+		color: #ffffff;
+		font: 600 13px/18px Figtree, system-ui, sans-serif;
+		box-shadow: 0 6px 16px rgba(0, 0, 0, 0.18);
+		pointer-events: none;
+		opacity: 0;
+		transition: opacity 0.12s ease;
+	}
+
+	.sk-riel-tip.sk-visible {
+		opacity: 1;
+		transition-delay: 0.25s;
+	}
+
+	.sk-riel-tip kbd {
+		margin-left: 8px;
+		font: inherit;
+		font-weight: 500;
+		color: #a1a1aa;
+	}
+
+	html.dark .sk-riel .sk-riel-b {
+		color: #d4d4d8;
+	}
+
+	html.dark .sk-riel .sk-riel-b:hover {
+		background: rgba(255, 255, 255, 0.08);
+		color: #fafafa;
+	}
+
+	html.dark .sk-riel .sk-riel-b[aria-expanded='true'] {
+		background: rgba(96, 140, 230, 0.18);
+		color: #8fb0f0;
+	}
+
+	html.dark .sk-riel :is(.sk-riel-logo, .sk-riel-yo, .sk-riel-modelo):hover {
+		background: transparent;
+	}
+
+	html.dark .sk-riel .sk-riel-nuevo,
+	html.dark .sk-riel .sk-riel-nuevo:hover {
+		background: #fafafa;
+		color: #18181b;
+	}
+
+	html.dark .sk-riel-div {
+		background: rgba(255, 255, 255, 0.1);
+	}
+
+	html.dark .sk-riel-pie {
+		box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.1);
+	}
+
+	html.dark :is(.sk-riel-cuenta-avisos, .sk-riel .sk-riel-yo i, .sk-riel-chats.sk-con-nuevo .sk-riel-punto) {
+		box-shadow: 0 0 0 2px #1c1c1e;
+	}
+
+	html.dark .sk-riel-chev {
+		box-shadow: 0 0 0 1.5px hsl(var(--sk-m, 220 45% 43%) / 0.4), 0 0 0 3px #1c1c1e;
+	}
+
+	/* tu cuenta: ventana junto a tu avatar; el selector de modelo, junto al modelo de abajo */
+	html.sk-riel-on [role='menu']:has(.user-menu-status) {
+		inset: 104px auto auto 72px !important;
+		width: 290px !important;
+		max-width: none !important;
+		transform: none !important;
+	}
+
+	body > .sk-selector.sk-sel-riel {
+		position: fixed !important;
+		top: auto !important;
+		left: 72px !important;
+		bottom: 66px !important;
+		width: 320px !important;
+		max-height: min(560px, calc(100dvh - 90px)) !important;
+		z-index: 70;
+	}
+
+	/* paneles de Chats y Notificaciones (lienzos "panel de chats" y "panel de notificaciones") */
+	html.sk-riel-on .sk-chats-velo {
+		left: 64px;
+	}
+
+	html.sk-riel-on .sk-chats-panel {
+		left: 72px !important;
+		top: 8px;
+		bottom: 12px;
+		width: 340px;
+		border: 0;
+		border-radius: 16px;
+		background: rgba(255, 255, 255, 0.78);
+		-webkit-backdrop-filter: blur(24px) saturate(1.6);
+		backdrop-filter: blur(24px) saturate(1.6);
+		box-shadow: 0 16px 40px rgba(24, 24, 27, 0.14), 0 0 0 1px rgba(24, 24, 27, 0.08);
+		color: #18181b;
+	}
+
+	html.sk-riel-on .sk-chats-cabecera {
+		height: 56px;
+		flex: none;
+		padding: 0 8px 0 18px;
+		gap: 2px;
+	}
+
+	html.sk-riel-on .sk-chats-nombre {
+		flex: 1;
+		font: 700 18px/24px Figtree, system-ui, sans-serif;
+	}
+
+	html.sk-riel-on .sk-chats-accion {
+		width: 32px;
+		height: 32px;
+		border-radius: 8px;
+		color: #3f3f46;
+	}
+
+	html.sk-riel-on .sk-chats-accion svg {
+		width: 18px;
+		height: 18px;
+		stroke-width: 1.9;
+	}
+
+	html.sk-riel-on .sk-chats-accion:hover {
+		background: rgba(24, 24, 27, 0.06);
+		color: #18181b;
+	}
+
+	html.sk-riel-on .sk-chats-buscar {
+		flex: none;
+		height: 38px;
+		margin: 0 12px 4px;
+		padding: 0 12px;
+		gap: 8px;
+		border-radius: 10px;
+		background: rgba(228, 228, 231, 0.6);
+		color: #52525b;
+	}
+
+	html.sk-riel-on .sk-chats-buscar svg {
+		width: 17px;
+		height: 17px;
+		stroke-width: 1.9;
+	}
+
+	html.sk-riel-on .sk-chats-buscar input {
+		font: 400 15px/20px Figtree, system-ui, sans-serif;
+		color: #18181b;
+	}
+
+	html.sk-riel-on .sk-chats-buscar input::placeholder {
+		color: #52525b;
+		opacity: 1;
+	}
+
+	html.sk-riel-on .sk-chats-lista {
+		gap: 0;
+		padding: 0 0 18px;
+		scrollbar-width: none;
+	}
+
+	html.sk-riel-on .sk-chats-etiqueta {
+		height: 32px;
+		margin-top: 6px;
+		padding: 0 12px 0 18px;
+		gap: 6px;
+		font: 700 12px/16px Figtree, system-ui, sans-serif;
+		letter-spacing: 0.06em;
+		color: #52525b;
+	}
+
+	html.sk-riel-on .sk-chats-etiqueta svg {
+		width: 13px;
+		height: 13px;
+		stroke-width: 2;
+	}
+
+	html.sk-riel-on .sk-chats-etiqueta-accion {
+		padding-right: 12px;
+	}
+
+	html.sk-riel-on .sk-chats-mini {
+		width: 32px;
+		height: 32px;
+		margin-right: 0;
+	}
+
+	html.sk-riel-on .sk-chats-mini svg {
+		width: 18px;
+		height: 18px;
+	}
+
+	html.sk-riel-on .sk-chats-fila,
+	html.sk-riel-on .sk-chats-carpeta {
+		width: calc(100% - 12px);
+		margin: 0 6px;
+		color: #18181b;
+		font: 400 15px/20px Figtree, system-ui, sans-serif;
+	}
+
+	html.sk-riel-on .sk-chats-fila {
+		height: 38px;
+		padding: 0 12px;
+		gap: 10px;
+	}
+
+	html.sk-riel-on .sk-chats-carpeta {
+		height: 36px;
+		padding: 0 12px 0 8px;
+		gap: 8px;
+	}
+
+	html.sk-riel-on .sk-chats-carpeta svg:first-child {
+		width: 14px;
+		height: 14px;
+		stroke-width: 2.2;
+		color: #52525b;
+	}
+
+	html.sk-riel-on .sk-chats-carpeta svg + svg {
+		width: 17px;
+		height: 17px;
+		stroke-width: 1.9;
+		color: #3f3f46;
+	}
+
+	html.sk-riel-on .sk-chats-fila .sk-chats-titulo {
+		flex: 1;
+	}
+
+	html.sk-riel-on .sk-chats-hace {
+		font: 500 12.5px/16px Figtree, system-ui, sans-serif;
+		color: #52525b;
+	}
+
+	html.sk-riel-on .sk-chats-fila:hover,
+	html.sk-riel-on .sk-chats-carpeta:hover {
+		background: rgba(24, 24, 27, 0.05);
+	}
+
+	html.sk-riel-on .sk-chats-fila.sk-chats-nuevo {
+		background: rgba(214, 51, 108, 0.07);
+		font-weight: 600;
+	}
+
+	.sk-chats-punto {
+		flex: none;
+		width: 8px;
+		height: 8px;
+		border-radius: 9999px;
+		background: #d6336c;
+	}
+
+	.sk-chats-pensando {
+		flex: none;
+		font: 500 12.5px/16px Figtree, system-ui, sans-serif;
+		color: #2f4a8a;
+	}
+
+	html.sk-riel-on .sk-chats-fila.sk-chats-actual {
+		background: rgba(255, 255, 255, 0.9);
+		box-shadow: inset 3px 0 0 hsl(var(--sk-m, 220 45% 43%)), 0 0 0 1px #e1e1e5;
+		font-weight: 600;
+	}
+
+	html.sk-riel-on .sk-chats-dentro {
+		padding-left: 18px;
+	}
+
+	html.sk-riel-on .sk-chats-vacio {
+		padding: 8px 18px;
+		color: #52525b;
+	}
+
+	/* notificaciones */
+	.sk-avisos-filtros {
+		flex: none;
+		display: flex;
+		gap: 4px;
+		margin: 0 12px 6px;
+		padding: 3px;
+		border-radius: 10px;
+		background: rgba(228, 228, 231, 0.6);
+	}
+
+	.sk-avisos-filtros button {
+		flex: 1;
+		height: 30px;
+		padding: 0 6px;
+		border: 0;
+		border-radius: 8px;
+		background: transparent;
+		color: #52525b;
+		font: 500 13.5px/1 Figtree, system-ui, sans-serif;
+		white-space: nowrap;
+		cursor: pointer;
+	}
+
+	.sk-avisos-filtros button[aria-pressed='true'] {
+		background: #ffffff;
+		color: #18181b;
+		font-weight: 600;
+		box-shadow: 0 1px 2px rgba(24, 24, 27, 0.1);
+	}
+
+	.sk-avisos-lista {
+		flex: 1;
+		min-height: 0;
+		overflow-y: auto;
+		padding-bottom: 8px;
+		scrollbar-width: none;
+	}
+
+	.sk-avisos-grupo {
+		padding: 10px 18px 4px;
+		font: 700 12px/16px Figtree, system-ui, sans-serif;
+		letter-spacing: 0.06em;
+		text-transform: uppercase;
+		color: #52525b;
+	}
+
+	.sk-aviso {
+		display: flex;
+		gap: 12px;
+		width: calc(100% - 12px);
+		margin: 0 6px;
+		padding: 10px 12px;
+		border: 0;
+		border-radius: 12px;
+		background: transparent;
+		text-align: left;
+		color: #18181b;
+		cursor: pointer;
+	}
+
+	.sk-aviso:hover {
+		background: rgba(24, 24, 27, 0.05);
+	}
+
+	.sk-aviso.sk-aviso-nuevo {
+		background: rgba(35, 97, 199, 0.06);
+	}
+
+	.sk-aviso.sk-aviso-nuevo:hover {
+		background: rgba(35, 97, 199, 0.1);
+	}
+
+	.sk-aviso-foto,
+	.sk-aviso-icono {
+		flex: none;
+		width: 32px;
+		height: 32px;
+	}
+
+	.sk-aviso-foto {
+		border-radius: 9999px;
+		object-fit: cover;
+	}
+
+	.sk-aviso-icono {
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		border-radius: 10px;
+		background: #eef4fd;
+		color: #2361c7;
+	}
+
+	.sk-aviso-icono.sk-aviso-error {
+		background: #fdeceb;
+		color: #c0392b;
+	}
+
+	.sk-aviso-texto {
+		flex: 1;
+		min-width: 0;
+		display: block;
+	}
+
+	.sk-aviso-linea {
+		display: flex;
+		align-items: baseline;
+		gap: 8px;
+	}
+
+	.sk-aviso-linea b {
+		flex: 1;
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+		white-space: nowrap;
+		font: 500 14.5px/20px Figtree, system-ui, sans-serif;
+	}
+
+	.sk-aviso-nuevo .sk-aviso-linea b {
+		font-weight: 600;
+	}
+
+	.sk-aviso-falla .sk-aviso-linea b {
+		color: #a32a22;
+	}
+
+	.sk-aviso-linea time {
+		flex: none;
+		font: 500 12px/16px Figtree, system-ui, sans-serif;
+		color: #52525b;
+	}
+
+	.sk-aviso-cuerpo {
+		display: -webkit-box;
+		-webkit-line-clamp: 2;
+		-webkit-box-orient: vertical;
+		overflow: hidden;
+		font: 400 13.5px/19px Figtree, system-ui, sans-serif;
+		color: #3f3f46;
+	}
+
+	.sk-aviso-punto {
+		flex: none;
+		width: 8px;
+		height: 8px;
+		margin-top: 6px;
+		border-radius: 9999px;
+	}
+
+	.sk-aviso-nuevo .sk-aviso-punto {
+		background: #2361c7;
+	}
+
+	.sk-avisos-vacio {
+		margin: 0;
+		padding: 24px 18px;
+		font: 400 14px/20px Figtree, system-ui, sans-serif;
+		color: #52525b;
+		text-align: center;
+	}
+
+	.sk-avisos-pie {
+		flex: none;
+		width: 100%;
+		padding: 10px 18px 14px;
+		border: 0;
+		background: transparent;
+		box-shadow: inset 0 1px 0 #ececee;
+		text-align: left;
+		font: 500 13px/18px Figtree, system-ui, sans-serif;
+		color: #2361c7;
+		cursor: pointer;
+	}
+
+	.sk-avisos-pie:hover {
+		color: #1a4a99;
+	}
+
+	/* oscuro */
+	html.dark.sk-riel-on .sk-chats-panel {
+		background: rgba(30, 30, 33, 0.82);
+		box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.08);
+		color: #f4f4f5;
+	}
+
+	html.dark.sk-riel-on :is(.sk-chats-fila, .sk-chats-carpeta, .sk-chats-buscar input, .sk-aviso) {
+		color: #f4f4f5;
+	}
+
+	html.dark.sk-riel-on :is(.sk-chats-accion, .sk-chats-carpeta svg + svg) {
+		color: #d4d4d8;
+	}
+
+	html.dark.sk-riel-on :is(.sk-chats-etiqueta, .sk-chats-hace, .sk-chats-buscar, .sk-chats-buscar input::placeholder, .sk-avisos-grupo, .sk-aviso-linea time, .sk-avisos-filtros button) {
+		color: #a1a1aa;
+	}
+
+	html.dark.sk-riel-on :is(.sk-chats-buscar, .sk-avisos-filtros) {
+		background: rgba(255, 255, 255, 0.08);
+	}
+
+	html.dark.sk-riel-on .sk-avisos-filtros button[aria-pressed='true'] {
+		background: rgba(255, 255, 255, 0.14);
+		color: #fafafa;
+	}
+
+	html.dark.sk-riel-on .sk-chats-fila.sk-chats-actual {
+		background: rgba(255, 255, 255, 0.08);
+		box-shadow: inset 3px 0 0 hsl(var(--sk-m, 220 45% 60%)), 0 0 0 1px rgba(255, 255, 255, 0.1);
+	}
+
+	html.dark.sk-riel-on .sk-aviso-cuerpo {
+		color: #c4c4cc;
+	}
+
+	html.dark.sk-riel-on .sk-avisos-pie {
+		box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.08);
+		color: #8fb0f0;
+	}
+
+	html.dark.sk-riel-on .sk-chats-pensando {
+		color: #8fb0f0;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.sk-riel-chats .sk-riel-punto,
+	.sk-riel-chats .sk-riel-aro {
+		animation: none !important;
+	}
+
+	.sk-riel-chats.sk-con-pensando .sk-riel-aro {
+		background: none;
+		box-shadow: inset 0 0 0 2px #3d5a9e;
+		-webkit-mask: none;
+		mask: none;
+	}
+}
+
+/* la barra comprimida vieja forzaba botones de 40 px con íconos de 19: en la final son de 44 con íconos de 20 */
+@media (min-width: 768px) {
+	#sidebar[class*='w-[calc(42px'] nav.sk-riel button.sk-riel-b.sk-riel-b {
+		width: 44px !important;
+		height: 44px !important;
+		margin: 0 !important;
+		border-radius: 12px;
+	}
+
+	#sidebar[class*='w-[calc(42px'] .sk-riel .sk-riel-b > svg {
+		width: 20px !important;
+		height: 20px !important;
+		stroke-width: 1.9;
+	}
+
+	#sidebar[class*='w-[calc(42px'] nav.sk-riel button.sk-riel-nuevo.sk-riel-nuevo {
+		border-radius: 9999px;
+	}
+
+	#sidebar[class*='w-[calc(42px'] .sk-riel .sk-riel-nuevo > svg {
+		width: 19px !important;
+		height: 19px !important;
+		stroke-width: 2;
+	}
+
+	#sidebar[class*='w-[calc(42px'] .sk-riel .sk-riel-chev svg {
+		width: 12px !important;
+		height: 12px !important;
+		stroke-width: 2.6;
+	}
+}
+
+/* títulos de sección de la barra (Carpetas, Fijados, Hoy, Ayer…): todos iguales, como en los lienzos finales. La flechita
+   que Open WebUI muestra junto a "Carpetas" al pasar el cursor se quita (tocar "Carpetas" sigue plegando la sección) */
+#sidebar #sidebar-folders-button :has(> svg),
+#sidebar #sidebar-folders-button svg {
+	display: none !important;
+}
+
+@media (max-width: 767px) {
+	#sidebar h3.pl-2\.5 {
+		font-size: 12.5px !important;
+		line-height: 16px !important;
+		font-weight: 700 !important;
+		letter-spacing: 0.06em !important;
+		color: #52525b !important;
+	}
+}
+
+@media (min-width: 768px) {
+	#sidebar:not([class*='w-[calc(42px']) h3.pl-2\.5 {
+		font-size: 12px !important;
+		line-height: 16px !important;
+		font-weight: 700 !important;
+		letter-spacing: 0.06em !important;
+		color: #52525b !important;
+	}
+
+	/* "+" de Carpetas: mismo cuadro, ícono y columna que la flecha de Fijados */
+	#sidebar:not([class*='w-[calc(42px']) button.w-7.h-7.rounded-lg:is([aria-label='Nueva Carpeta'], [aria-label='New Folder']) {
+		position: relative;
+		right: 6px;
+	}
+
+	#sidebar:not([class*='w-[calc(42px']) button.w-7.h-7.rounded-lg:is([aria-label='Nueva Carpeta'], [aria-label='New Folder']) svg {
+		width: 18px !important;
+		height: 18px !important;
+	}
+}
+
+html.dark #sidebar h3.pl-2\.5 {
+	color: #a1a1aa !important;
+}
+
+/* cuadro de escribir (lienzos finales de escritorio): píldoras blancas con filo gris, sin la línea entre el + y las
+   píldoras; los íconos de color se quedan igual */
+html:not(.dark) {
+	--sk-chip-fondo: #ffffff;
+}
+
+@media (min-width: 768px) {
+	:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) > div[dir='ltr'] > div:nth-child(2)::before {
+		display: none;
+	}
+}
+
+/* escritorio: el chat ocupa exactamente el ancho del cuadro de escribir (lienzos finales): tu avatar queda en el borde
+   derecho del cuadro y el de la IA en el izquierdo. La lista reserva siempre el hueco de su barra de desplazamiento y
+   carbono.js mide ese hueco (--sk-hueco) y el ancho máximo de la columna (--sk-col) para que el cuadro use los mismos */
+@media (min-width: 768px) {
+	#messages-container {
+		scrollbar-gutter: stable;
+	}
+
+	#messages-container div.mx-auto:has(> [id^='message-']) {
+		padding-left: 8px !important;
+		padding-right: 8px !important;
+	}
+
+	html.sk-col-lista div.mx-auto.inset-x-0:has(#message-input-container) {
+		padding-left: 8px !important;
+		padding-right: calc(8px + var(--sk-hueco, 0px)) !important;
+		max-width: calc(var(--sk-col, 100000px) + var(--sk-hueco, 0px)) !important;
+	}
+}
+
+/* jerarquía de las carpetas (como en el panel de Chats): los chats de una carpeta van con sangría y una línea guía que
+   baja desde el ícono de la carpeta; la flecha que aparece al pasar el cursor sobre el ícono, del mismo tamaño que él */
+#sidebar div:has(> div [id^='folder-'][id$='-button']) > div > div > div.ml-3.pl-1:has(#sidebar-chat-item) {
+	margin-left: 23px !important;
+	padding-left: 3px !important;
+	border-left: 1px solid #d9d9de !important;
+}
+
+html.dark #sidebar div:has(> div [id^='folder-'][id$='-button']) > div > div > div.ml-3.pl-1:has(#sidebar-chat-item) {
+	border-left-color: rgba(255, 255, 255, 0.12) !important;
+}
+
+#sidebar [id^='folder-'][id$='-button'] > button:first-child > div > svg {
+	width: 18px !important;
+	height: 18px !important;
+}
+
+@media (min-width: 768px) {
+	#sidebar:not([class*='w-[calc(42px']) div:has(> div [id^='folder-'][id$='-button']) > div > div > div.ml-3.pl-1:has(#sidebar-chat-item) {
+		margin-left: 22px !important;
+	}
+}
+
+/* al cargar la página, Open WebUI pide las carpetas al final (~0,8 s después que los chats): mientras tanto la lista
+   espera sin verse, así todo aparece junto y las carpetas no empujan la lista (carbono.js, a lo más 1,5 s) */
+html.sk-esperando-carpetas #sidebar .overflow-y-auto {
+	opacity: 0;
+}
+
+#sidebar .overflow-y-auto {
+	transition: opacity 0.18s ease;
+}
+
+/* píldora de la carpeta de trabajo (Workspace): Open WebUI la baja 1 px y la corre 2 px; alineada con las demás */
+:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) button[aria-label='Choose working directory'],
+:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) div.translate-x-0\.5:has(button[aria-label='Choose working directory']) {
+	translate: none !important;
+}
+
+:is(#message-input-container, [id^='side-chat-input-'][id$='-wrapper']) div.translate-x-0\.5:has(button[aria-label='Choose working directory']) {
+	margin-left: 4px;
+	margin-right: 2px;
+}
+
+/* teléfono: el texto de la respuesta a la misma distancia de "Sakura · hora" que tu burbuja de "hora · tu nombre"
+   (~10 px, como en el lienzo móvil); antes quedaba a 20 */
+@media (max-width: 767px) {
+	#messages-container [id^='message-']:not(.user-message) > div.flex-auto.relative:not(.sk-llena) {
+		padding-top: 0 !important;
 	}
 }

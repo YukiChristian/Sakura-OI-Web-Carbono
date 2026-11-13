@@ -1,6 +1,6 @@
 # Carbono para Open WebUI
 
-**Versión 0.95.2** · probado con Open WebUI **0.13.3**
+**Versión 0.95.3** · probado con Open WebUI **0.13.3**
 
 Carbono es el tema recomendado para [Sakura OI Web](https://github.com/YukiChristian/Sakura-OI-Web). Deja la interfaz de Open WebUI neutra (superficies en tonos carbón y zinc, acción principal en negro), con más jerarquía en el texto, tipografía Atkinson Hyperlegible, menús de vidrio esmerilado y un composer pensado para el teléfono.
 
@@ -39,7 +39,7 @@ La guía de estilo (principios, colores, tipografía y componentes) está en [do
 - **Tipografía:** Atkinson Hyperlegible Next para la interfaz y Atkinson Hyperlegible Mono para código (Google Fonts).
 - **Barra lateral:** vidrio claro con el color del modelo activo (tomado de su avatar, como los pétalos), tarjeta «Modelo activo» con su selector, modelos fijados, **Nuevo Chat** en negro con Buscar al lado, píldoras Notas · Espacio · Agenda y chats compactos con el avatar del modelo de cada uno.
 - **Chat:** globo de tus mensajes en gris neutro, fondo de cada modelo con un velo blanco degradado y desenfocado para que el texto se lea primero, y barra de título de vidrio esmerilado.
-- **Composer en escritorio:** chips neutros con una insignia redonda de color (Herramientas naranja, Web verde, Open Terminal violeta, Razonamiento rosa), una línea que los separa de `+` e Integraciones y, a la derecha, el modelo con su avatar, el micrófono y la voz. Si la caja es angosta, los chips se quedan solo con su insignia.
+- **Composer en escritorio:** chips blancos con filo gris y una insignia redonda de color (Herramientas naranja, Web verde, Open Terminal violeta, Razonamiento rosa) junto al `+` y, a la derecha, el modelo con su avatar, el micrófono y la voz. Si la caja es angosta, los chips se quedan solo con su insignia.
 - **Composer en el teléfono:** texto arriba; abajo `+`, Integraciones, un botón de opciones con las insignias de color de las opciones activas encimadas y un contador «4/4», el modelo con su avatar, el micrófono y la voz. El botón abre la hoja de vidrio **Herramientas y opciones**, donde cada opción tiene su ícono, su descripción y su interruptor encendido o apagado.
 - **Menús:** vidrio esmerilado (blanco al 60 % con desenfoque) en todos los menús flotantes y en el selector de modelo; nunca se salen de la ventana y muestran todas sus opciones.
 - **Administración y Zona de Pruebas:** pestañas en control segmentado, tabla de usuarios en tarjeta con el rol en píldora, buscador y botones de 46 px, instrucciones del sistema en tarjeta, un recuadro punteado que explica qué hacer cuando no hay mensajes y botón **Ejecutar** en negro.
@@ -51,6 +51,16 @@ La guía de estilo (principios, colores, tipografía y componentes) está en [do
 - **Rendimiento:** los selectores evitan buscar por el atributo `class` dentro de `:has()`, que obliga al navegador a recalcular toda la página en cada hover.
 
 ## Cambios
+
+### 0.95.3
+
+- **Barra comprimida, diseño final (escritorio):** 64 px con el mismo orden que la barra abierta: logo (expande la barra), notificaciones y tu cuenta arriba; Buscar chats, Notas, Espacio, Agenda y Chats en medio; el modelo activo y «Nuevo chat» abajo. Botones de 44 px con tooltip y atajo (Ctrl K, Alt N, Alt E, Alt A, Ctrl Shift O). Chats avisa con un punto rosa si hay una respuesta nueva y con un aro azul si un chat está pensando.
+- **Panel de notificaciones:** junto a la barra comprimida, con Todas / Sin leer / Sistema, agrupadas por día. Anota cuándo un modelo te respondió en un chat que no estabas viendo (con su foto y el inicio de la respuesta) y los avisos de error o información de Open WebUI; marcar todo como leído y borrar. Se guardan en tu navegador.
+- **Panel de chats:** con el estilo del diseño final, la respuesta nueva resaltada, «Pensando…» en el chat que está generando y el chat abierto con la barra de su color; las carpetas recuerdan si las dejaste abiertas o cerradas y su contenido llega con el panel.
+- **Carpetas en la barra:** mismo estilo que los chats, con sangría y una línea guía para los chats de cada carpeta; ya no aparecen después que el resto ni empujan la lista al cargar.
+- **Títulos de sección:** Carpetas, Fijados, Hoy, Ayer… con el mismo tamaño y color; el «+» de Carpetas alineado con la flecha de Fijados.
+- **Chat en escritorio:** los mensajes ocupan exactamente el ancho del cuadro de escribir (avatares en sus bordes); píldoras del cuadro blancas y con el mismo espacio entre ellas.
+- **Teléfono:** la ventana de pestañas y el modo voz entran y salen deslizándose como la barra lateral; el texto de la respuesta queda a la misma distancia del nombre que tu burbuja.
 
 ### 0.95.2
 

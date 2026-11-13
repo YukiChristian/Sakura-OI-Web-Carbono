@@ -1,5 +1,5 @@
 /*
- * Carbono 0.95.2 — comportamiento del tema. El lanzador lo sirve en /static/loader.js
+ * Carbono 0.95.3 — comportamiento del tema. El lanzador lo sirve en /static/loader.js
  * (que Open WebUI carga en cada página) mientras exista carbono/ACTIVO.
  *
  * Barras de desplazamiento que solo aparecen mientras haces scroll: carbono.css las deja
@@ -22,7 +22,7 @@
 		const barra = document.querySelector('#sidebar');
 		const conBarra = barra && barra.getBoundingClientRect().width > 0;
 		const lista = conBarra
-			? barra.querySelector('.sk-barra-extra, .sk-chats-envoltura')
+			? barra.querySelector('.sk-barra-extra, .sk-riel')
 			: document.querySelector('#chat-input, #messages-container, main');
 		if (lista || performance.now() - inicio > 3000) setTimeout(quitar, 150);
 		else requestAnimationFrame(esperar);
@@ -676,7 +676,6 @@ function skVisible(selector) {
 	let filtro = '';
 	let creandoCarpeta = false;
 	let pendiente = false;
-	let modelosFijados = null; // [{ id, nombre }] de la sección Modelos de la barra lateral
 
 	const pedir = async (url) => {
 		const r = await fetch(url, { headers: { Authorization: `Bearer ${localStorage.token}` } });
@@ -685,6 +684,13 @@ function skVisible(selector) {
 
 	const cargar = async () => {
 		const [fijados, carpetas] = await Promise.all([pedir('/api/v1/chats/pinned'), pedir('/api/v1/folders/')]);
+		// carpetas abiertas o cerradas como las dejaste (Open WebUI lo guarda en cada carpeta) y su contenido de una vez
+		abiertas.clear();
+		const abrirYa = carpetas.filter((c) => c.is_expanded);
+		abrirYa.forEach((c) => abiertas.add(c.id));
+		const contenidos = Promise.all(
+			abrirYa.map(async (c) => chatsDeCarpeta.set(c.id, await pedir(`/api/v1/chats/folder/${encodeURIComponent(c.id)}/list?page=1`)))
+		);
 		// como la barra lateral: sin fijados ni chats de carpetas; hasta 5 páginas de 60
 		const recientes = [];
 		for (let pagina = 1; pagina <= 5; pagina++) {
@@ -692,8 +698,16 @@ function skVisible(selector) {
 			recientes.push(...lote);
 			if (lote.length < 60) break;
 		}
+		await contenidos;
 		datos = { fijados, recientes, carpetas };
 	};
+
+	const guardarAbierta = (id, abierta) =>
+		fetch(`/api/v1/folders/${encodeURIComponent(id)}/update/expanded`, {
+			method: 'POST',
+			headers: { Authorization: `Bearer ${localStorage.token}`, 'Content-Type': 'application/json' },
+			body: JSON.stringify({ is_expanded: abierta })
+		}).catch(() => {});
 
 	const hace = (segundos) => {
 		const s = Math.max(0, Date.now() / 1000 - segundos);
@@ -721,7 +735,13 @@ function skVisible(selector) {
 
 	const fila = (chat) => {
 		const actual = location.pathname === `/c/${chat.id}`;
-		return `<a class="sk-chats-fila${actual ? ' sk-chats-actual' : ''}" href="/c/${esc(chat.id)}"${actual ? ' aria-current="page"' : ''}><span class="sk-chats-titulo">${esc(chat.title)}</span><span class="sk-chats-hace">${hace(chat.updated_at)}</span></a>`;
+		const estado = window.skAvisos?.estado();
+		const nuevo = !actual && estado?.nuevos.has(chat.id);
+		const pensando = estado?.pensando.has(chat.id);
+		const fin = pensando
+			? '<span class="sk-chats-pensando" role="status">Pensando…</span>'
+			: `${nuevo ? '<span class="sk-chats-punto" aria-label="Respuesta nueva"></span>' : ''}<span class="sk-chats-hace">${hace(chat.updated_at)}</span>`;
+		return `<a class="sk-chats-fila${actual ? ' sk-chats-actual' : ''}${nuevo ? ' sk-chats-nuevo' : ''}" href="/c/${esc(chat.id)}"${actual ? ' aria-current="page"' : ''}><span class="sk-chats-titulo">${esc(chat.title)}</span>${fin}</a>`;
 	};
 
 	const coincide = (chat) => !filtro || String(chat.title).toLowerCase().includes(filtro);
@@ -794,14 +814,15 @@ function skVisible(selector) {
 	};
 
 	const cerrar = () => {
-		document.querySelector('.sk-chats-panel')?.remove();
-		document.querySelector('.sk-chats-velo')?.remove();
-		document.querySelector('.sk-chats-boton')?.setAttribute('aria-expanded', 'false');
+		document.querySelector('.sk-chats-panel:not(.sk-avisos-panel)')?.remove();
+		document.querySelector('.sk-chats-velo:not(.sk-avisos-velo)')?.remove();
+		document.querySelector('.sk-riel-chats')?.setAttribute('aria-expanded', 'false');
 	};
 
 	const abrir = () => {
 		const rail = document.querySelector(RAIL);
 		if (!rail) return;
+		window.skAvisos?.cerrar();
 		filtro = '';
 		const velo = document.createElement('div');
 		velo.className = 'sk-chats-velo';
@@ -816,7 +837,7 @@ function skVisible(selector) {
 				<span class="sk-chats-nombre">Chats</span>
 				<div class="sk-chats-acciones">
 					<a class="sk-chats-accion" href="/" aria-label="Nuevo chat" title="Nuevo chat">${svg('nuevo')}</a>
-					<button type="button" class="sk-chats-accion" data-accion="barra" aria-label="Mantener barra abierta" title="Mantener barra abierta">${svg('barra')}</button>
+					<button type="button" class="sk-chats-accion" data-accion="barra" aria-label="Fijar barra abierta" title="Fijar barra abierta">${svg('barra')}</button>
 					<button type="button" class="sk-chats-accion" data-accion="cerrar" aria-label="Cerrar" title="Cerrar">${svg('cerrar')}</button>
 				</div>
 			</div>
@@ -837,9 +858,15 @@ function skVisible(selector) {
 			if (e.target.closest('a')) cerrar(); // Open WebUI navega sin recargar
 			const carpeta = e.target.closest('[data-carpeta]')?.dataset.carpeta;
 			if (carpeta) {
-				if (abiertas.has(carpeta)) abiertas.delete(carpeta);
-				else {
+				const c = datos?.carpetas.find((x) => x.id === carpeta);
+				if (abiertas.has(carpeta)) {
+					abiertas.delete(carpeta);
+					guardarAbierta(carpeta, false);
+					if (c) c.is_expanded = false;
+				} else {
 					abiertas.add(carpeta);
+					guardarAbierta(carpeta, true);
+					if (c) c.is_expanded = true;
 					if (!chatsDeCarpeta.has(carpeta)) {
 						pintarLista();
 						chatsDeCarpeta.set(carpeta, await pedir(`/api/v1/chats/folder/${encodeURIComponent(carpeta)}/list?page=1`));
@@ -853,7 +880,7 @@ function skVisible(selector) {
 			pintarLista();
 		});
 		document.body.append(velo, panel);
-		document.querySelector('.sk-chats-boton')?.setAttribute('aria-expanded', 'true');
+		document.querySelector('.sk-riel-chats')?.setAttribute('aria-expanded', 'true');
 		pintarLista();
 		// siempre datos frescos al abrir (chats nuevos, renombrados, fijados)
 		cargar().then(pintarLista, () => {
@@ -863,98 +890,27 @@ function skVisible(selector) {
 		panel.querySelector('input').focus();
 	};
 
-	// Modelos fijados (sección Modelos de la barra lateral): Ajustes del usuario, sin los ocultos
-	const cargarModelos = async () => {
-		modelosFijados = [];
-		try {
-			// lista rápida (personas guardadas, milisegundos): se pintan ya; la completa (/api/models, segundos) se pide
-			// después solo si algún modelo fijado no es persona, y entonces se vuelven a pintar los avatares
-			const [ajustes, rapida] = await Promise.all([
-				pedir('/api/v1/users/user/settings'),
-				pedir('/api/v1/models/list').catch(() => null)
-			]);
-			const ids = ajustes?.ui?.pinnedModels ?? [];
-			const personas = (rapida?.items ?? []).filter((m) => m.is_active !== false && !m.meta?.hidden);
-			const encontrados = ids.map((id) => personas.find((m) => m.id === id));
-			modelosFijados = encontrados.filter(Boolean).map((m) => ({ id: m.id, nombre: m.name }));
-			if (encontrados.some((m) => !m)) {
-				pedir('/api/models')
-					.then(({ data = [] } = {}) => {
-						const completos = ids
-							.map((id, i) => encontrados[i] ?? data.find((m) => m.id === id && !m.info?.meta?.hidden))
-							.filter(Boolean)
-							.map((m) => ({ id: m.id, nombre: m.name }));
-						if (completos.length === modelosFijados.length) return;
-						modelosFijados = completos;
-						document.querySelector('.sk-chats-envoltura')?.remove();
-						asegurarBoton();
-					})
-					.catch(() => {});
-			}
-		} catch {
-			// sin modelos fijados en la barra contraída
-		}
-		document.querySelector('.sk-chats-envoltura')?.remove(); // se vuelve a armar con los avatares
-		asegurarBoton();
-	};
-
+	// la barra comprimida (carbono.js, "Barra comprimida · diseño final") abre y cierra el panel; si la barra se abre o
+	// pasa a teléfono, el panel se cierra
+	let precargado = false;
 	const asegurarBoton = () => {
 		pendiente = false;
-		const rail = document.querySelector(RAIL);
-		if (!rail) {
-			cerrar(); // la barra se abrió o cambió a teléfono
-			return;
+		if (!document.querySelector(RAIL)) return cerrar();
+		// con la barra comprimida a la vista se cargan los chats en segundo plano: el panel abre ya lleno
+		if (!precargado && localStorage.token) {
+			precargado = true;
+			cargar().catch(() => (precargado = false));
 		}
-		// los modelos y "Chats" van después del último acceso fijado (Notas, Espacio, Agenda…), no a media fila: así
-		// Calendario queda con su grupo aunque se fije después
-		const fijados = [...rail.querySelectorAll("a[href='/notes'], a[href='/workspace'], a[href='/calendar'], a[href='/automations'], a[href^='/playground']")];
-		const ultimo = (fijados.at(-1) || rail.querySelector("a[href='/workspace']"))?.parentElement;
-		const existente = rail.querySelector('.sk-chats-envoltura');
-		if (existente) {
-			if (ultimo && ultimo.nextElementSibling !== existente) ultimo.after(existente);
-			return;
-		}
-		if (!modelosFijados) {
-			if (localStorage.token && modelosFijados === null) {
-				modelosFijados = undefined;
-				cargarModelos();
-			}
-			return;
-		}
-		if (!ultimo?.parentElement) return;
-		const envoltura = document.createElement('div');
-		envoltura.className = 'sk-chats-envoltura';
-		const avatares = modelosFijados
-			.map(
-				(m) =>
-					`<a class="sk-rail-modelo" href="/?model=${encodeURIComponent(m.id)}" aria-label="Nuevo chat con ${esc(m.nombre)}" title="${esc(m.nombre)}"><img src="/api/v1/models/model/profile/image?id=${encodeURIComponent(m.id)}" alt=""></a>`
-			)
-			.join('');
-		envoltura.innerHTML = `${avatares ? `<span class="sk-chats-division" aria-hidden="true"></span>${avatares}` : ''}<span class="sk-chats-division" aria-hidden="true"></span><button type="button" class="sk-chats-boton" aria-label="Chats" aria-expanded="false" title="Chats">${ICONO_CHATS}</button><span class="sk-chats-leyenda" aria-hidden="true">Chats</span>`;
-		// la barra contraída se abre con cualquier clic: se detiene aquí y se navega con un enlace suelto en
-		// <body>, para que Open WebUI lo maneje sin recargar la página
-		envoltura.querySelectorAll('.sk-rail-modelo').forEach((enlace) =>
-			enlace.addEventListener('click', (e) => {
-				e.preventDefault();
-				e.stopPropagation();
-				const suelto = document.createElement('a');
-				suelto.href = enlace.getAttribute('href');
-				suelto.hidden = true;
-				document.body.appendChild(suelto);
-				suelto.click();
-				suelto.remove();
-			})
-		);
-		envoltura.querySelector('button').addEventListener('click', (e) => {
-			e.stopPropagation(); // la barra contraída se abre al tocar cualquier parte vacía
-			if (document.querySelector('.sk-chats-panel')) cerrar();
-			else abrir();
-		});
-		ultimo.after(envoltura);
+	};
+
+	window.skPanelChats = {
+		alternar: () => (document.querySelector('.sk-chats-panel:not(.sk-avisos-panel)') ? cerrar() : abrir()),
+		cerrar,
+		repintar: () => document.querySelector('.sk-chats-panel:not(.sk-avisos-panel)') && pintarLista()
 	};
 
 	document.addEventListener('keydown', (e) => {
-		if (e.key === 'Escape' && document.querySelector('.sk-chats-panel')) cerrar();
+		if (e.key === 'Escape' && document.querySelector('.sk-chats-panel:not(.sk-avisos-panel)')) cerrar();
 	});
 
 	skVigilar(() => {
@@ -5347,7 +5303,18 @@ function skVisible(selector) {
 		if (!s || /translateX\(-100%\)/.test(s.getAttribute('style') || '')) return false;
 		activo.abierta ??= performance.now();
 		const completa = s.querySelector('.sk-barra-modelo') && s.querySelector('.sk-barra-fijados') && s.querySelector('#sidebar-chat-item');
-		return Boolean(completa) || performance.now() - activo.abierta > 150;
+		// Open WebUI pide las carpetas después de los chats (~0,8 s más): si tienes carpetas se esperan también, para que
+		// no aparezcan después empujando la lista (a lo más 1,2 s)
+		const carpetas = s.querySelector("[id^='folder-'][id$='-button']");
+		const transcurrido = performance.now() - activo.abierta;
+		let hay = false;
+		try {
+			if (carpetas) localStorage.setItem('sk-hay-carpetas', '1');
+			hay = localStorage.getItem('sk-hay-carpetas') === '1';
+			if (hay && !carpetas && completa && transcurrido > 1200) localStorage.removeItem('sk-hay-carpetas');
+		} catch {}
+		if (completa && hay && !carpetas) return transcurrido > 1200;
+		return Boolean(completa) || transcurrido > 150;
 	};
 
 	const apagar = () => {
@@ -5485,24 +5452,43 @@ function skVisible(selector) {
 	else document.addEventListener('DOMContentLoaded', preparar, { once: true });
 })();
 
-/* Pantalla de llamada: al tocar "Modo de voz" se guarda el centro del botón para que la pantalla se abra en círculo
-   desde ahí, y se marca la entrada (html[data-sk-voz-entrada]) para la cascada de la cabecera, la foto y los botones. */
+/* Teléfono: la ventana de pestañas y la pantalla de llamada salen hacia la derecha (como la barra lateral, 200 ms)
+   antes de cerrarse; al tocar "Ocultar pestañas" o "‹ Chat" se anima primero y después se deja actuar al botón. */
 (() => {
-	const BOTON = "button[aria-label='Modo de Voz'], button[aria-label='Voice mode']";
-	let fin = 0;
+	const telefono = matchMedia('(max-width: 767px)');
+	const VENTANA = ".modal[role='dialog']:is([aria-label='Pestañas'], [aria-label='Tabs'])";
+	const CIERRAN = ['Ocultar pestañas', 'Hide tabs', 'Volver al chat'];
+	let propio = false;
 	document.addEventListener(
-		'pointerdown',
+		'click',
 		(e) => {
-			const b = e.target.closest?.(BOTON);
-			if (!b) return;
-			const r = b.getBoundingClientRect();
-			const raiz = document.documentElement;
-			raiz.style.setProperty('--sk-voz-x', `${Math.round(r.left + r.width / 2)}px`);
-			raiz.style.setProperty('--sk-voz-y', `${Math.round(r.top + r.height / 2)}px`);
-			raiz.dataset.skVozEntrada = '';
-			clearTimeout(fin);
-			// la pantalla puede tardar en montarse (micrófono, conexión): la cascada espera hasta 2.5 s
-			fin = setTimeout(() => delete raiz.dataset.skVozEntrada, 2500);
+			if (propio || !telefono.matches || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+			const boton = e.target.closest?.('button');
+			const ventana = boton?.closest(VENTANA);
+			if (!ventana || !CIERRAN.includes(boton.getAttribute('aria-label'))) return;
+			const panel = ventana.querySelector(':scope > div.relative');
+			if (!panel || panel.skSaliendo) return;
+			e.preventDefault();
+			e.stopImmediatePropagation();
+			panel.skSaliendo = true;
+			const anim = panel.animate([{ translate: '0 0' }, { translate: '100% 0' }], {
+				duration: 200,
+				easing: 'cubic-bezier(0.4, 0, 1, 1)',
+				fill: 'forwards'
+			});
+			anim.onfinish = () => {
+				propio = true;
+				try {
+					boton.click();
+				} finally {
+					propio = false;
+				}
+				// si la ventana siguiera ahí (no se cerró), regresa a su lugar
+				setTimeout(() => {
+					if (panel.isConnected) anim.cancel();
+					panel.skSaliendo = false;
+				}, 1500);
+			};
 		},
 		true
 	);
@@ -5584,6 +5570,19 @@ function skVisible(selector) {
 	};
 	window.skAlinearFijados = alinearFijados;
 	addEventListener('resize', () => requestAnimationFrame(alinearFijados));
+	// también cuando "Fijados" se vuelve visible (al abrir la barra, por cualquier camino)
+	const avistador = new IntersectionObserver((entradas) => {
+		if (entradas.some((e) => e.isIntersecting)) requestAnimationFrame(alinearFijados);
+	});
+	let observado = null;
+	skVigilar(() => {
+		const b = document.getElementById('sidebar-pinned-chats-button');
+		if (b && b !== observado) {
+			if (observado) avistador.unobserve(observado);
+			avistador.observe(b);
+			observado = b;
+		}
+	});
 
 	const montar = () => {
 		pendiente = false;
@@ -5782,4 +5781,748 @@ function skVisible(selector) {
 			localStorage.setItem('sk-barra-320', '1');
 		}
 	} catch {}
+})();
+
+/*
+ * Notificaciones (lienzo "Barra comprimida · panel de notificaciones"). Open WebUI no guarda un historial de avisos, así
+ * que el tema arma uno propio en este navegador:
+ *  - respuestas: se escucha el canal en tiempo real de Open WebUI (el WebSocket de socket.io, solo lectura). Mientras
+ *    llegan trozos de una respuesta el chat está "pensando"; al terminar, si no la estabas viendo, queda como
+ *    "respuesta nueva" hasta que abres ese chat y se anota "<modelo> respondió" con el inicio del texto.
+ *  - sistema: los avisos de error, advertencia o información que Open WebUI muestra abajo (toasts).
+ * Se guardan las últimas 60 en localStorage. window.skAvisos expone el estado (para la barra comprimida y el panel de
+ * chats) y abre o cierra el panel junto a la barra.
+ */
+(() => {
+	const CLAVE = 'sk-avisos';
+	const CLAVE_NUEVOS = 'sk-chats-nuevos';
+	const MAXIMO = 60;
+	const ESCAPES = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+	const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ESCAPES[c]);
+	const leer = (clave, defecto) => {
+		try {
+			return JSON.parse(localStorage.getItem(clave)) ?? defecto;
+		} catch {
+			return defecto;
+		}
+	};
+	const guardar = (clave, valor) => {
+		try {
+			localStorage.setItem(clave, JSON.stringify(valor));
+		} catch {
+			// sin almacenamiento: los avisos duran lo que la página
+		}
+	};
+
+	let avisos = leer(CLAVE, []);
+	const nuevos = new Set(leer(CLAVE_NUEVOS, []));
+	const pensando = new Map(); // chat -> última señal (ms)
+	let panel = null;
+	let filtro = 'todas';
+	let todas = false;
+
+	const chatActual = () => location.pathname.match(/^\/c\/([^/?#]+)/)?.[1] || null;
+	const avisar = () => window.dispatchEvent(new Event('sk-avisos'));
+	const persistir = () => {
+		guardar(CLAVE, avisos.slice(0, MAXIMO));
+		guardar(CLAVE_NUEVOS, [...nuevos]);
+		avisar();
+		pintar();
+	};
+	const agregar = (aviso) => {
+		avisos.unshift({ id: `${Date.now()}-${Math.random().toString(36).slice(2, 7)}`, ts: Date.now(), leido: false, ...aviso });
+		avisos = avisos.slice(0, MAXIMO);
+		persistir();
+	};
+
+	// ---- respuestas, desde el canal en tiempo real ----
+	const limpiar = (texto) =>
+		String(texto || '')
+			.replace(/<details[\s\S]*?<\/details>/gi, ' ')
+			.replace(/<[^>]+>/g, ' ')
+			.replace(/[#*_`>~|\[\]]/g, '')
+			.replace(/\s+/g, ' ')
+			.trim()
+			.slice(0, 140);
+
+	let nombres = null; // id de modelo -> nombre (Sakura, Lain…)
+	const nombreModelo = async (id) => {
+		if (!id) return null;
+		if (!nombres) {
+			try {
+				const r = await fetch('/api/v1/models/list', { headers: { Authorization: `Bearer ${localStorage.token}` } });
+				const d = await r.json();
+				nombres = Object.fromEntries((d.items || d.data || d || []).map((m) => [m.id, m.name]));
+			} catch {
+				nombres = {};
+			}
+		}
+		return nombres[id] || null;
+	};
+
+	const terminada = async (chatId, mensajeId) => {
+		pensando.delete(chatId);
+		const viendo = chatId === chatActual() && !document.hidden;
+		if (viendo) {
+			avisar();
+			return;
+		}
+		nuevos.add(chatId);
+		let titulo = 'Respuesta nueva';
+		let cuerpo = '';
+		let modelo = null;
+		try {
+			const r = await fetch(`/api/v1/chats/${encodeURIComponent(chatId)}`, { headers: { Authorization: `Bearer ${localStorage.token}` } });
+			const c = await r.json();
+			const m = c?.chat?.history?.messages?.[mensajeId] || Object.values(c?.chat?.history?.messages || {}).at(-1);
+			modelo = m?.model || null;
+			const nombre =
+				m?.modelName || (await nombreModelo(modelo)) || (modelo ? modelo.charAt(0).toUpperCase() + modelo.slice(1) : 'La IA');
+			titulo = `${nombre} respondió`;
+			cuerpo = `«${c?.title || 'Chat'}» · ${limpiar(m?.content)}`;
+		} catch {
+			// sin detalles: queda el aviso genérico
+		}
+		agregar({ tipo: 'respuesta', titulo, cuerpo, chat: chatId, modelo });
+	};
+
+	const recibir = (texto) => {
+		if (typeof texto !== 'string' || !texto.startsWith('42') || !texto.includes('"chat:completion"')) return;
+		const chatId = texto.match(/"chat_id"\s*:\s*"([^"]+)"/)?.[1];
+		if (!chatId) return;
+		if (!/"done"\s*:\s*true/.test(texto)) {
+			const antes = pensando.has(chatId);
+			pensando.set(chatId, Date.now());
+			if (!antes) avisar();
+			return;
+		}
+		let mensajeId = null;
+		try {
+			const [, evento] = JSON.parse(texto.slice(2));
+			if (evento?.data?.data?.done !== true) return;
+			mensajeId = evento.message_id;
+		} catch {
+			// trama rara: se toma como terminada igual
+		}
+		terminada(chatId, mensajeId);
+	};
+
+	const Original = window.WebSocket;
+	if (Original && !Original.skAvisos) {
+		const Envoltura = function (...args) {
+			const ws = new Original(...args);
+			try {
+				if (String(args[0]).includes('/ws/socket.io')) ws.addEventListener('message', (e) => recibir(e.data));
+			} catch {
+				// nunca estorbar la conexión de Open WebUI
+			}
+			return ws;
+		};
+		Envoltura.prototype = Original.prototype;
+		Object.assign(Envoltura, { CONNECTING: 0, OPEN: 1, CLOSING: 2, CLOSED: 3, skAvisos: true });
+		window.WebSocket = Envoltura;
+	}
+
+	// un chat que deja de mandar señales (detenido, error) deja de "pensar" a los 30 s
+	setInterval(() => {
+		let cambio = false;
+		for (const [id, ms] of pensando) if (Date.now() - ms > 30000) cambio = pensando.delete(id) || true;
+		if (cambio) avisar();
+	}, 5000);
+
+	// al abrir un chat se apaga su "respuesta nueva" y sus avisos quedan leídos
+	const visto = () => {
+		const id = chatActual();
+		if (!id || document.hidden) return;
+		let cambio = nuevos.delete(id);
+		for (const a of avisos) if (a.chat === id && !a.leido) cambio = a.leido = true;
+		if (cambio) persistir();
+	};
+	document.addEventListener('visibilitychange', visto);
+
+	// ---- sistema: toasts de Open WebUI ----
+	const vistos = new WeakSet();
+	const revisarToasts = () => {
+		visto();
+		for (const t of document.querySelectorAll('[data-sonner-toast]')) {
+			if (vistos.has(t)) continue;
+			vistos.add(t);
+			const tipo = t.getAttribute('data-type');
+			if (t.getAttribute('data-styled') === 'false' || !['error', 'warning', 'info'].includes(tipo)) continue;
+			const titulo = (t.querySelector('[data-title]')?.textContent || t.textContent || '').trim();
+			if (!titulo) continue;
+			const cuerpo = (t.querySelector('[data-description]')?.textContent || '').trim();
+			agregar({ tipo: tipo === 'info' ? 'info' : 'error', titulo: titulo.slice(0, 120), cuerpo: cuerpo.slice(0, 160) });
+		}
+	};
+	skVigilar(revisarToasts);
+
+	// ---- panel ----
+	const ICONOS = {
+		todo: '<path d="M2 12l4 4 8-9M10 16l1 1 9-10"/>',
+		ajustes:
+			'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/>',
+		cerrar: '<path d="M6 6l12 12M18 6L6 18"/>',
+		error: '<path d="M12 3l9 16H3z"/><path d="M12 10v4M12 17v.5"/>',
+		info: '<circle cx="12" cy="12" r="9"/><path d="M12 11v5M12 8v.5"/>'
+	};
+	const svg = (n, tam = 18) =>
+		`<svg viewBox="0 0 24 24" width="${tam}" height="${tam}" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONOS[n]}</svg>`;
+
+	const hace = (ms) => {
+		const s = Math.max(0, (Date.now() - ms) / 1000);
+		if (s < 60) return 'ahora';
+		if (s < 3600) return `hace ${Math.floor(s / 60)} min`;
+		const hoy = new Date().setHours(0, 0, 0, 0);
+		if (ms >= hoy) return `hace ${Math.floor(s / 3600)} h`;
+		if (ms >= hoy - 86400000) return 'ayer';
+		return new Date(ms).toLocaleDateString('es', { day: 'numeric', month: 'short' });
+	};
+	const grupo = (ms) => {
+		const hoy = new Date().setHours(0, 0, 0, 0);
+		return ms >= hoy ? 'Hoy' : ms >= hoy - 86400000 ? 'Ayer' : 'Anteriores';
+	};
+	const sinLeer = () => avisos.filter((a) => !a.leido).length;
+
+	const renglon = (a) => {
+		const figura =
+			a.tipo === 'respuesta' && a.modelo
+				? `<img class="sk-aviso-foto" alt="" src="/api/v1/models/model/profile/image?id=${encodeURIComponent(a.modelo)}">`
+				: `<span class="sk-aviso-icono sk-aviso-${a.tipo === 'error' ? 'error' : 'info'}">${svg(a.tipo === 'error' ? 'error' : 'info', 17)}</span>`;
+		return `<button type="button" class="sk-aviso${a.leido ? '' : ' sk-aviso-nuevo'}${a.tipo === 'error' ? ' sk-aviso-falla' : ''}" data-aviso="${esc(a.id)}">
+			${figura}
+			<span class="sk-aviso-texto"><span class="sk-aviso-linea"><b>${esc(a.titulo)}</b><time>${hace(a.ts)}</time></span>${a.cuerpo ? `<span class="sk-aviso-cuerpo">${esc(a.cuerpo)}</span>` : ''}</span>
+			<span class="sk-aviso-punto"${a.leido ? '' : ' aria-label="Sin leer"'}></span>
+		</button>`;
+	};
+
+	const pintar = () => {
+		if (!panel) return;
+		const n = sinLeer();
+		panel.querySelectorAll('[data-filtro]').forEach((b) => {
+			b.setAttribute('aria-pressed', String(b.dataset.filtro === filtro));
+			if (b.dataset.filtro === 'sin-leer') b.textContent = n ? `Sin leer · ${n}` : 'Sin leer';
+		});
+		const lista = avisos.filter((a) => (filtro === 'sin-leer' ? !a.leido : filtro === 'sistema' ? a.tipo !== 'respuesta' : true));
+		const visibles = todas ? lista : lista.slice(0, 20);
+		let html = '';
+		let actual = null;
+		for (const a of visibles) {
+			const g = grupo(a.ts);
+			if (g !== actual) {
+				html += `<div class="sk-avisos-grupo">${g}</div>`;
+				actual = g;
+			}
+			html += renglon(a);
+		}
+		panel.querySelector('.sk-avisos-lista').innerHTML =
+			html ||
+			`<p class="sk-avisos-vacio">${filtro === 'sin-leer' ? 'Todo está leído' : filtro === 'sistema' ? 'Sin avisos del sistema' : 'Aún no tienes notificaciones'}</p>`;
+		const pie = panel.querySelector('.sk-avisos-pie');
+		const faltan = lista.length > visibles.length;
+		pie.textContent = faltan ? 'Ver todas las notificaciones' : 'Borrar notificaciones';
+		pie.dataset.accion = faltan ? 'todas' : 'borrar';
+		pie.hidden = !avisos.length;
+	};
+
+	const cerrar = () => {
+		if (!panel) return;
+		panel.remove();
+		document.querySelector('.sk-avisos-velo')?.remove();
+		panel = null;
+		document.querySelector('.sk-riel-campana')?.setAttribute('aria-expanded', 'false');
+	};
+
+	const abrir = () => {
+		window.skPanelChats?.cerrar();
+		filtro = 'todas';
+		todas = false;
+		const velo = document.createElement('div');
+		velo.className = 'sk-chats-velo sk-avisos-velo';
+		velo.addEventListener('click', cerrar);
+		panel = document.createElement('aside');
+		panel.className = 'sk-chats-panel sk-avisos-panel';
+		panel.setAttribute('role', 'dialog');
+		panel.setAttribute('aria-label', 'Notificaciones');
+		panel.innerHTML = `
+			<div class="sk-chats-cabecera">
+				<span class="sk-chats-nombre">Notificaciones</span>
+				<div class="sk-chats-acciones">
+					<button type="button" class="sk-chats-accion" data-accion="leidas" aria-label="Marcar todo como leído" title="Marcar todo como leído">${svg('todo')}</button>
+					<button type="button" class="sk-chats-accion" data-accion="ajustes" aria-label="Ajustes de notificaciones" title="Ajustes de notificaciones">${svg('ajustes')}</button>
+					<button type="button" class="sk-chats-accion" data-accion="cerrar" aria-label="Cerrar" title="Cerrar">${svg('cerrar')}</button>
+				</div>
+			</div>
+			<div class="sk-avisos-filtros" role="group" aria-label="Filtrar">
+				<button type="button" data-filtro="todas">Todas</button><button type="button" data-filtro="sin-leer">Sin leer</button><button type="button" data-filtro="sistema">Sistema</button>
+			</div>
+			<div class="sk-avisos-lista"></div>
+			<button type="button" class="sk-avisos-pie"></button>`;
+		panel.addEventListener('click', (e) => {
+			const f = e.target.closest('[data-filtro]');
+			if (f) {
+				filtro = f.dataset.filtro;
+				todas = false;
+				pintar();
+				return;
+			}
+			const accion = e.target.closest('[data-accion]')?.dataset.accion;
+			if (accion === 'cerrar') return cerrar();
+			if (accion === 'leidas') {
+				avisos.forEach((a) => (a.leido = true));
+				return persistir();
+			}
+			if (accion === 'ajustes') {
+				cerrar();
+				document.querySelector('#sidebar .sk-barra-ajustes')?.click();
+				return;
+			}
+			if (accion === 'todas') {
+				todas = true;
+				return pintar();
+			}
+			if (accion === 'borrar') {
+				avisos = [];
+				return persistir();
+			}
+			const a = avisos.find((x) => x.id === e.target.closest('[data-aviso]')?.dataset.aviso);
+			if (!a) return;
+			a.leido = true;
+			persistir();
+			if (a.chat) {
+				cerrar();
+				const suelto = document.createElement('a');
+				suelto.href = `/c/${a.chat}`;
+				suelto.hidden = true;
+				document.body.appendChild(suelto);
+				suelto.click();
+				suelto.remove();
+			}
+		});
+		document.body.append(velo, panel);
+		document.querySelector('.sk-riel-campana')?.setAttribute('aria-expanded', 'true');
+		pintar();
+		panel.querySelector('[data-filtro="todas"]').focus({ preventScroll: true });
+	};
+
+	document.addEventListener('keydown', (e) => {
+		if (e.key === 'Escape' && panel) cerrar();
+	});
+
+	window.skAvisos = {
+		estado: () => ({ nuevos, pensando: new Set(pensando.keys()), sinLeer: sinLeer() }),
+		alternar: () => (panel ? cerrar() : abrir()),
+		cerrar
+	};
+	window.addEventListener('sk-avisos', () => window.skPanelChats?.repintar());
+})();
+
+/*
+ * Escritorio: barra comprimida del lienzo "Barra comprimida · diseño final". Mismo orden que la barra expandida: arriba
+ * el logo (expande la barra), las notificaciones y tu cuenta; en medio Buscar chats, los accesos fijados (Notas,
+ * Espacio, Agenda…) y Chats con sus estados (punto rosa si hay una respuesta nueva, aro azul girando si un chat está
+ * pensando); abajo el modelo activo y "Nuevo chat". Botones de 44 px con nombre y tooltip con su atajo.
+ * Los botones de Open WebUI siguen ahí (ocultos) y los nuevos solo les pasan el toque, así todo funciona igual.
+ */
+(() => {
+	const escritorio = matchMedia('(min-width: 768px)');
+	const RIEL = "#sidebar[class*='w-[calc(42px']";
+	const raiz = document.documentElement;
+	const ic = (d, tam = 20, grosor = 1.9) =>
+		`<svg viewBox="0 0 24 24" width="${tam}" height="${tam}" fill="none" stroke="currentColor" stroke-width="${grosor}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+	const I = {
+		campana: '<path d="M6 16V11a6 6 0 0 1 12 0v5l2 2H4z"/><path d="M10 20a2 2 0 0 0 4 0"/>',
+		buscar: '<circle cx="11" cy="11" r="7"/><path d="M20 20l-4-4"/>',
+		notas: '<rect x="5" y="3" width="14" height="18" rx="2"/><path d="M9 7h6M9 11h6M9 15h3"/>',
+		espacio: '<rect x="4" y="4" width="6" height="6" rx="1"/><rect x="14" y="4" width="6" height="6" rx="1"/><rect x="4" y="14" width="6" height="6" rx="1"/><path d="M17 14v6M14 17h6"/>',
+		agenda: '<rect x="4" y="5" width="16" height="15" rx="2"/><path d="M4 10h16M8 3v4M16 3v4"/>',
+		auto: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+		pruebas: '<path d="M9 3h6M10 3v6l-5 9a2 2 0 0 0 2 3h10a2 2 0 0 0 2-3l-5-9V3"/>',
+		chats: '<path d="M4 5h11a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1H9l-4 3v-3H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1z"/><path d="M18 9h2a1 1 0 0 1 1 1v7a1 1 0 0 1-1 1h-1v3l-4-3h-4a1 1 0 0 1-1-1v-1"/>',
+		flecha: '<path d="M6 9l6 6 6-6"/>',
+		lapiz: '<path d="M4 20h4L19 9l-4-4L4 16z"/>'
+	};
+	// accesos fijados de Open WebUI: nombre, ícono y atajo (Alt + letra, solo en escritorio)
+	const ACCESOS = [
+		['/notes', 'Notas', I.notas, 'N'],
+		['/workspace', 'Espacio', I.espacio, 'E'],
+		['/calendar', 'Agenda', I.agenda, 'A'],
+		['/automations', 'Automatizaciones', I.auto, ''],
+		['/playground', 'Zona de pruebas', I.pruebas, '']
+	];
+	let pendiente = false;
+	let tip = null;
+
+	const tocar = (el) => {
+		if (!el) return;
+		el.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true, button: 0, pointerType: 'mouse' }));
+		el.click();
+	};
+	const ir = (href) => {
+		const suelto = document.createElement('a');
+		suelto.href = href;
+		suelto.hidden = true;
+		document.body.appendChild(suelto);
+		suelto.click();
+		suelto.remove();
+	};
+	const boton = (clase, etiqueta, html, extra = '') =>
+		`<button type="button" class="sk-riel-b ${clase}" aria-label="${etiqueta}" data-tip="${etiqueta}"${extra}>${html}</button>`;
+
+	const ocultarTip = () => tip?.classList.remove('sk-visible');
+	const mostrarTip = (b) => {
+		if (!b?.dataset.tip) return;
+		if (!tip) {
+			tip = document.createElement('span');
+			tip.className = 'sk-riel-tip';
+			tip.setAttribute('role', 'tooltip');
+			document.body.appendChild(tip);
+		}
+		tip.innerHTML = `${b.dataset.tip}${b.dataset.atajo ? `<kbd>${b.dataset.atajo}</kbd>` : ''}`;
+		const r = b.getBoundingClientRect();
+		const riel = b.closest('#sidebar')?.getBoundingClientRect();
+		tip.style.left = `${(riel?.right ?? r.right) + 2}px`;
+		tip.style.top = `${r.top + r.height / 2}px`;
+		tip.classList.add('sk-visible');
+	};
+
+	const crear = (s) => {
+		const riel = document.createElement('nav');
+		riel.className = 'sk-riel';
+		riel.setAttribute('aria-label', 'Barra comprimida');
+		const logo = s.querySelector('#sidebar-open-button img')?.getAttribute('src') || '/static/favicon.png';
+		const accesos = ACCESOS.filter(([href]) => s.querySelector(`a[href='${href}'], a[href^='${href}/']`))
+			.map(([href, nombre, d, letra]) =>
+				boton('sk-riel-acceso', nombre, ic(d), ` data-href="${href}"${letra ? ` data-atajo="Alt ${letra}"` : ''}`)
+			)
+			.join('');
+		riel.innerHTML =
+			boton('sk-riel-logo', 'Expandir barra', `<img alt="" src="${logo}">`) +
+			boton('sk-riel-campana', 'Notificaciones', `${ic(I.campana)}<span class="sk-riel-cuenta-avisos" aria-hidden="true"></span>`, ' aria-expanded="false"') +
+			boton('sk-riel-yo', 'Tu cuenta', '<img alt=""><i aria-hidden="true"></i>') +
+			'<span class="sk-riel-div" aria-hidden="true"></span>' +
+			boton('sk-riel-buscar', 'Buscar chats', ic(I.buscar), ' data-atajo="Ctrl K"') +
+			accesos +
+			'<span class="sk-riel-div" aria-hidden="true"></span>' +
+			boton(
+				'sk-riel-chats',
+				'Chats',
+				`${ic(I.chats)}<span class="sk-riel-punto" aria-hidden="true"></span><span class="sk-riel-aro" aria-hidden="true"></span>`,
+				' aria-expanded="false"'
+			) +
+			'<span class="sk-riel-hueco"></span>' +
+			'<div class="sk-riel-pie">' +
+			`<button type="button" class="sk-riel-b sk-riel-modelo" aria-haspopup="dialog" aria-expanded="false"><img alt=""><span class="sk-riel-chev">${ic(I.flecha, 12, 2.6)}</span></button>` +
+			boton('sk-riel-nuevo', 'Nuevo chat', ic(I.lapiz, 19, 2), ' data-atajo="Ctrl Shift O"') +
+			'</div>';
+		riel.addEventListener('click', (e) => {
+			e.stopPropagation();
+			const b = e.target.closest('.sk-riel-b');
+			if (!b) return;
+			ocultarTip();
+			const sb = document.getElementById('sidebar');
+			if (b.classList.contains('sk-riel-logo')) document.getElementById('sidebar-open-button')?.click();
+			else if (b.classList.contains('sk-riel-campana')) window.skAvisos?.alternar();
+			else if (b.classList.contains('sk-riel-yo')) tocar(sb?.querySelector(".sk-barra-usuario button[aria-haspopup='true']"));
+			else if (b.classList.contains('sk-riel-buscar')) sb?.querySelector("button[aria-label='Buscar'], button[aria-label='Search']")?.click();
+			else if (b.dataset.href) ir(b.dataset.href);
+			else if (b.classList.contains('sk-riel-chats')) window.skPanelChats?.alternar();
+			else if (b.classList.contains('sk-riel-nuevo')) sb?.querySelector("a[aria-label='Nuevo Chat'], a[aria-label='New Chat']")?.click();
+			else if (b.classList.contains('sk-riel-modelo')) {
+				window.skAvisos?.cerrar();
+				window.skPanelChats?.cerrar();
+				Promise.resolve(window.skSelectorModelo?.alternar(b)).then(() =>
+					document.querySelector('body > .sk-selector')?.classList.add('sk-sel-riel')
+				);
+			}
+		});
+		riel.addEventListener('pointerover', (e) => mostrarTip(e.target.closest('[data-tip]')));
+		riel.addEventListener('pointerout', (e) => {
+			if (!e.relatedTarget || !e.target.closest('[data-tip]')?.contains(e.relatedTarget)) ocultarTip();
+		});
+		riel.addEventListener('focusin', (e) => e.target.matches(':focus-visible') && mostrarTip(e.target.closest('[data-tip]')));
+		riel.addEventListener('focusout', ocultarTip);
+		s.prepend(riel);
+		return riel;
+	};
+
+	const estados = (riel) => {
+		const e = window.skAvisos?.estado();
+		if (!e) return;
+		const actual = location.pathname.match(/^\/c\/([^/?#]+)/)?.[1];
+		const nuevos = [...e.nuevos].filter((id) => id !== actual).length;
+		const piensan = e.pensando.size;
+		const chats = riel.querySelector('.sk-riel-chats');
+		chats.classList.toggle('sk-con-nuevo', nuevos > 0);
+		chats.classList.toggle('sk-con-pensando', piensan > 0);
+		const partes = [nuevos && `${nuevos} respuesta${nuevos > 1 ? 's' : ''} nueva${nuevos > 1 ? 's' : ''}`, piensan && `${piensan} pensando`].filter(Boolean);
+		const etiqueta = partes.length ? `Chats · ${partes.join(', ')}` : 'Chats';
+		if (chats.getAttribute('aria-label') !== etiqueta) {
+			chats.setAttribute('aria-label', etiqueta);
+			chats.dataset.tip = etiqueta;
+		}
+		const campana = riel.querySelector('.sk-riel-campana');
+		const cuenta = campana.querySelector('.sk-riel-cuenta-avisos');
+		const n = e.sinLeer;
+		const texto = n ? String(n > 99 ? '99+' : n) : '';
+		if (cuenta.textContent !== texto) cuenta.textContent = texto;
+		campana.setAttribute('aria-label', n ? `Notificaciones, ${n} sin leer` : 'Notificaciones');
+	};
+
+	const montar = () => {
+		pendiente = false;
+		const s = document.querySelector(RIEL);
+		const activa = Boolean(s && escritorio.matches);
+		raiz.classList.toggle('sk-riel-on', activa);
+		if (!activa) {
+			document.querySelector('.sk-riel')?.remove();
+			window.skAvisos?.cerrar();
+			ocultarTip();
+			return;
+		}
+		const riel = s.querySelector(':scope > .sk-riel') || crear(s);
+		if (riel !== s.firstElementChild) s.prepend(riel);
+		// tu foto y la del modelo activo
+		const yo = s.querySelector(".sk-barra-usuario button[aria-haspopup='true'] img")?.getAttribute('src');
+		const imgYo = riel.querySelector('.sk-riel-yo img');
+		if (yo && imgYo.getAttribute('src') !== yo) imgYo.src = yo;
+		const foto = document.querySelector("#message-input-container :is(button, [aria-label^='Modelo']) img[src*='/models/model/profile/image']");
+		const src = foto?.getAttribute('src');
+		const imgModelo = riel.querySelector('.sk-riel-modelo img');
+		if (src && imgModelo.getAttribute('src') !== src) imgModelo.src = src;
+		const modelo = riel.querySelector('.sk-riel-modelo');
+		const nombre = foto?.closest('button')?.textContent.trim() || '';
+		const etiqueta = nombre ? `Modelo activo: ${nombre}` : 'Modelo activo';
+		if (modelo.dataset.tip !== etiqueta) {
+			modelo.dataset.tip = etiqueta;
+			modelo.setAttribute('aria-label', `${etiqueta}. Cambiar de modelo`);
+		}
+		modelo.setAttribute('aria-expanded', String(Boolean(document.querySelector('body > .sk-selector'))));
+		estados(riel);
+	};
+
+	skVigilar(() => {
+		if (pendiente) return;
+		pendiente = true;
+		requestAnimationFrame(montar);
+	});
+	window.addEventListener('sk-avisos', () => {
+		const riel = document.querySelector('.sk-riel');
+		if (riel) estados(riel);
+	});
+	escritorio.addEventListener('change', montar);
+
+	// atajos: Alt N (Notas), Alt E (Espacio), Alt A (Agenda)
+	document.addEventListener('keydown', (e) => {
+		if (!escritorio.matches || !e.altKey || e.ctrlKey || e.metaKey || e.shiftKey) return;
+		const acceso = ACCESOS.find(([, , , letra]) => letra && e.code === `Key${letra}`);
+		if (!acceso) return;
+		e.preventDefault();
+		ir(acceso[0]);
+	});
+})();
+
+/*
+ * Escritorio: el cuadro de escribir toma el mismo ancho que la columna del chat (ver carbono.css, "el chat ocupa
+ * exactamente el ancho del cuadro"). Se mide el hueco de la barra de desplazamiento de la lista y el ancho máximo de la
+ * columna (cambia con la vista Compacta/Ampliada y con la ventana).
+ */
+(() => {
+	const escritorio = matchMedia('(min-width: 768px)');
+	const raiz = document.documentElement;
+	let pendiente = false;
+	const poner = (nombre, valor) => {
+		if (raiz.style.getPropertyValue(nombre) !== valor) raiz.style.setProperty(nombre, valor);
+	};
+	const medir = () => {
+		pendiente = false;
+		const lista = document.getElementById('messages-container');
+		const columna = lista?.querySelector("div.mx-auto:has(> [id^='message-'])");
+		if (!escritorio.matches || !columna) {
+			if (raiz.classList.contains('sk-col-lista')) raiz.classList.remove('sk-col-lista');
+			return;
+		}
+		poner('--sk-hueco', `${Math.max(0, lista.offsetWidth - lista.clientWidth)}px`);
+		const maximo = getComputedStyle(columna).maxWidth;
+		poner('--sk-col', maximo === 'none' ? '100000px' : maximo);
+		if (!raiz.classList.contains('sk-col-lista')) raiz.classList.add('sk-col-lista');
+	};
+	const pedir = () => {
+		if (pendiente) return;
+		pendiente = true;
+		requestAnimationFrame(medir);
+	};
+	skVigilar(pedir);
+	addEventListener('resize', pedir);
+	new MutationObserver(pedir).observe(raiz, { attributes: true, attributeFilter: ['class'] });
+})();
+
+/* al cargar: si tienes carpetas, la lista de la barra espera a que lleguen (ver carbono.css, "Open WebUI pide las
+   carpetas al final"). Además, una carpeta abierta reserva la altura que tenía su contenido la última vez hasta que
+   Open WebUI lo vuelve a pedir (~0,6 s después): el chat aparece en su lugar sin empujar la lista */
+(() => {
+	const raiz = document.documentElement;
+	const leer = (clave, defecto) => {
+		try {
+			return JSON.parse(localStorage.getItem(clave)) ?? defecto;
+		} catch {
+			return defecto;
+		}
+	};
+	const guardar = (clave, valor) => {
+		try {
+			localStorage.setItem(clave, JSON.stringify(valor));
+		} catch {}
+	};
+	const inicio = performance.now();
+	let esperando = leer('sk-hay-carpetas', 0) === 1;
+	if (esperando) raiz.classList.add('sk-esperando-carpetas');
+	const soltar = () => {
+		esperando = false;
+		raiz.classList.remove('sk-esperando-carpetas');
+	};
+	setTimeout(() => {
+		// ya no tienes carpetas: la próxima vez no se espera
+		if (esperando && !document.querySelector("#sidebar [id^='folder-'][id$='-button']") && document.querySelector('#sidebar #sidebar-chat-item')) {
+			try {
+				localStorage.removeItem('sk-hay-carpetas');
+			} catch {}
+		}
+		soltar();
+	}, 1500);
+
+	const altos = leer('sk-carpetas-alto', {});
+	const vistas = new WeakMap(); // contenido -> primera vez sin chats (ms)
+	let pendiente = false;
+
+	const revisar = () => {
+		pendiente = false;
+		const s = document.getElementById('sidebar');
+		const botones = s ? [...s.querySelectorAll("[id^='folder-'][id$='-button']")] : [];
+		if (botones.length && leer('sk-hay-carpetas', 0) !== 1) guardar('sk-hay-carpetas', 1);
+		if (esperando && (botones.length || (performance.now() - inicio > 400 && (!s || s.getBoundingClientRect().width < 100)))) soltar();
+		let cambio = false;
+		let reservando = false;
+		for (const b of s ? s.querySelectorAll("div[id^='folder-'][id$='-button']") : []) {
+			const id = b.id.slice(7, -7);
+			const grupo = b.closest('.w-full.cursor-pointer');
+			const contenido = grupo?.nextElementSibling;
+			if (!grupo) continue;
+			const reservar = (px) => {
+				const v = px > 0 ? `${px}px` : '';
+				if (grupo.style.marginBottom !== v) grupo.style.marginBottom = v;
+			};
+			const abierta = b.querySelector('button[aria-expanded]')?.getAttribute('aria-expanded') === 'true';
+			const tieneChats = Boolean(contenido?.querySelector('#sidebar-chat-item'));
+			const alto = contenido?.offsetHeight || 0; // el contenedor se despliega con animación: se mide el real
+			if (!abierta) {
+				reservar(0);
+				vistas.delete(grupo);
+				continue;
+			}
+			if (!vistas.has(grupo)) vistas.set(grupo, performance.now());
+			const listo = tieneChats && altos[id] && alto >= altos[id] - 1;
+			if (listo || performance.now() - vistas.get(grupo) > 3000) {
+				reservar(0);
+				if (tieneChats && alto && altos[id] !== alto) {
+					altos[id] = alto;
+					cambio = true;
+				} else if (!tieneChats && altos[id]) {
+					delete altos[id]; // carpeta abierta pero vacía de verdad
+					cambio = true;
+				}
+				continue;
+			}
+			if (tieneChats && !altos[id] && alto) {
+				altos[id] = alto;
+				cambio = true;
+			}
+			reservar((altos[id] || 0) - alto);
+			reservando = true;
+		}
+		// mientras se despliega no hay cambios en la página que avisen: se vuelve a medir en cada cuadro
+		if (reservando) pedir();
+		if (cambio) guardar('sk-carpetas-alto', altos);
+	};
+	const pedir = () => {
+		if (pendiente) return;
+		pendiente = true;
+		requestAnimationFrame(revisar);
+	};
+	skVigilar(pedir);
+	setTimeout(revisar, 3100);
+})();
+
+/*
+ * Carpetas más rápidas: Open WebUI pide las carpetas (y luego los chats de cada carpeta abierta) solo después de cargar
+ * toda la lista de chats, así que en la barra aparecían ~0,8 s más tarde que lo demás. El tema adelanta esas mismas
+ * peticiones (al cargar la página y al tocar "Abrir barra lateral") y, cuando Open WebUI las hace, le entrega la
+ * respuesta que ya llegó. Las respuestas adelantadas caducan a los 4 s y cualquier cambio (crear, mover, plegar…) las
+ * descarta, así nunca se muestra algo viejo.
+ */
+(() => {
+	const original = window.fetch.bind(window);
+	const VIGENCIA = 4000;
+	const adelantadas = new Map(); // ruta -> { promesa, t }
+
+	const ruta = (url) => {
+		try {
+			const u = new URL(url, location.origin);
+			return u.origin === location.origin ? u.pathname + u.search : null;
+		} catch {
+			return null;
+		}
+	};
+
+	const adelantar = (url) => {
+		const token = localStorage.token;
+		if (!token) return null;
+		const previa = adelantadas.get(url);
+		if (previa && performance.now() - previa.t < VIGENCIA) return previa.promesa;
+		const promesa = original(url, { headers: { Accept: 'application/json', authorization: `Bearer ${token}` } })
+			.then((r) => (r.ok ? r : null))
+			.catch(() => null);
+		adelantadas.set(url, { promesa, t: performance.now() });
+		return promesa;
+	};
+
+	const precargar = () => {
+		const carpetas = adelantar('/api/v1/folders/');
+		adelantar('/api/v1/folders/shared');
+		carpetas?.then(async (r) => {
+			if (!r) return;
+			try {
+				const lista = await r.clone().json();
+				for (const c of lista) if (c.is_expanded) adelantar(`/api/v1/folders/${c.id}/shared/chats?page=1`);
+			} catch {}
+		});
+	};
+
+	window.fetch = function (recurso, opciones) {
+		try {
+			const url = typeof recurso === 'string' ? recurso : recurso instanceof URL ? recurso.href : recurso?.url;
+			const metodo = (opciones?.method || (recurso instanceof Request ? recurso.method : 'GET')).toUpperCase();
+			const r = url && ruta(url);
+			if (r && metodo !== 'GET' && /^\/api\/v1\/(folders|chats)\b/.test(r)) adelantadas.clear();
+			else if (r && metodo === 'GET') {
+				const previa = adelantadas.get(r);
+				if (previa) {
+					if (performance.now() - previa.t < VIGENCIA) {
+						return previa.promesa.then((resp) => (resp ? resp.clone() : original(recurso, opciones)));
+					}
+					adelantadas.delete(r);
+				}
+			}
+		} catch {}
+		return original(recurso, opciones);
+	};
+
+	precargar();
+	document.addEventListener(
+		'pointerdown',
+		(e) => {
+			if (e.target.closest?.("button[aria-label='Abrir Barra Lateral'], button[aria-label='Open Sidebar'], #sidebar-open-button, .sk-riel-logo")) precargar();
+		},
+		{ capture: true, passive: true }
+	);
 })();
