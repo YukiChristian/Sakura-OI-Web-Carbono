@@ -1,5 +1,5 @@
 /*
- * Carbono 0.95.3 — tema para Open WebUI (probado con 0.13.3).
+ * Carbono 0.95.4 — tema para Open WebUI (probado con 0.13.3).
  * https://github.com/YukiChristian/Sakura-OI-Web-Carbono
  *
  * El lanzador lo sirve en /static/custom.css mientras exista carbono/ACTIVO (ver README).
@@ -20832,29 +20832,6 @@ html:not(.dark) {
 	}
 }
 
-/* jerarquía de las carpetas (como en el panel de Chats): los chats de una carpeta van con sangría y una línea guía que
-   baja desde el ícono de la carpeta; la flecha que aparece al pasar el cursor sobre el ícono, del mismo tamaño que él */
-#sidebar div:has(> div [id^='folder-'][id$='-button']) > div > div > div.ml-3.pl-1:has(#sidebar-chat-item) {
-	margin-left: 23px !important;
-	padding-left: 3px !important;
-	border-left: 1px solid #d9d9de !important;
-}
-
-html.dark #sidebar div:has(> div [id^='folder-'][id$='-button']) > div > div > div.ml-3.pl-1:has(#sidebar-chat-item) {
-	border-left-color: rgba(255, 255, 255, 0.12) !important;
-}
-
-#sidebar [id^='folder-'][id$='-button'] > button:first-child > div > svg {
-	width: 18px !important;
-	height: 18px !important;
-}
-
-@media (min-width: 768px) {
-	#sidebar:not([class*='w-[calc(42px']) div:has(> div [id^='folder-'][id$='-button']) > div > div > div.ml-3.pl-1:has(#sidebar-chat-item) {
-		margin-left: 22px !important;
-	}
-}
-
 /* al cargar la página, Open WebUI pide las carpetas al final (~0,8 s después que los chats): mientras tanto la lista
    espera sin verse, así todo aparece junto y las carpetas no empujan la lista (carbono.js, a lo más 1,5 s) */
 html.sk-esperando-carpetas #sidebar .overflow-y-auto {
@@ -20876,10 +20853,3015 @@ html.sk-esperando-carpetas #sidebar .overflow-y-auto {
 	margin-right: 2px;
 }
 
-/* teléfono: el texto de la respuesta a la misma distancia de "Sakura · hora" que tu burbuja de "hora · tu nombre"
-   (~10 px, como en el lienzo móvil); antes quedaba a 20 */
+/* teléfono: el texto de la respuesta a 16 px de "Sakura · hora" (antes 20). Tu burbuja va a 11 px de tu nombre, pero
+   su borde y su relleno la separan a la vista; sin burbuja, el texto a 10 px se veía pegado */
+@media (max-width: 767px) {
+	#messages-container [id^='message-']:not(.user-message) > div.flex-auto.relative:not(.sk-llena) {
+		padding-top: 6px !important;
+	}
+}
+
+/* teléfono: íconos de las acciones de la respuesta 2 px más grandes (18 en lugar de 16), y el de la gráfica del
+   rendimiento igual que los demás: mismo tamaño, trazo y gris, sin el círculo */
 @media (max-width: 767px) {
-	#messages-container [id^='message-']:not(.user-message) > div.flex-auto.relative:not(.sk-llena) {
-		padding-top: 0 !important;
+	#messages-container .sk-pie button:not(.sk-met-detalle) > svg {
+		width: 18px !important;
+		height: 18px !important;
+	}
+
+	#messages-container .sk-pie button.sk-met-detalle {
+		width: 30px !important;
+		height: 32px !important;
+		min-width: 30px !important;
+		margin: 0 !important;
+		border-radius: 9px !important;
+		background: transparent !important;
+		box-shadow: none !important;
+		color: #52525b !important;
+	}
+
+	#messages-container .sk-pie button.sk-met-detalle svg {
+		width: 18px !important;
+		height: 18px !important;
+		stroke-width: 1.8 !important;
+	}
+
+	html.dark #messages-container .sk-pie button.sk-met-detalle {
+		color: #a1a1aa !important;
+	}
+}
+
+/* ---------- Proyectos (lienzos "R2 · pensada para el pulgar", "Barra lateral móvil · diseño final" y "Barra escritorio
+   · diseño final") ----------
+   Cada carpeta es una tarjeta: ícono de carpeta en un cuadro de 28 px (32 en el teléfono) con su color al 12 %, nombre
+   de 15 px (16) en seminegrita y "N chats" debajo, ⋯ y la flecha a la derecha. Abierta: fondo blanco al 75 %, línea
+   #e1e1e5 y radio 16; sus chats con 36 px (40) de sangría y al final "Nuevo chat en <proyecto>" en su color. carbono.js
+   pone el ícono, la cuenta, el botón y las clases sk-proy / sk-proy-abierta. */
+#sidebar #sidebar-folders-content .sk-proy.sk-proy-raiz {
+	margin: 0 2px 6px;
+	padding: 2px 0;
+	border-radius: 16px;
+	transition: background-color 0.18s ease, box-shadow 0.18s ease;
+}
+
+#sidebar #sidebar-folders-content .sk-proy.sk-proy-raiz.sk-proy-abierta {
+	background: rgba(255, 255, 255, 0.75);
+	box-shadow: inset 0 0 0 1px #e1e1e5;
+}
+
+html.dark #sidebar #sidebar-folders-content .sk-proy.sk-proy-raiz.sk-proy-abierta {
+	background: rgba(255, 255, 255, 0.05);
+	box-shadow: inset 0 0 0 1px #3f3f46;
+}
+
+/* fila de la carpeta: 44 px (52), ícono · nombre y cuenta · ⋯ · flecha */
+#sidebar #sidebar-folders-content div[id^='folder-'][id$='-button'] {
+	display: flex !important;
+	align-items: center !important;
+	gap: 12px !important;
+	width: 100% !important;
+	height: 44px !important;
+	margin: 0 !important;
+	padding: 0 4px 0 8px !important;
+	border-radius: 14px !important;
+	background: transparent !important;
+}
+
+#sidebar #sidebar-folders-content div[id^='folder-'][id$='-button']:hover {
+	background: rgba(24, 24, 27, 0.04) !important;
+}
+
+html.dark #sidebar #sidebar-folders-content div[id^='folder-'][id$='-button']:hover {
+	background: rgba(255, 255, 255, 0.05) !important;
+}
+
+#sidebar #sidebar-folders-content div[id^='folder-'][id$='-button'] > div.flex-1 {
+	order: 1;
+	flex: 1 1 0% !important;
+	width: 0 !important;
+	min-width: 0 !important;
+	max-width: none !important;
+	transform: none !important;
+	translate: none !important;
+}
+
+#sidebar #sidebar-folders-content div[id^='folder-'][id$='-button'] a {
+	display: grid !important;
+	grid-template-columns: 28px minmax(0, 1fr);
+	grid-auto-rows: auto;
+	align-content: center;
+	column-gap: 12px;
+	row-gap: 0;
+	margin: 0 !important;
+	padding: 0 !important;
+}
+
+#sidebar #sidebar-folders-content div[id^='folder-'][id$='-button'] a > .sk-proy-icono {
+	grid-row: 1 / span 2;
+	align-self: center;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	border-radius: 10px;
+	color: var(--sk-proy-tinta, var(--sk-proy, #7c5cff));
+	background: color-mix(in srgb, var(--sk-proy, #7c5cff) 12%, transparent);
+}
+
+#sidebar #sidebar-folders-content div[id^='folder-'][id$='-button'] a > .sk-proy-icono svg {
+	width: 15.7px;
+	height: 15.7px;
+}
+
+#sidebar #sidebar-folders-content div[id^='folder-'][id$='-button'] a > .truncate {
+	grid-column: 2;
+	color: #18181b !important;
+	font-size: 15px !important;
+	line-height: 20px !important;
+	font-weight: 600 !important;
+}
+
+#sidebar #sidebar-folders-content div[id^='folder-'][id$='-button'] a > .sk-proy-sub {
+	grid-column: 2;
+	color: #52525b;
+	font-size: 12.5px;
+	line-height: 16px;
+	font-weight: 500;
+	white-space: nowrap;
+}
+
+#sidebar #sidebar-folders-content div[id^='folder-'][id$='-button'] a > .sk-proy-sub:empty {
+	display: none;
+}
+
+html.dark #sidebar #sidebar-folders-content div[id^='folder-'][id$='-button'] a > .truncate {
+	color: #ececee !important;
+}
+
+html.dark #sidebar #sidebar-folders-content div[id^='folder-'][id$='-button'] a > .sk-proy-sub {
+	color: #a1a1aa;
+}
+
+/* ⋯ siempre a la vista, antes de la flecha */
+#sidebar #sidebar-folders-content div[id^='folder-'][id$='-button'] > .hover-reveal {
+	order: 2;
+	position: static !important;
+	inset: auto !important;
+	opacity: 1 !important;
+	visibility: visible !important;
+	display: flex !important;
+	margin: 0 !important;
+	color: #3f3f46;
+}
+
+#sidebar #sidebar-folders-content div[id^='folder-'][id$='-button'] > .hover-reveal button {
+	display: inline-flex !important;
+	align-items: center;
+	justify-content: center;
+	width: 28px !important;
+	height: 28px !important;
+	padding: 0 !important;
+	border-radius: 10px !important;
+	color: #3f3f46 !important;
+}
+
+#sidebar #sidebar-folders-content div[id^='folder-'][id$='-button'] > .hover-reveal button:hover {
+	background: rgba(24, 24, 27, 0.06) !important;
+}
+
+#sidebar #sidebar-folders-content div[id^='folder-'][id$='-button'] > .hover-reveal button > div {
+	color: inherit !important;
+}
+
+#sidebar #sidebar-folders-content div[id^='folder-'][id$='-button'] > .hover-reveal button > div,
+#sidebar #sidebar-folders-content div[id^='folder-'][id$='-button'] > .hover-reveal button svg {
+	width: 20px !important;
+	height: 20px !important;
+}
+
+/* la flecha (antes el ícono de carpeta a la izquierda, que mostraba la flecha al pasar el cursor) a la derecha */
+#sidebar #sidebar-folders-content div[id^='folder-'][id$='-button'] > button:first-child {
+	order: 3;
+	display: inline-flex !important;
+	align-items: center;
+	justify-content: center;
+	flex: none;
+	width: 28px !important;
+	height: 28px !important;
+	margin: 0 !important;
+	padding: 0 !important;
+	border-radius: 10px !important;
+	background: transparent !important;
+	color: #3f3f46 !important;
+}
+
+#sidebar #sidebar-folders-content div[id^='folder-'][id$='-button'] > button:first-child:hover {
+	background: rgba(24, 24, 27, 0.06) !important;
+}
+
+#sidebar #sidebar-folders-content div[id^='folder-'][id$='-button'] > button:first-child > div.group-hover\:hidden {
+	display: none !important;
+}
+
+#sidebar #sidebar-folders-content div[id^='folder-'][id$='-button'] > button:first-child > div.hidden {
+	display: flex !important;
+	padding: 0 !important;
+}
+
+#sidebar #sidebar-folders-content div[id^='folder-'][id$='-button'] > button:first-child svg {
+	width: 18px !important;
+	height: 18px !important;
+	stroke-width: 2 !important;
+}
+
+html.dark #sidebar #sidebar-folders-content div[id^='folder-'][id$='-button'] > .hover-reveal button,
+html.dark #sidebar #sidebar-folders-content div[id^='folder-'][id$='-button'] > button:first-child {
+	color: #d4d4d8 !important;
+}
+
+/* chats del proyecto: sangría de 36 px, sin línea guía */
+#sidebar #sidebar-folders-content .sk-proy div.ml-3.pl-1 {
+	margin: 0 2px 0 34px !important;
+	padding: 0 !important;
+	border-left: 0 !important;
+}
+
+/* "Nuevo chat en <proyecto>" */
+#sidebar .sk-proy-nuevo {
+	display: none;
+}
+
+#sidebar .sk-proy.sk-proy-abierta > .sk-proy-nuevo {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+	width: calc(100% - 40px);
+	height: 34px;
+	margin: 0 4px 2px 36px;
+	padding: 0 8px;
+	border-radius: 10px;
+	color: var(--sk-proy-tinta, var(--sk-proy, #7c5cff));
+	font-size: 14.5px;
+	line-height: 20px;
+	font-weight: 500;
+	text-align: left;
+	white-space: nowrap;
+}
+
+#sidebar .sk-proy-nuevo span {
+	min-width: 0;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+#sidebar .sk-proy-nuevo:hover {
+	background: color-mix(in srgb, var(--sk-proy, #7c5cff) 8%, transparent);
+}
+
+#sidebar .sk-proy-nuevo svg {
+	flex: none;
+	width: 16.5px;
+	height: 16.5px;
+}
+
+html.dark #sidebar .sk-proy-nuevo {
+	color: color-mix(in srgb, var(--sk-proy, #7c5cff) 70%, #fff);
+}
+
+/* teléfono: fila de 52, ícono de 32, nombre de 16, botones de 36, chats de 48 con 40 de sangría */
+@media (max-width: 767px) {
+	#sidebar #sidebar-folders-content div[id^='folder-'][id$='-button'] {
+		height: 52px !important;
+	}
+
+	#sidebar #sidebar-folders-content div[id^='folder-'][id$='-button'] a {
+		grid-template-columns: 32px minmax(0, 1fr);
+	}
+
+	#sidebar #sidebar-folders-content div[id^='folder-'][id$='-button'] a > .sk-proy-icono {
+		width: 32px;
+		height: 32px;
+	}
+
+	#sidebar #sidebar-folders-content div[id^='folder-'][id$='-button'] a > .sk-proy-icono svg {
+		width: 18px;
+		height: 18px;
+	}
+
+	#sidebar #sidebar-folders-content div[id^='folder-'][id$='-button'] a > .truncate {
+		font-size: 16px !important;
+	}
+
+	#sidebar #sidebar-folders-content div[id^='folder-'][id$='-button'] > .hover-reveal button,
+	#sidebar #sidebar-folders-content div[id^='folder-'][id$='-button'] > button:first-child {
+		width: 36px !important;
+		height: 36px !important;
+		border-radius: 12px !important;
+	}
+
+	#sidebar #sidebar-folders-content .sk-proy div.ml-3.pl-1 {
+		margin-left: 38px !important;
+	}
+
+	#sidebar .sk-proy.sk-proy-abierta > .sk-proy-nuevo {
+		width: calc(100% - 44px);
+		height: 42px;
+		margin-left: 40px;
+		border-radius: 12px;
+	}
+}
+
+/* Panel de Chats (barra comprimida): Proyectos como tarjetas, igual que en la barra abierta (lienzo "Barra comprimida ·
+   panel de chats"): cabecera de 42 px con el ícono de 28 en su color, nombre de 15 en seminegrita y "N chats", ⋯ (abre
+   el proyecto) y la flecha; abierta, fondo blanco al 75 % con sus chats de 38 px a 36 de sangría y "Nuevo chat en …" */
+@media (min-width: 768px) {
+	html.sk-riel-on .sk-chats-proy {
+		margin: 0 6px 6px;
+		padding: 2px 0;
+		border-radius: 16px;
+	}
+
+	html.sk-riel-on .sk-chats-proy.sk-abierta {
+		background: rgba(255, 255, 255, 0.75);
+		box-shadow: inset 0 0 0 1px #e1e1e5;
+	}
+
+	html.sk-riel-on .sk-chats-proy-cab {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		height: 42px;
+		padding: 0 4px 0 8px;
+		border-radius: 14px;
+	}
+
+	html.sk-riel-on .sk-chats-proy-cab:hover {
+		background: rgba(24, 24, 27, 0.04);
+	}
+
+	html.sk-riel-on .sk-chats-proy-enlace {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		color: #18181b;
+		text-decoration: none;
+	}
+
+	html.sk-riel-on .sk-chats-proy-icono {
+		flex: none;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px;
+		border-radius: 10px;
+		color: var(--sk-proy-tinta, var(--sk-proy, #7c5cff));
+		background: color-mix(in srgb, var(--sk-proy, #7c5cff) 12%, transparent);
+	}
+
+	html.sk-riel-on .sk-chats-proy-icono svg {
+		width: 15.7px;
+		height: 15.7px;
+		stroke-width: 2;
+	}
+
+	html.sk-riel-on .sk-chats-proy-texto {
+		flex: 1;
+		min-width: 0;
+		display: flex;
+		flex-direction: column;
+	}
+
+	html.sk-riel-on .sk-chats-proy-texto .sk-chats-titulo {
+		font: 600 15px/20px Figtree, system-ui, sans-serif;
+		white-space: nowrap;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	html.sk-riel-on .sk-chats-proy-sub {
+		font: 500 12.5px/16px Figtree, system-ui, sans-serif;
+		color: #52525b;
+	}
+
+	html.sk-riel-on .sk-chats-proy-boton {
+		flex: none;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
+		width: 28px;
+		height: 28px;
+		padding: 0;
+		border: 0;
+		border-radius: 10px;
+		background: transparent;
+		color: #3f3f46;
+		cursor: pointer;
+	}
+
+	html.sk-riel-on .sk-chats-proy-boton:hover {
+		background: rgba(24, 24, 27, 0.06);
+	}
+
+	html.sk-riel-on .sk-chats-proy-boton svg {
+		stroke-width: 2;
+	}
+
+	html.sk-riel-on .sk-chats-proy .sk-chats-fila {
+		width: calc(100% - 40px);
+		margin: 0 4px 0 36px;
+	}
+
+	html.sk-riel-on .sk-chats-proy .sk-chats-vacio {
+		padding-left: 44px;
+	}
+
+	html.sk-riel-on .sk-chats-proy-nuevo {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+		width: calc(100% - 40px);
+		height: 32px;
+		margin: 0 4px 2px 36px;
+		padding: 0 8px;
+		border-radius: 10px;
+		color: var(--sk-proy-tinta, var(--sk-proy, #7c5cff));
+		font: 500 14.5px/20px Figtree, system-ui, sans-serif;
+		text-decoration: none;
+		white-space: nowrap;
+	}
+
+	html.sk-riel-on .sk-chats-proy-nuevo span {
+		min-width: 0;
+		overflow: hidden;
+		text-overflow: ellipsis;
+	}
+
+	html.sk-riel-on .sk-chats-proy-nuevo svg {
+		flex: none;
+		width: 16.5px;
+		height: 16.5px;
+		stroke-width: 2.2;
+	}
+
+	html.sk-riel-on .sk-chats-proy-nuevo:hover {
+		background: color-mix(in srgb, var(--sk-proy, #7c5cff) 8%, transparent);
+	}
+
+	html.dark.sk-riel-on .sk-chats-proy.sk-abierta {
+		background: rgba(255, 255, 255, 0.05);
+		box-shadow: inset 0 0 0 1px #3f3f46;
+	}
+
+	html.dark.sk-riel-on .sk-chats-proy-enlace {
+		color: #ececee;
+	}
+
+	html.dark.sk-riel-on .sk-chats-proy-sub {
+		color: #a1a1aa;
+	}
+
+	html.dark.sk-riel-on .sk-chats-proy-boton {
+		color: #d4d4d8;
+	}
+}
+
+/* ---------- Página del proyecto (lienzos "Proyecto «Hola» · escritorio" y "· móvil") ----------
+   Columna de 980 px: encabezado (ícono de 56 en el color del proyecto, nombre de 30, "Proyecto · N chats · actualizado
+   …", Editar y ⋯), tarjetas Instrucciones y Archivos, "Chats del proyecto · N" y los chats como tarjetas de vidrio; el
+   composer queda al final (pegado abajo al desplazar) con la píldora "En el proyecto …". carbono.js agrega .sk-pp. */
+html.sk-pag-proy #chat-pane > div.flex.items-center.h-full {
+	align-items: stretch !important;
+}
+
+html.sk-pag-proy #chat-pane div.m-auto.w-full {
+	display: flex !important;
+	flex-direction: column;
+	gap: 20px;
+	width: 100%;
+	max-width: 1044px !important;
+	min-height: 100%;
+	margin: 0 auto !important;
+	padding: 28px 32px 18px !important;
+	transform: none !important;
+	translate: none !important;
+}
+
+html.sk-pag-proy #chat-pane div.m-auto.w-full > div:first-child,
+html.sk-pag-proy #chat-pane div.m-auto.w-full > div:first-child > div {
+	display: contents !important;
+}
+
+/* la lista de Open WebUI se cambia por la del proyecto en cuanto está lista */
+html.sk-pag-proy.sk-pp-lista #chat-pane div.m-auto.w-full > div.mx-auto {
+	display: none !important;
+}
+
+/* encabezado */
+html.sk-pag-proy #chat-pane .sk-pp-cab {
+	order: 1;
+	display: flex !important;
+	align-items: center !important;
+	gap: 16px;
+	width: 100% !important;
+	max-width: none !important;
+	margin: 0 !important;
+	padding: 0 !important;
+}
+
+html.sk-pag-proy #chat-pane .sk-pp-cab > div:first-child {
+	flex: 1;
+	min-width: 0;
+	display: grid !important;
+	grid-template-columns: 56px minmax(0, 1fr);
+	column-gap: 16px;
+	align-items: center;
+	text-align: left !important;
+}
+
+html.sk-pag-proy #chat-pane .sk-pp-cab > div:first-child > span:first-child,
+html.sk-pag-proy #chat-pane .sk-pp-cab > div:first-child > span:first-child > button {
+	grid-row: 1 / span 2;
+	grid-column: 1;
+}
+
+html.sk-pag-proy #chat-pane .sk-pp-cab > div:first-child > span:first-child button {
+	display: inline-flex !important;
+	align-items: center;
+	justify-content: center;
+	width: 56px !important;
+	height: 56px !important;
+	border-radius: 17px !important;
+	background: color-mix(in srgb, var(--sk-pp, #7c5cff) 12%, transparent) !important;
+	color: var(--sk-pp-tinta, var(--sk-pp, #7c5cff)) !important;
+}
+
+html.sk-pag-proy #chat-pane .sk-pp-cab > div:first-child > span:first-child button svg {
+	width: 30px !important;
+	height: 30px !important;
+	stroke-width: 1.8 !important;
+}
+
+html.sk-pag-proy #chat-pane .sk-pp-cab .line-clamp-1 {
+	grid-column: 2;
+	align-self: end;
+	color: #18181b;
+	font: 700 30px/36px Figtree, system-ui, sans-serif !important;
+}
+
+html.sk-pag-proy #chat-pane .sk-pp-sub {
+	grid-column: 2;
+	align-self: start;
+	color: #52525b;
+	font: 500 14px/20px Figtree, system-ui, sans-serif;
+}
+
+html.sk-pag-proy #chat-pane .sk-pp-cab > div:last-child {
+	translate: none !important;
+	transform: none !important;
+}
+
+html.sk-pag-proy #chat-pane .sk-pp-cab > div:last-child button > div {
+	display: inline-flex !important;
+	align-items: center;
+	justify-content: center;
+	width: 36px !important;
+	height: 36px !important;
+	padding: 0 !important;
+	border-radius: 9999px !important;
+	background: rgba(255, 255, 255, 0.8) !important;
+	box-shadow: inset 0 0 0 1px #d4d4d8;
+	color: #18181b;
+}
+
+html.sk-pag-proy #chat-pane .sk-pp-cab > div:last-child button svg {
+	width: 18px !important;
+	height: 18px !important;
+}
+
+.sk-pp-editar {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	height: 36px;
+	padding: 0 14px;
+	border: 0;
+	border-radius: 9999px;
+	background: rgba(255, 255, 255, 0.8);
+	box-shadow: inset 0 0 0 1px #d4d4d8;
+	color: #18181b;
+	font: 600 14px/1 Figtree, system-ui, sans-serif;
+	cursor: pointer;
+}
+
+.sk-pp-editar:hover,
+html.sk-pag-proy #chat-pane .sk-pp-cab > div:last-child button:hover > div {
+	background: #fff !important;
+}
+
+/* tarjetas, rótulo y chats */
+.sk-pp {
+	order: 2;
+	display: flex;
+	flex-direction: column;
+	gap: 20px;
+	text-align: left;
+}
+
+.sk-pp-tarjetas {
+	display: flex;
+	gap: 14px;
+}
+
+.sk-pp-tarjeta {
+	flex: 1;
+	min-width: 0;
+	padding: 16px 18px;
+	border-radius: 18px;
+	background: rgba(255, 255, 255, 0.88);
+	-webkit-backdrop-filter: blur(18px) saturate(1.6);
+	backdrop-filter: blur(18px) saturate(1.6);
+	box-shadow: inset 0 0 0 1px #d9d9de;
+}
+
+.sk-pp-tarjeta-cab {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-bottom: 6px;
+	color: #3f3f46;
+}
+
+.sk-pp-tarjeta-cab > span {
+	flex: 1;
+	color: #18181b;
+	font: 700 15.5px/20px Figtree, system-ui, sans-serif;
+}
+
+.sk-pp-tarjeta p {
+	margin: 0;
+	color: #52525b;
+	font: 400 14px/20px Figtree, system-ui, sans-serif;
+	display: -webkit-box;
+	-webkit-line-clamp: 2;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+.sk-pp-accion {
+	padding: 0;
+	border: 0;
+	background: none;
+	color: #2361c7;
+	font: 600 14px/20px Figtree, system-ui, sans-serif;
+	cursor: pointer;
+}
+
+.sk-pp-accion:hover {
+	text-decoration: underline;
+}
+
+.sk-pp-rotulo {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	margin-top: 6px;
+}
+
+.sk-pp-rotulo > span {
+	flex: 1;
+	color: #52525b;
+	font: 700 13px/18px Figtree, system-ui, sans-serif;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
+.sk-pp-orden {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	padding: 4px 6px;
+	border: 0;
+	border-radius: 8px;
+	background: none;
+	color: #3f3f46;
+	font: 500 13.5px/18px Figtree, system-ui, sans-serif;
+	cursor: pointer;
+}
+
+.sk-pp-orden:hover {
+	background: rgba(24, 24, 27, 0.05);
+}
+
+.sk-pp-chats {
+	display: flex;
+	flex-direction: column;
+	gap: 8px;
+}
+
+.sk-pp-chat {
+	display: flex;
+	align-items: center;
+	gap: 14px;
+	padding: 12px 16px;
+	border-radius: 16px;
+	background: rgba(255, 255, 255, 0.88);
+	-webkit-backdrop-filter: blur(18px) saturate(1.6);
+	backdrop-filter: blur(18px) saturate(1.6);
+	box-shadow: inset 0 0 0 1px #d9d9de;
+	color: #09090b;
+	text-decoration: none;
+	transition: background-color 0.15s ease;
+}
+
+.sk-pp-chat:hover {
+	background: #fff;
+}
+
+.sk-pp-chat > img,
+.sk-pp-sinfoto {
+	flex: none;
+	width: 36px;
+	height: 36px;
+	border-radius: 9999px;
+	object-fit: cover;
+}
+
+.sk-pp-sinfoto {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	color: var(--sk-pp-tinta, var(--sk-pp, #7c5cff));
+	background: color-mix(in srgb, var(--sk-pp, #7c5cff) 12%, transparent);
+}
+
+.sk-pp-chat-texto {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.sk-pp-chat-titulo {
+	font: 600 16px/22px Figtree, system-ui, sans-serif;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.sk-pp-chat-vista {
+	color: #52525b;
+	font: 400 14px/20px Figtree, system-ui, sans-serif;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.sk-pp-chat-fin {
+	flex: none;
+	display: inline-flex;
+	flex-direction: column;
+	align-items: flex-end;
+	gap: 6px;
+	color: #52525b;
+	font: 500 12.5px/16px Figtree, system-ui, sans-serif;
+}
+
+.sk-pp-punto {
+	width: 8px;
+	height: 8px;
+	border-radius: 9999px;
+	background: #d6336c;
+	box-shadow: 0 0 0 3px rgba(214, 51, 108, 0.22);
+}
+
+.sk-pp-pensando {
+	color: #2f4a8a;
+}
+
+.sk-pp-vacio {
+	margin: 0;
+	padding: 18px;
+	border-radius: 16px;
+	background: rgba(255, 255, 255, 0.6);
+	box-shadow: inset 0 0 0 1px #e1e1e5;
+	color: #52525b;
+	font: 400 14px/20px Figtree, system-ui, sans-serif;
+	text-align: center;
+}
+
+/* composer al final, pegado abajo */
+html.sk-pag-proy #chat-pane div.m-auto.w-full > div:first-child > div > div:has(#message-input-container) {
+	order: 3;
+	position: sticky;
+	bottom: 18px;
+	z-index: 5;
+	width: 100% !important;
+	max-width: none !important;
+	margin-top: auto !important;
+	padding: 0 !important;
+	text-align: left;
+}
+
+html.sk-pag-proy #chat-pane div.m-auto.w-full #chat-input p.is-editor-empty:first-child::before {
+	content: var(--sk-pp-ph, attr(data-placeholder)) !important;
+}
+
+.sk-pp-chip {
+	align-self: flex-start;
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	height: 28px;
+	margin: 10px 0 0 12px;
+	padding: 0 10px 0 6px;
+	border-radius: 9999px;
+	background: color-mix(in srgb, var(--sk-pp, #7c5cff) 12%, transparent);
+	color: color-mix(in srgb, var(--sk-pp-tinta, var(--sk-pp, #7c5cff)) 82%, #000);
+	font: 600 13px/1 Figtree, system-ui, sans-serif;
+	white-space: nowrap;
+}
+
+.sk-pp-chip svg {
+	color: var(--sk-pp-tinta, var(--sk-pp, #7c5cff));
+}
+
+.sk-pp-chip-tel {
+	display: none;
+}
+
+/* oscuro */
+html.dark.sk-pag-proy #chat-pane .sk-pp-cab .line-clamp-1,
+html.dark .sk-pp-tarjeta-cab > span,
+html.dark .sk-pp-chat,
+html.dark .sk-pp-editar {
+	color: #ececee;
+}
+
+html.dark.sk-pag-proy #chat-pane .sk-pp-sub,
+html.dark .sk-pp-tarjeta p,
+html.dark .sk-pp-rotulo > span,
+html.dark .sk-pp-chat-vista,
+html.dark .sk-pp-chat-fin,
+html.dark .sk-pp-orden {
+	color: #a1a1aa;
+}
+
+html.dark .sk-pp-tarjeta,
+html.dark .sk-pp-chat,
+html.dark .sk-pp-vacio,
+html.dark .sk-pp-editar,
+html.dark.sk-pag-proy #chat-pane .sk-pp-cab > div:last-child button > div {
+	background: rgba(39, 39, 42, 0.72) !important;
+	box-shadow: inset 0 0 0 1px #3f3f46;
+}
+
+html.dark .sk-pp-chat:hover {
+	background: rgba(52, 52, 56, 0.9) !important;
+}
+
+html.dark .sk-pp-accion {
+	color: #7aa7f0;
+}
+
+html.dark .sk-pp-chip {
+	color: color-mix(in srgb, var(--sk-pp, #7c5cff) 55%, #fff);
+}
+
+/* teléfono */
+@media (max-width: 767px) {
+	html.sk-pag-proy #chat-pane div.m-auto.w-full {
+		gap: 16px;
+		padding: 64px 16px 16px !important; /* la barra superior del teléfono se monta 48 px sobre la página */
+	}
+
+	html.sk-pag-proy #chat-pane .sk-pp-cab {
+		gap: 8px;
+	}
+
+	html.sk-pag-proy #chat-pane .sk-pp-cab > div:first-child {
+		grid-template-columns: 48px minmax(0, 1fr);
+		column-gap: 12px;
+	}
+
+	html.sk-pag-proy #chat-pane .sk-pp-cab > div:first-child > span:first-child button {
+		width: 48px !important;
+		height: 48px !important;
+		border-radius: 14px !important;
+	}
+
+	html.sk-pag-proy #chat-pane .sk-pp-cab > div:first-child > span:first-child button svg {
+		width: 26px !important;
+		height: 26px !important;
+	}
+
+	html.sk-pag-proy #chat-pane .sk-pp-cab .line-clamp-1 {
+		font: 700 24px/30px Figtree, system-ui, sans-serif !important;
+	}
+
+	html.sk-pag-proy #chat-pane .sk-pp-sub {
+		font: 500 13px/18px Figtree, system-ui, sans-serif;
+	}
+
+	.sk-pp {
+		gap: 16px;
+	}
+
+	.sk-pp-tarjetas {
+		gap: 10px;
+	}
+
+	.sk-pp-tarjeta {
+		padding: 12px 14px;
+		border-radius: 16px;
+	}
+
+	.sk-pp-tarjeta-cab {
+		gap: 8px;
+		margin-bottom: 4px;
+	}
+
+	.sk-pp-tarjeta-cab > span {
+		font-size: 15px;
+	}
+
+	.sk-pp-tarjeta p {
+		font-size: 13px;
+		line-height: 18px;
+	}
+
+	.sk-pp-rotulo {
+		margin-top: 4px;
+	}
+
+	.sk-pp-rotulo > span {
+		font-size: 12.5px;
+		line-height: 16px;
+	}
+
+	.sk-pp-orden {
+		display: none;
+	}
+
+	html.sk-pag-proy #chat-pane div.m-auto.w-full > div:first-child > div > div:has(#message-input-container) {
+		bottom: 16px;
+	}
+
+	html.sk-pag-proy #chat-pane .sk-pp {
+		margin-bottom: 44px;
+	}
+
+	.sk-pp-chip {
+		position: absolute;
+		top: -38px;
+		left: 50%;
+		margin: 0;
+		transform: translateX(-50%);
+		background: rgba(255, 255, 255, 0.9);
+		box-shadow: inset 0 0 0 1px #d9d9de;
+	}
+
+	.sk-pp-chip-esc {
+		display: none;
+	}
+
+	.sk-pp-chip-tel {
+		display: inline;
+	}
+
+	html.dark .sk-pp-chip {
+		background: rgba(39, 39, 42, 0.9);
+		box-shadow: inset 0 0 0 1px #3f3f46;
+	}
+}
+
+/* menú ⋯ del proyecto: "Color" con su nombre y una fila de 10 muestras de 28 px (40 de área táctil); la elegida con
+   aro de 2 px y palomita blanca. "Eliminar" en rojo. (lienzo "Proyectos · elegir color") */
+.app-dropdown-menu.sk-menu-proy {
+	min-width: 250px !important;
+}
+
+.sk-proy-color {
+	padding: 2px 0 4px;
+}
+
+.sk-proy-color-cab {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+	height: 36px;
+	padding: 0 8px;
+	color: inherit;
+	font-size: inherit;
+}
+
+.sk-proy-color-cab > span:first-of-type {
+	flex: 1;
+}
+
+.sk-proy-color-nombre {
+	color: #52525b;
+	font-size: 13px;
+	line-height: 18px;
+	font-weight: 500;
+}
+
+html.dark .sk-proy-color-nombre {
+	color: #a1a1aa;
+}
+
+.sk-proy-muestras {
+	display: grid;
+	grid-template-columns: repeat(5, 40px);
+	justify-content: space-between;
+	padding: 0 4px;
+}
+
+.sk-proy-muestras button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+	padding: 0;
+	border: 0;
+	border-radius: 9999px;
+	background: none;
+	cursor: pointer;
+}
+
+.sk-proy-muestras button > span {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	border-radius: 9999px;
+	box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.08);
+	transition: transform 0.12s ease;
+}
+
+.sk-proy-muestras button:hover > span {
+	transform: scale(1.08);
+}
+
+.sk-proy-muestras button[aria-checked='true'] > span {
+	box-shadow: 0 0 0 2px #fff, 0 0 0 4px var(--sk-m);
+}
+
+html.dark .sk-proy-muestras button[aria-checked='true'] > span {
+	box-shadow: 0 0 0 2px #27272a, 0 0 0 4px var(--sk-m);
+}
+
+.sk-proy-muestras button:focus-visible {
+	outline: 2px solid #2361c7;
+	outline-offset: 0;
+}
+
+.app-dropdown-menu.sk-menu-proy > button.sk-menu-peligro,
+.app-dropdown-menu.sk-menu-proy > button.sk-menu-peligro svg {
+	color: #a32a22 !important;
+}
+
+html.dark .app-dropdown-menu.sk-menu-proy > button.sk-menu-peligro,
+html.dark .app-dropdown-menu.sk-menu-proy > button.sk-menu-peligro svg {
+	color: #f87171 !important;
+}
+
+@media (max-width: 767px) {
+	.app-dropdown-menu.sk-menu-proy {
+		min-width: 272px !important;
+	}
+}
+
+/* selector de modelo: los modelos sin foto llevan su inicial blanca en un círculo de color (lienzo "Barra escritorio
+   · al tocar «Lain ▾»"); el color sale del id del modelo con la misma paleta de los proyectos */
+.sk-selector .sk-sel-fila > .sk-sel-letra[style*='--sk-letra'] {
+	border-radius: 9999px !important;
+	background: var(--sk-letra) !important;
+	box-shadow: none !important;
+	color: #fff !important;
+	font-size: 14px !important;
+	font-weight: 700 !important;
+}
+
+/* tarjeta Instrucciones en edición y estado de la subida de archivos */
+.sk-pp-texto {
+	display: block;
+	width: 100%;
+	min-height: 96px;
+	margin: 4px 0 10px;
+	padding: 10px 12px;
+	border: 0;
+	border-radius: 12px;
+	background: #fff;
+	box-shadow: inset 0 0 0 1px #d4d4d8;
+	color: #18181b;
+	font: 400 14px/20px Figtree, system-ui, sans-serif;
+	resize: vertical;
+}
+
+.sk-pp-texto:focus {
+	outline: none;
+	box-shadow: inset 0 0 0 2px #2361c7;
+}
+
+.sk-pp-botones {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+}
+
+.sk-pp-boton {
+	height: 34px;
+	padding: 0 14px;
+	border: 0;
+	border-radius: 9999px;
+	background: rgba(255, 255, 255, 0.8);
+	box-shadow: inset 0 0 0 1px #d4d4d8;
+	color: #18181b;
+	font: 600 14px/1 Figtree, system-ui, sans-serif;
+	cursor: pointer;
+}
+
+.sk-pp-boton.sk-pp-guardar {
+	background: #18181b;
+	box-shadow: none;
+	color: #fff;
+}
+
+.sk-pp-boton:disabled {
+	opacity: 0.6;
+	cursor: default;
+}
+
+.sk-pp-subiendo {
+	color: #52525b;
+	font: 500 13.5px/20px Figtree, system-ui, sans-serif;
+}
+
+.sk-pp-tarjeta p.sk-pp-aviso {
+	margin-top: 6px;
+	color: #a32a22;
+}
+
+html.dark .sk-pp-texto {
+	background: rgba(24, 24, 27, 0.8);
+	box-shadow: inset 0 0 0 1px #3f3f46;
+	color: #ececee;
+}
+
+html.dark .sk-pp-boton {
+	background: rgba(39, 39, 42, 0.8);
+	box-shadow: inset 0 0 0 1px #3f3f46;
+	color: #ececee;
+}
+
+html.dark .sk-pp-boton.sk-pp-guardar {
+	background: #ececee;
+	color: #18181b;
+}
+
+html.dark .sk-pp-tarjeta p.sk-pp-aviso {
+	color: #f87171;
+}
+
+/* ---------- Editar proyecto (lienzos "Editar proyecto · escritorio" y "· móvil") ----------
+   Ventana de 600 px, radio 24, fondo #fcfcfd; campos de 46 px con radio 12; Color con 12 muestras; Imagen de fondo como
+   tarjeta; Acceso y Avanzado en una lista de filas de 56 px; pie con Cancelar y "Guardar cambios" de 44 px. En el
+   teléfono, hoja desde abajo con radio 28 y asa. carbono.js agrega .sk-ep y los elementos sk-ep-*. */
+.modal.sk-ep {
+	background: rgba(24, 24, 27, 0.32) !important;
+}
+
+.modal.sk-ep > div {
+	width: 600px !important;
+	max-width: calc(100vw - 32px) !important;
+	border-radius: 24px !important;
+	background: #fcfcfd !important;
+	box-shadow: 0 30px 80px rgba(24, 24, 27, 0.28), 0 0 0 1px rgba(24, 24, 27, 0.08) !important;
+	color: #18181b;
+	overflow: hidden;
+}
+
+.modal.sk-ep .sk-ep-cab {
+	display: flex !important;
+	align-items: center !important;
+	gap: 12px !important;
+	padding: 18px 14px 18px 24px !important;
+}
+
+.modal.sk-ep .sk-ep-cab > div:nth-child(2) {
+	flex: 1;
+	color: #18181b !important;
+	font: 700 20px/26px Figtree, system-ui, sans-serif !important;
+}
+
+.modal.sk-ep .sk-ep-icono {
+	flex: none;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+	border-radius: 12px;
+	color: var(--sk-ep-tinta, var(--sk-ep, #7c5cff));
+	background: color-mix(in srgb, var(--sk-ep, #7c5cff) 12%, transparent);
+}
+
+.modal.sk-ep .sk-ep-acceso-original {
+	position: absolute !important;
+	width: 1px !important;
+	height: 1px !important;
+	overflow: hidden !important;
+	opacity: 0 !important;
+	pointer-events: none !important;
+}
+
+.modal.sk-ep .sk-ep-cab button[aria-label='Cerrar'],
+.modal.sk-ep .sk-ep-cab button[aria-label='Close'] {
+	display: inline-flex !important;
+	align-items: center;
+	justify-content: center;
+	width: 44px !important;
+	height: 44px !important;
+	padding: 0 !important;
+	border-radius: 12px !important;
+	color: #3f3f46 !important;
+}
+
+.modal.sk-ep .sk-ep-cab button[aria-label='Cerrar']:hover,
+.modal.sk-ep .sk-ep-cab button[aria-label='Close']:hover {
+	background: rgba(24, 24, 27, 0.06) !important;
+}
+
+.modal.sk-ep .sk-ep-cab button[aria-label='Cerrar'] svg,
+.modal.sk-ep .sk-ep-cab button[aria-label='Close'] svg {
+	width: 20px !important;
+	height: 20px !important;
+}
+
+/* cuerpo */
+.modal.sk-ep > div > div > div:nth-child(2) {
+	padding: 0 !important;
+}
+
+.modal.sk-ep form {
+	display: flex !important;
+	flex-direction: column;
+	gap: 18px;
+	padding: 0 24px;
+}
+
+.modal.sk-ep .sk-ep-campo {
+	display: grid !important;
+	grid-template-columns: minmax(0, 1fr) auto;
+	align-items: baseline;
+	row-gap: 6px;
+	margin: 0 !important;
+}
+
+.modal.sk-ep .sk-ep-campo > label,
+.modal.sk-ep .sk-ep-rotulo {
+	margin: 0 !important;
+	color: #18181b !important;
+	font: 600 14px/20px Figtree, system-ui, sans-serif !important;
+}
+
+.modal.sk-ep .sk-ep-nota {
+	color: #52525b;
+	font: 500 12.5px/16px Figtree, system-ui, sans-serif;
+}
+
+.modal.sk-ep .sk-ep-campo > :not(label):not(.sk-ep-nota):not(.sk-ep-rotulo) {
+	grid-column: 1 / -1;
+}
+
+.modal.sk-ep #folder-name,
+.modal.sk-ep #folder-description {
+	display: block;
+	width: 100%;
+	padding: 0 14px !important;
+	border: 0 !important;
+	border-radius: 12px !important;
+	background: #fff !important;
+	box-shadow: inset 0 0 0 1px #d4d4d8;
+	color: #18181b !important;
+	outline: none !important;
+}
+
+.modal.sk-ep #folder-name {
+	height: 46px;
+	font: 500 16px/1 Figtree, system-ui, sans-serif !important;
+}
+
+.modal.sk-ep #folder-description {
+	min-height: 72px;
+	padding: 12px 14px !important;
+	font: 400 15px/21px Figtree, system-ui, sans-serif !important;
+	resize: vertical;
+}
+
+.modal.sk-ep #folder-name::placeholder,
+.modal.sk-ep #folder-description::placeholder {
+	color: #6b6b73 !important;
+}
+
+.modal.sk-ep #folder-name:focus,
+.modal.sk-ep #folder-description:focus {
+	box-shadow: inset 0 0 0 1.5px #2361c7, 0 0 0 4px rgba(35, 97, 199, 0.14);
+}
+
+/* color */
+.modal.sk-ep .sk-ep-muestras {
+	display: grid;
+	grid-template-columns: repeat(12, 40px);
+	justify-content: space-between;
+}
+
+.modal.sk-ep .sk-ep-muestras button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+	padding: 0;
+	border: 0;
+	border-radius: 9999px;
+	background: none;
+	cursor: pointer;
+}
+
+.modal.sk-ep .sk-ep-muestras button > span {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 28px;
+	height: 28px;
+	border-radius: 9999px;
+	transition: transform 0.12s ease;
+}
+
+.modal.sk-ep .sk-ep-muestras button:hover > span {
+	transform: scale(1.08);
+}
+
+.modal.sk-ep .sk-ep-muestras button[aria-checked='true'] > span {
+	box-shadow: 0 0 0 2px #fcfcfd, 0 0 0 4px var(--sk-m);
+}
+
+.modal.sk-ep .sk-ep-muestras button:focus-visible {
+	outline: 2px solid #2361c7;
+}
+
+/* imagen de fondo */
+.modal.sk-ep .sk-ep-solo-rotulo {
+	margin-bottom: -12px !important;
+}
+
+.modal.sk-ep .sk-ep-fondo {
+	display: flex !important;
+	align-items: center !important;
+	gap: 12px;
+	margin: 0 !important;
+	padding: 10px;
+	border-radius: 14px;
+	box-shadow: inset 0 0 0 1.5px #d4d4d8;
+}
+
+.modal.sk-ep #folder-background-image-label {
+	display: none !important;
+}
+
+.modal.sk-ep .sk-ep-fondo-info {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.modal.sk-ep .sk-ep-fondo-mini {
+	flex: none;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 56px;
+	height: 56px;
+	border-radius: 10px;
+	background: #f4f4f5 center / cover no-repeat;
+	box-shadow: inset 0 0 0 1px #e4e4e7;
+	color: #52525b;
+}
+
+.modal.sk-ep .sk-ep-fondo-mini.sk-con-imagen svg {
+	display: none;
+}
+
+.modal.sk-ep .sk-ep-fondo-texto {
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.modal.sk-ep .sk-ep-fondo-texto b {
+	font: 500 14.5px/20px Figtree, system-ui, sans-serif;
+}
+
+.modal.sk-ep .sk-ep-fondo-texto small,
+.modal.sk-ep .sk-ep-fila-texto small,
+.modal.sk-ep .sk-ep-avanzado small {
+	display: block;
+	color: #52525b;
+	font: 400 13px/18px Figtree, system-ui, sans-serif;
+	text-align: left;
+}
+
+.modal.sk-ep .sk-ep-fondo button {
+	display: inline-flex !important;
+	align-items: center;
+	height: 36px;
+	padding: 0 14px !important;
+	border-radius: 9999px !important;
+	background: #fff !important;
+	box-shadow: inset 0 0 0 1px #d4d4d8;
+	color: #18181b !important;
+	font: 600 14px/1 Figtree, system-ui, sans-serif !important;
+}
+
+.modal.sk-ep .sk-ep-fondo button svg {
+	display: none;
+}
+
+.modal.sk-ep #folder-background-image-state {
+	margin: 0 !important;
+}
+
+.modal.sk-ep .sk-ep-oculto {
+	display: none !important;
+}
+
+/* Acceso y Avanzado */
+.modal.sk-ep .sk-ep-acceso,
+.modal.sk-ep .sk-ep-avanzado > button {
+	display: flex !important;
+	align-items: center !important;
+	gap: 12px;
+	width: 100%;
+	min-height: 56px;
+	padding: 0 12px 0 14px !important;
+	border: 0;
+	background: #fff !important;
+	box-shadow: inset 0 0 0 1px #e4e4e7;
+	color: #18181b !important;
+	text-align: left;
+	cursor: pointer;
+}
+
+.modal.sk-ep .sk-ep-acceso {
+	margin-bottom: -18px;
+	border-radius: 14px 14px 0 0;
+	box-shadow: inset 1px 0 0 #e4e4e7, inset -1px 0 0 #e4e4e7, inset 0 1px 0 #e4e4e7, inset 0 -1px 0 #ececee;
+}
+
+.modal.sk-ep .sk-ep-avanzado {
+	margin: 0 !important;
+}
+
+.modal.sk-ep .sk-ep-avanzado > button {
+	border-radius: 0 0 14px 14px !important;
+	box-shadow: inset 1px 0 0 #e4e4e7, inset -1px 0 0 #e4e4e7, inset 0 -1px 0 #e4e4e7;
+}
+
+.modal.sk-ep .sk-ep-acceso:hover,
+.modal.sk-ep .sk-ep-avanzado > button:hover {
+	background: #fafafb !important;
+}
+
+.modal.sk-ep .sk-ep-fila-icono {
+	flex: none;
+	display: inline-flex;
+	color: #3f3f46;
+}
+
+.modal.sk-ep .sk-ep-fila-texto {
+	flex: 1;
+	min-width: 0;
+}
+
+.modal.sk-ep .sk-ep-fila-texto b,
+.modal.sk-ep .sk-ep-avanzado > button > div > div:first-child {
+	display: block;
+	color: #18181b;
+	font: 600 14.5px/20px Figtree, system-ui, sans-serif !important;
+	text-align: left;
+}
+
+.modal.sk-ep .sk-ep-avanzado > button > div {
+	flex: 1;
+}
+
+.modal.sk-ep .sk-ep-avanzado > button > div > div:last-child svg {
+	width: 18px !important;
+	height: 18px !important;
+	color: #3f3f46;
+}
+
+.modal.sk-ep .sk-ep-cambiar {
+	color: #2361c7;
+	font: 600 14px/20px Figtree, system-ui, sans-serif;
+}
+
+/* contenido de Avanzado al abrirse */
+.modal.sk-ep .sk-ep-avanzado > :not(button) {
+	padding: 12px 4px 0;
+}
+
+/* pie */
+.modal.sk-ep .sk-ep-pie {
+	display: flex !important;
+	align-items: center;
+	justify-content: flex-end !important;
+	gap: 10px;
+	margin: 2px -24px 0 !important;
+	padding: 14px 20px 16px !important;
+	box-shadow: inset 0 1px 0 #ececee;
+}
+
+.modal.sk-ep .sk-ep-pie > button {
+	display: inline-flex !important;
+	align-items: center;
+	height: 44px !important;
+	padding: 0 22px !important;
+	border: 0;
+	border-radius: 9999px !important;
+	background: #18181b !important;
+	color: #fff !important;
+	font: 600 15px/1 Figtree, system-ui, sans-serif !important;
+	cursor: pointer;
+}
+
+.modal.sk-ep .sk-ep-pie > button.sk-ep-cancelar {
+	padding: 0 18px !important;
+	background: #fff !important;
+	box-shadow: inset 0 0 0 1px #d4d4d8;
+	color: #18181b !important;
+}
+
+.modal.sk-ep .sk-ep-pie > button.sk-ep-cancelar:hover {
+	background: #f4f4f5 !important;
+}
+
+/* oscuro */
+html.dark .modal.sk-ep > div {
+	background: #1f1f23 !important;
+	color: #ececee;
+}
+
+html.dark .modal.sk-ep .sk-ep-cab > div:nth-child(2),
+html.dark .modal.sk-ep .sk-ep-campo > label,
+html.dark .modal.sk-ep .sk-ep-rotulo,
+html.dark .modal.sk-ep .sk-ep-fila-texto b,
+html.dark .modal.sk-ep .sk-ep-avanzado > button > div > div:first-child {
+	color: #ececee !important;
+}
+
+html.dark .modal.sk-ep .sk-ep-nota,
+html.dark .modal.sk-ep .sk-ep-fondo-texto small,
+html.dark .modal.sk-ep .sk-ep-fila-texto small,
+html.dark .modal.sk-ep .sk-ep-avanzado small {
+	color: #a1a1aa;
+}
+
+html.dark .modal.sk-ep #folder-name,
+html.dark .modal.sk-ep #folder-description,
+html.dark .modal.sk-ep .sk-ep-acceso,
+html.dark .modal.sk-ep .sk-ep-avanzado > button,
+html.dark .modal.sk-ep .sk-ep-fondo button,
+html.dark .modal.sk-ep .sk-ep-pie > button.sk-ep-cancelar {
+	background: #27272a !important;
+	color: #ececee !important;
+}
+
+html.dark .modal.sk-ep .sk-ep-pie > button:not(.sk-ep-cancelar) {
+	background: #ececee !important;
+	color: #18181b !important;
+}
+
+html.dark .modal.sk-ep .sk-ep-muestras button[aria-checked='true'] > span {
+	box-shadow: 0 0 0 2px #1f1f23, 0 0 0 4px var(--sk-m);
+}
+
+/* teléfono: hoja desde abajo con asa */
+@media (max-width: 767px) {
+	.modal.sk-ep {
+		align-items: flex-end !important;
+		padding: 0 !important;
+	}
+
+	.modal.sk-ep > div {
+		width: 100% !important;
+		max-width: 100% !important;
+		max-height: 94dvh;
+		margin: 0 !important;
+		padding-top: 8px;
+		overflow-y: auto;
+		border-radius: 28px 28px 0 0 !important;
+		box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.22) !important;
+	}
+
+	.modal.sk-ep > div::before {
+		content: '';
+		display: block;
+		width: 40px;
+		height: 5px;
+		margin: 0 auto 4px;
+		border-radius: 9999px;
+		background: #c4c4ca;
+	}
+
+	.modal.sk-ep .sk-ep-cab {
+		padding: 6px 12px 14px 20px !important;
+	}
+
+	.modal.sk-ep form {
+		padding: 0 20px;
+	}
+
+	.modal.sk-ep .sk-ep-muestras {
+		grid-template-columns: repeat(6, 40px);
+		row-gap: 6px;
+	}
+
+	.modal.sk-ep .sk-ep-pie {
+		margin: 2px -20px 0 !important;
+		padding-bottom: calc(16px + env(safe-area-inset-bottom)) !important;
+	}
+}
+
+/* ---------- Archivos del proyecto · miniaturas, visor y confirmación (lienzos "Archivos del proyecto · ver y
+   eliminar") ----------
+   Miniaturas de 104 × 72 con radio 10 (imagen, video con ▶ y duración, o documento con su tipo), nombre acortado al
+   centro y "PNG · 1.2 MB"; al pasar el cursor, aro azul y botón Eliminar. El visor ocupa la pantalla con fondo oscuro:
+   cabecera con Descargar, Abrir en pestaña y Eliminar, flechas, tira de miniaturas y "1 de 4 · usa ← → para cambiar";
+   en el teléfono, fondo negro, puntos y barra Descargar · Compartir · Eliminar. Eliminar siempre pide confirmación. */
+.sk-pp-tarjeta-cab > span i {
+	color: #52525b;
+	font-style: normal;
+	font-weight: 500;
+}
+
+.sk-pp-tarjeta p.sk-pp-arch-ayuda {
+	font-size: 13px;
+	line-height: 18px;
+}
+
+.sk-pp-archivos {
+	display: flex;
+	gap: 8px;
+	margin-top: 10px;
+	overflow-x: auto;
+	scrollbar-width: thin;
+	padding: 2px 2px 4px;
+	margin-left: -2px;
+}
+
+.sk-pp-arch {
+	position: relative;
+	flex: none;
+	width: 104px;
+	cursor: pointer;
+	outline: none;
+}
+
+.sk-pp-arch-caja {
+	position: relative;
+	display: block;
+	width: 104px;
+	height: 72px;
+	border-radius: 10px;
+	transition: box-shadow 0.15s ease;
+}
+
+.sk-pp-arch:hover .sk-pp-arch-caja,
+.sk-pp-arch:focus-visible .sk-pp-arch-caja {
+	box-shadow: 0 0 0 2px #2361c7;
+}
+
+.sk-va-mini {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	width: 100%;
+	height: 100%;
+	overflow: hidden;
+	border-radius: inherit;
+	background: #f4f4f5;
+}
+
+.sk-pp-arch-caja > .sk-va-mini {
+	border-radius: 10px;
+}
+
+.sk-va-mini > img,
+.sk-va-mini > video {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+	object-position: 50% 25%;
+	pointer-events: none;
+}
+
+.sk-va-doc {
+	flex-direction: column;
+	gap: 2px;
+	background: #f1f1f4;
+	color: #52525b;
+}
+
+.sk-va-doc b {
+	font: 700 10.5px/1 Figtree, system-ui, sans-serif;
+}
+
+.sk-va-doc[data-ext='pdf'] {
+	background: #fdeceb;
+	color: #a32a22;
+}
+
+.sk-pp-arch-play {
+	position: absolute;
+	left: 50%;
+	top: 50%;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 32px;
+	height: 32px;
+	margin: -16px 0 0 -16px;
+	border-radius: 9999px;
+	background: rgba(9, 9, 11, 0.55);
+	pointer-events: none;
+}
+
+.sk-pp-arch-dur:not(:empty) {
+	position: absolute;
+	right: 5px;
+	bottom: 5px;
+	padding: 2px 5px;
+	border-radius: 6px;
+	background: rgba(9, 9, 11, 0.6);
+	color: #fff;
+	font: 600 10.5px/1.3 Figtree, system-ui, sans-serif;
+	pointer-events: none;
+}
+
+.sk-pp-arch-quitar {
+	position: absolute;
+	right: 4px;
+	top: 4px;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 30px;
+	height: 30px;
+	padding: 0;
+	border: 0;
+	border-radius: 9999px;
+	background: rgba(255, 255, 255, 0.95);
+	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+	color: #a32a22;
+	opacity: 0;
+	cursor: pointer;
+	transition: opacity 0.15s ease;
+}
+
+.sk-pp-arch:hover .sk-pp-arch-quitar,
+.sk-pp-arch:focus-within .sk-pp-arch-quitar {
+	opacity: 1;
+}
+
+.sk-pp-arch-nombre {
+	display: block;
+	margin-top: 6px;
+	color: #18181b;
+	font: 500 13px/18px Figtree, system-ui, sans-serif;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.sk-pp-arch-meta {
+	display: block;
+	color: #52525b;
+	font: 500 11.5px/16px Figtree, system-ui, sans-serif;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+html.dark .sk-pp-arch-nombre {
+	color: #ececee;
+}
+
+html.dark .sk-pp-arch-meta,
+html.dark .sk-pp-tarjeta-cab > span i {
+	color: #a1a1aa;
+}
+
+.sk-pp-nota-nuevos {
+	margin: 0;
+	color: color-mix(in srgb, var(--sk-pp-tinta, var(--sk-pp, #7c5cff)) 82%, #000);
+	font: 500 13.5px/20px Figtree, system-ui, sans-serif;
+	text-align: center;
+}
+
+html.dark .sk-pp-nota-nuevos {
+	color: color-mix(in srgb, var(--sk-pp, #7c5cff) 55%, #fff);
+}
+
+/* teléfono: la tira va en su propia sección, sin el botón de eliminar (se elimina desde el visor) */
+.sk-pp-archivos-movil:empty {
+	display: none;
+}
+
+.sk-pp-rotulo-arch {
+	margin-bottom: -2px;
+	color: #52525b;
+	font: 700 12.5px/16px Figtree, system-ui, sans-serif;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
+@media (max-width: 767px) {
+	.sk-pp-archivos-movil .sk-pp-archivos {
+		margin-right: -16px;
+		padding-right: 16px;
+		scrollbar-width: none;
+	}
+
+	.sk-pp-archivos-movil .sk-pp-arch-quitar {
+		display: none;
+	}
+
+	.sk-pp-nota-nuevos {
+		font-size: 13px;
+	}
+}
+
+/* ---------- visor ---------- */
+.sk-visor {
+	position: fixed;
+	inset: 0;
+	z-index: 99990;
+	display: grid;
+	grid-template-rows: auto minmax(0, 1fr) auto;
+	background: rgba(28, 28, 31, 0.9);
+	-webkit-backdrop-filter: blur(8px);
+	backdrop-filter: blur(8px);
+	color: #fff;
+	font-family: Figtree, system-ui, sans-serif;
+	animation: sk-visor-entra 0.16s ease-out;
+}
+
+@keyframes sk-visor-entra {
+	from {
+		opacity: 0;
+	}
+}
+
+.sk-visor-cab {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 12px 16px;
+}
+
+.sk-visor-x-tel {
+	display: none !important;
+}
+
+.sk-visor-cab-mini {
+	flex: none;
+	width: 32px;
+	height: 32px;
+	border-radius: 8px;
+	overflow: hidden;
+}
+
+.sk-visor-titulo {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.sk-visor-titulo b {
+	font: 700 14.5px/20px Figtree, system-ui, sans-serif;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.sk-visor-titulo small {
+	color: rgba(255, 255, 255, 0.7);
+	font: 500 12px/16px Figtree, system-ui, sans-serif;
+}
+
+.sk-visor-acciones {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.sk-visor-boton {
+	display: inline-flex;
+	align-items: center;
+	gap: 6px;
+	height: 34px;
+	padding: 0 12px;
+	border: 0;
+	border-radius: 9999px;
+	background: rgba(255, 255, 255, 0.1);
+	color: #fff;
+	font: 600 13px/1 Figtree, system-ui, sans-serif;
+	text-decoration: none;
+	cursor: pointer;
+}
+
+.sk-visor-boton:hover {
+	background: rgba(255, 255, 255, 0.18);
+}
+
+.sk-visor-boton.sk-visor-peligro {
+	color: #ff9d94;
+}
+
+.sk-visor-x {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+	margin-left: 6px;
+	padding: 0;
+	border: 0;
+	border-radius: 9999px;
+	background: rgba(255, 255, 255, 0.1);
+	color: #fff;
+	cursor: pointer;
+}
+
+.sk-visor-x:hover {
+	background: rgba(255, 255, 255, 0.18);
+}
+
+.sk-visor-escena {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 0;
+	padding: 8px 96px;
+}
+
+.sk-visor-obra {
+	max-width: 100%;
+	max-height: 100%;
+	border-radius: 12px;
+	box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+	object-fit: contain;
+}
+
+.sk-visor-pdf {
+	width: min(900px, 100%);
+	height: 100%;
+	border: 0;
+	background: #fff;
+}
+
+.sk-visor-sinvista {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 10px;
+	padding: 32px 40px;
+	background: rgba(255, 255, 255, 0.06);
+	text-align: center;
+}
+
+.sk-visor-sinvista > .sk-va-mini {
+	width: 96px;
+	height: 96px;
+	border-radius: 16px;
+}
+
+.sk-visor-sinvista small {
+	color: rgba(255, 255, 255, 0.7);
+}
+
+.sk-visor-flecha {
+	position: fixed;
+	top: 50%;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+	margin-top: -20px;
+	padding: 0;
+	border: 0;
+	border-radius: 9999px;
+	background: rgba(255, 255, 255, 0.1);
+	color: #fff;
+	cursor: pointer;
+}
+
+.sk-visor-flecha:hover {
+	background: rgba(255, 255, 255, 0.2);
+}
+
+.sk-visor-ant {
+	left: 26px;
+}
+
+.sk-visor-sig {
+	right: 26px;
+}
+
+.sk-visor-pie {
+	display: flex;
+	flex-direction: column;
+	align-items: center;
+	gap: 6px;
+	padding: 10px 16px 16px;
+}
+
+.sk-visor-tira {
+	display: flex;
+	gap: 6px;
+	max-width: 100%;
+	overflow-x: auto;
+}
+
+.sk-visor-t {
+	flex: none;
+	width: 44px;
+	height: 32px;
+	padding: 0;
+	border: 0;
+	border-radius: 6px;
+	overflow: hidden;
+	background: none;
+	opacity: 0.6;
+	cursor: pointer;
+}
+
+.sk-visor-t.sk-activa {
+	opacity: 1;
+	box-shadow: 0 0 0 2px #fff;
+}
+
+.sk-visor-t .sk-va-doc b {
+	font-size: 8px;
+}
+
+.sk-visor-t .sk-va-doc svg {
+	display: none;
+}
+
+.sk-visor-ayuda {
+	color: rgba(255, 255, 255, 0.7);
+	font: 500 12px/16px Figtree, system-ui, sans-serif;
+}
+
+.sk-visor-puntos,
+.sk-visor-barra {
+	display: none;
+}
+
+.sk-visor.sk-visor-uno .sk-visor-flecha,
+.sk-visor.sk-visor-uno .sk-visor-tira,
+.sk-visor.sk-visor-uno .sk-visor-puntos {
+	display: none !important;
+}
+
+@media (max-width: 767px) {
+	.sk-visor {
+		background: #000;
+		-webkit-backdrop-filter: none;
+		backdrop-filter: none;
+	}
+
+	.sk-visor-cab {
+		padding: 8px 12px 8px 4px;
+	}
+
+	.sk-visor-x-tel {
+		display: inline-flex !important;
+		margin: 0;
+		background: none;
+		width: 44px;
+		height: 44px;
+	}
+
+	.sk-visor-cab-mini,
+	.sk-visor-acciones,
+	.sk-visor-flecha,
+	.sk-visor-tira,
+	.sk-visor-ayuda {
+		display: none !important;
+	}
+
+	.sk-visor-titulo b {
+		font-size: 15px;
+	}
+
+	.sk-visor-escena {
+		padding: 0;
+	}
+
+	.sk-visor-obra {
+		border-radius: 0;
+		box-shadow: none;
+	}
+
+	.sk-visor-pdf {
+		width: 100%;
+	}
+
+	.sk-visor-pie {
+		padding: 10px 0 0;
+		gap: 12px;
+	}
+
+	.sk-visor-puntos {
+		display: flex;
+		gap: 6px;
+	}
+
+	.sk-visor-puntos span {
+		width: 6px;
+		height: 6px;
+		border-radius: 9999px;
+		background: rgba(255, 255, 255, 0.35);
+	}
+
+	.sk-visor-puntos span.sk-activo {
+		width: 18px;
+		background: #fff;
+	}
+
+	.sk-visor-barra {
+		display: flex;
+		justify-content: space-around;
+		align-self: stretch;
+		padding: 10px 8px calc(12px + env(safe-area-inset-bottom));
+		box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+	}
+
+	.sk-visor-tel-boton {
+		display: inline-flex;
+		flex-direction: column;
+		align-items: center;
+		gap: 4px;
+		min-width: 88px;
+		padding: 4px 8px;
+		border: 0;
+		background: none;
+		color: #fff;
+		font: 600 13px/16px Figtree, system-ui, sans-serif;
+		text-decoration: none;
+	}
+
+	.sk-visor-tel-boton.sk-visor-peligro {
+		color: #ff6b5e;
+	}
+}
+
+/* ---------- confirmar eliminación ---------- */
+.sk-confirma-capa {
+	position: fixed;
+	inset: 0;
+	z-index: 99995;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 16px;
+	background: rgba(9, 9, 11, 0.45);
+	animation: sk-visor-entra 0.14s ease-out;
+}
+
+.sk-confirma {
+	width: 300px;
+	max-width: 100%;
+	padding: 16px;
+	border-radius: 20px;
+	background: #fff;
+	box-shadow: 0 24px 60px rgba(0, 0, 0, 0.3);
+	color: #18181b;
+	font-family: Figtree, system-ui, sans-serif;
+}
+
+.sk-confirma-icono {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 36px;
+	height: 36px;
+	border-radius: 9999px;
+	background: #fdeceb;
+	color: #b8342a;
+}
+
+.sk-confirma-cab {
+	display: none;
+}
+
+.sk-confirma-titulo {
+	margin: 10px 0;
+	font: 700 16px/22px Figtree, system-ui, sans-serif;
+}
+
+.sk-confirma-archivo {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 8px;
+	border-radius: 12px;
+	background: #f6f6f8;
+	box-shadow: inset 0 0 0 1px #e4e4e7;
+}
+
+.sk-confirma-archivo > .sk-va-mini,
+.sk-confirma-cab > .sk-va-mini {
+	flex: none;
+	width: 32px;
+	height: 32px;
+	border-radius: 6px;
+}
+
+.sk-confirma-archivo .sk-va-doc svg,
+.sk-confirma-cab .sk-va-doc svg {
+	display: none;
+}
+
+.sk-confirma-archivo .sk-va-doc b {
+	font-size: 8px;
+}
+
+.sk-confirma-archivo > span,
+.sk-confirma-cab > span {
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.sk-confirma-archivo b {
+	font: 500 13.5px/18px Figtree, system-ui, sans-serif;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.sk-confirma small {
+	color: #52525b;
+	font: 500 11.5px/16px Figtree, system-ui, sans-serif;
+}
+
+.sk-confirma p {
+	margin: 12px 0 0;
+	color: #3f3f46;
+	font: 400 13px/19px Figtree, system-ui, sans-serif;
+}
+
+.sk-confirma p b {
+	color: #18181b;
+	font-weight: 700;
+}
+
+.sk-confirma-botones {
+	display: flex;
+	justify-content: flex-end;
+	gap: 8px;
+	margin-top: 16px;
+}
+
+.sk-confirma-botones button {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	gap: 6px;
+	height: 40px;
+	padding: 0 16px;
+	border: 0;
+	border-radius: 9999px;
+	font: 600 13.5px/1 Figtree, system-ui, sans-serif;
+	cursor: pointer;
+}
+
+.sk-confirma-no {
+	background: #fff;
+	box-shadow: inset 0 0 0 1px #d4d4d8;
+	color: #18181b;
+}
+
+.sk-confirma-no:hover {
+	background: #f4f4f5;
+}
+
+.sk-confirma-si {
+	background: #b8342a;
+	color: #fff;
+}
+
+.sk-confirma-si:hover {
+	background: #a02d24;
+}
+
+html.dark .sk-confirma {
+	background: #1f1f23;
+	color: #ececee;
+}
+
+html.dark .sk-confirma-archivo {
+	background: #27272a;
+	box-shadow: inset 0 0 0 1px #3f3f46;
+}
+
+html.dark .sk-confirma p,
+html.dark .sk-confirma small {
+	color: #a1a1aa;
+}
+
+html.dark .sk-confirma p b {
+	color: #ececee;
+}
+
+html.dark .sk-confirma-no {
+	background: #27272a;
+	box-shadow: inset 0 0 0 1px #3f3f46;
+	color: #ececee;
+}
+
+/* teléfono: hoja desde abajo con miniatura y botones a todo lo ancho */
+@media (max-width: 767px) {
+	.sk-confirma-capa {
+		align-items: flex-end;
+		padding: 8px;
+	}
+
+	.sk-confirma {
+		width: 100%;
+		padding: 16px 16px calc(16px + env(safe-area-inset-bottom));
+		border-radius: 22px;
+	}
+
+	.sk-confirma-icono,
+	.sk-confirma-titulo,
+	.sk-confirma-archivo,
+	.sk-confirma-extra {
+		display: none !important;
+	}
+
+	.sk-confirma-cab {
+		display: flex;
+		align-items: center;
+		gap: 12px;
+	}
+
+	.sk-confirma-cab > .sk-va-mini {
+		width: 40px;
+		height: 40px;
+		border-radius: 8px;
+	}
+
+	.sk-confirma-cab b {
+		font: 700 16px/22px Figtree, system-ui, sans-serif;
+	}
+
+	.sk-confirma-botones {
+		flex-direction: column-reverse;
+		gap: 10px;
+	}
+
+	.sk-confirma-botones button {
+		width: 100%;
+		height: 48px;
+		font-size: 15px;
+	}
+}
+
+/* ---------- Visor de imágenes del chat, coherente con el visor de archivos ----------
+   Cabecera, flechas, tira y barra del teléfono son las mismas piezas del visor de archivos (sk-visor-*); la imagen de
+   Open WebUI queda en medio con márgenes para no pasar debajo de ellas. El zoom del tema sigue funcionando. */
+.modal.sk-vi {
+	background: rgba(28, 28, 31, 0.92) !important;
+}
+
+.modal.sk-vi > div:first-child:not(.sk-vi-capa) {
+	display: none !important; /* la X y Descargar de Open WebUI: el tema usa los suyos */
+}
+
+.modal.sk-vi > div:has(> img) {
+	position: absolute !important;
+	inset: 64px 96px 112px !important;
+	height: auto !important;
+}
+
+.modal.sk-vi:has(.sk-vi-prompt-abierto) > div:has(> img) {
+	bottom: 210px !important;
+}
+
+.modal.sk-vi > div > img {
+	max-width: 100%;
+	max-height: 100%;
+	width: auto !important;
+	height: auto !important;
+	border-radius: 12px;
+	box-shadow: 0 20px 60px rgba(0, 0, 0, 0.45);
+}
+
+.sk-vi-capa {
+	position: absolute;
+	inset: 0;
+	z-index: 5;
+	pointer-events: none;
+	color: #fff;
+	font-family: Figtree, system-ui, sans-serif;
+}
+
+.sk-vi-capa > * {
+	pointer-events: auto;
+}
+
+.sk-vi-cab {
+	position: absolute;
+	top: 0;
+	left: 0;
+	right: 0;
+}
+
+.sk-vi-foto {
+	flex: none;
+	width: 32px;
+	height: 32px;
+	border-radius: 9999px;
+	overflow: hidden;
+	background: rgba(255, 255, 255, 0.1);
+}
+
+.sk-vi-foto img {
+	width: 100%;
+	height: 100%;
+	object-fit: cover;
+}
+
+.sk-vi-pie {
+	position: absolute;
+	left: 0;
+	right: 0;
+	bottom: 0;
+}
+
+.sk-vi-prompt {
+	display: none;
+	width: min(496px, calc(100vw - 32px));
+	padding: 10px 12px 12px;
+	border-radius: 12px;
+	background: rgba(18, 18, 20, 0.92);
+	box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.08);
+}
+
+.sk-vi-con-prompt.sk-vi-prompt-abierto .sk-vi-prompt {
+	display: block;
+}
+
+.sk-vi-prompt-cab {
+	display: flex;
+	align-items: center;
+	gap: 6px;
+	margin-bottom: 6px;
+}
+
+.sk-vi-prompt-cab b {
+	flex: 1;
+	font: 700 12.5px/16px Figtree, system-ui, sans-serif;
+}
+
+.sk-vi-prompt-cab button {
+	display: inline-flex;
+	align-items: center;
+	gap: 4px;
+	padding: 2px 4px;
+	border: 0;
+	border-radius: 6px;
+	background: none;
+	color: rgba(255, 255, 255, 0.8);
+	font: 500 12px/16px Figtree, system-ui, sans-serif;
+	cursor: pointer;
+}
+
+.sk-vi-prompt-cab button:hover {
+	background: rgba(255, 255, 255, 0.1);
+}
+
+.sk-vi-prompt p {
+	margin: 0;
+	max-height: 96px;
+	overflow-y: auto;
+	color: #fff;
+	font: 400 13px/19px Figtree, system-ui, sans-serif;
+}
+
+/* "Prompt" en la barra del teléfono solo si la imagen tiene prompt */
+.sk-vi-capa:not(.sk-vi-con-prompt) [data-vi='prompt'] {
+	display: none;
+}
+
+.sk-visor-tel-boton.sk-activo {
+	color: #9ec3ff;
+}
+
+.sk-vi-aviso {
+	position: absolute;
+	left: 50%;
+	top: 72px;
+	padding: 8px 14px;
+	border-radius: 9999px;
+	background: rgba(255, 255, 255, 0.94);
+	color: #18181b;
+	font: 600 13px/1 Figtree, system-ui, sans-serif;
+	opacity: 0;
+	transform: translate(-50%, -6px);
+	transition: opacity 0.15s ease, transform 0.15s ease;
+	pointer-events: none !important;
+}
+
+.sk-vi-aviso.sk-visible {
+	opacity: 1;
+	transform: translate(-50%, 0);
+}
+
+/* "Ir al mensaje": el mensaje se ilumina un momento */
+#messages-container .sk-vi-destacado {
+	border-radius: 16px;
+	animation: sk-vi-destello 1.8s ease-out;
+}
+
+@keyframes sk-vi-destello {
+	0%,
+	30% {
+		box-shadow: 0 0 0 3px rgba(35, 97, 199, 0.45);
+	}
+
+	100% {
+		box-shadow: 0 0 0 3px rgba(35, 97, 199, 0);
+	}
+}
+
+@media (max-width: 767px) {
+	.modal.sk-vi {
+		background: #000 !important;
+	}
+
+	.modal.sk-vi > div:has(> img) {
+		inset: 60px 0 128px !important;
+	}
+
+	.modal.sk-vi:has(.sk-vi-prompt-abierto) > div:has(> img) {
+		bottom: 128px !important;
+	}
+
+	.modal.sk-vi > div > img {
+		border-radius: 0;
+		box-shadow: none;
+	}
+
+	.sk-vi-cab .sk-visor-x-tel {
+		order: -1;
+	}
+
+	.sk-vi-pie {
+		padding-top: 0;
+	}
+
+	.sk-vi-prompt {
+		position: absolute;
+		left: 8px;
+		right: 8px;
+		bottom: calc(100% - 28px);
+		width: auto;
+		border-radius: 16px;
+		background: rgba(32, 32, 36, 0.96);
+	}
+
+	.sk-vi-prompt p {
+		max-height: 80px;
+	}
+
+	.sk-vi-prompt .sk-vi-plegar {
+		display: none;
+	}
+}
+
+/* los textos del visor del chat en blanco (la regla general de ventanas los oscurecía) */
+.modal.sk-vi .sk-vi-capa,
+.modal.sk-vi .sk-vi-capa .sk-visor-titulo b,
+.modal.sk-vi .sk-vi-capa .sk-vi-prompt-cab b,
+.modal.sk-vi .sk-vi-capa .sk-vi-prompt p,
+.modal.sk-vi .sk-vi-capa .sk-visor-boton,
+.modal.sk-vi .sk-vi-capa .sk-visor-tel-boton:not(.sk-activo) {
+	color: #fff !important;
+}
+
+.modal.sk-vi .sk-vi-capa .sk-visor-titulo small,
+.modal.sk-vi .sk-vi-capa .sk-visor-ayuda,
+.modal.sk-vi .sk-vi-capa .sk-vi-prompt-cab button {
+	color: rgba(255, 255, 255, 0.72) !important;
+}
+
+/* ---------- Vista previa al pasar el cursor (lienzo "Vista previa al pasar el cursor · chat y proyecto") ----------
+   Vidrio blanco al 94 %, radio 18, sombra suave y flechita hacia la fila; aparece con un desvanecido de 120 ms (sin
+   animación si el sistema pide menos movimiento). Chat: 460 × 600 con globos de 16 px. Proyecto: 330 px. */
+.sk-previa-vieja {
+	display: none !important;
+}
+
+.sk-previa {
+	position: fixed;
+	z-index: 9990;
+	display: flex;
+	flex-direction: column;
+	border-radius: 18px;
+	background: rgba(255, 255, 255, 0.94);
+	-webkit-backdrop-filter: blur(24px) saturate(1.6);
+	backdrop-filter: blur(24px) saturate(1.6);
+	box-shadow: 0 18px 44px rgba(24, 24, 27, 0.18), 0 0 0 1px rgba(24, 24, 27, 0.09);
+	color: #18181b;
+	font-family: Figtree, system-ui, sans-serif;
+	cursor: pointer;
+	animation: sk-previa-entra 0.12s ease-out;
+}
+
+@keyframes sk-previa-entra {
+	from {
+		opacity: 0;
+	}
+}
+
+@media (prefers-reduced-motion: reduce) {
+	.sk-previa {
+		animation: none;
+	}
+}
+
+.sk-previa-flecha {
+	position: absolute;
+	left: -6px;
+	top: var(--sk-flecha, 36px);
+	width: 12px;
+	height: 12px;
+	transform: rotate(45deg);
+	background: #fff;
+	box-shadow: -1px 1px 0 rgba(24, 24, 27, 0.09);
+}
+
+.sk-previa-carga {
+	padding: 18px;
+	color: #52525b;
+	font: 500 13.5px/20px Figtree, system-ui, sans-serif;
+}
+
+.sk-previa-pie {
+	position: relative;
+	display: flex;
+	align-items: center;
+	justify-content: space-between;
+	padding: 9px 16px 11px;
+	box-shadow: inset 0 1px 0 #ececee;
+	color: #52525b;
+	font: 500 12.5px/16px Figtree, system-ui, sans-serif;
+}
+
+.sk-previa-pie kbd {
+	margin-left: 4px;
+	padding: 3px 6px;
+	border-radius: 6px;
+	background: #fff;
+	box-shadow: inset 0 0 0 1px #d4d4d8;
+	color: #3f3f46;
+	font: 500 11.5px/1 'JetBrains Mono', ui-monospace, monospace;
+}
+
+/* chat */
+.sk-previa-chat {
+	width: 460px;
+	height: min(600px, calc(100vh - 24px));
+}
+
+.sk-previa-cab {
+	position: relative;
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	padding: 14px 16px 12px;
+	box-shadow: inset 0 -1px 0 #ececee;
+}
+
+.sk-previa-foto {
+	flex: none;
+	width: 36px;
+	height: 36px;
+	border-radius: 9999px;
+	object-fit: cover;
+}
+
+.sk-previa-titulo {
+	flex: 1;
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.sk-previa-titulo b {
+	font: 700 17px/22px Figtree, system-ui, sans-serif;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.sk-previa-titulo small {
+	color: #52525b;
+	font: 500 13px/18px Figtree, system-ui, sans-serif;
+}
+
+.sk-previa-fijado {
+	color: #52525b;
+}
+
+.sk-previa-cuerpo {
+	position: relative;
+	flex: 1;
+	min-height: 0;
+	display: flex;
+	flex-direction: column;
+	gap: 14px;
+	padding: 12px 14px 14px 16px;
+	overflow-y: auto;
+	scrollbar-width: thin;
+	-webkit-mask: linear-gradient(transparent, #000 40px);
+	mask: linear-gradient(transparent, #000 40px);
+}
+
+.sk-previa-cuerpo > :first-child {
+	margin-top: auto;
+}
+
+.sk-previa-ia {
+	display: flex;
+	gap: 8px;
+	align-items: flex-start;
+}
+
+.sk-previa-ia > div {
+	flex: 1;
+	min-width: 0;
+}
+
+.sk-previa-av {
+	flex: none;
+	width: 28px;
+	height: 28px;
+	border-radius: 9999px;
+	object-fit: cover;
+}
+
+.sk-previa-quien {
+	display: block;
+	margin-bottom: 4px;
+	color: #52525b;
+	font: 500 12.5px/16px Figtree, system-ui, sans-serif;
+}
+
+.sk-previa-globo {
+	padding: 10px 14px;
+	border-radius: 6px 18px 18px 18px;
+	background: #f6f6f8;
+	box-shadow: inset 0 0 0 1px #e4e4e7;
+	color: #09090b;
+	font: 400 16px/24px Figtree, system-ui, sans-serif;
+	overflow-wrap: anywhere;
+}
+
+.sk-previa-globo code {
+	padding: 1px 4px;
+	border-radius: 4px;
+	background: rgba(24, 24, 27, 0.06);
+	font-size: 14px;
+}
+
+.sk-previa-yo {
+	display: flex;
+	flex-direction: column;
+	align-items: flex-end;
+}
+
+.sk-previa-yo .sk-previa-globo {
+	max-width: 82%;
+	padding: 9px 14px;
+	border-radius: 18px 6px 18px 18px;
+	background: #eef4ff;
+	box-shadow: inset 0 0 0 1px rgba(35, 97, 199, 0.28);
+}
+
+.sk-previa-fotos {
+	display: flex;
+	flex-wrap: wrap;
+	gap: 6px;
+	margin-top: 8px;
+}
+
+.sk-previa-fotos img {
+	width: 86px;
+	height: 86px;
+	border-radius: 10px;
+	object-fit: cover;
+	object-position: 50% 25%;
+}
+
+/* proyecto */
+.sk-previa-proy {
+	width: 330px;
+}
+
+.sk-previa-proy-cuerpo {
+	position: relative;
+	padding: 14px 16px 10px;
+}
+
+.sk-previa-proy-cab {
+	display: flex;
+	align-items: center;
+	gap: 12px;
+}
+
+.sk-previa-proy-cab > span:last-child {
+	min-width: 0;
+	display: flex;
+	flex-direction: column;
+}
+
+.sk-previa-proy-cab b {
+	font: 700 17px/22px Figtree, system-ui, sans-serif;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.sk-previa-proy-cab small {
+	color: #52525b;
+	font: 500 13px/18px Figtree, system-ui, sans-serif;
+}
+
+.sk-previa-proy-icono {
+	flex: none;
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	width: 40px;
+	height: 40px;
+	border-radius: 12px;
+	color: var(--sk-proy-tinta, var(--sk-proy, #7c5cff));
+	background: color-mix(in srgb, var(--sk-proy, #7c5cff) 12%, transparent);
+}
+
+.sk-previa-linea {
+	height: 1px;
+	margin: 12px 0 6px;
+	background: #ececee;
+}
+
+.sk-previa-dato {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	height: 30px;
+	color: #3f3f46;
+}
+
+.sk-previa-dato span {
+	flex: 1;
+	color: #18181b;
+	font: 500 14px/20px Figtree, system-ui, sans-serif;
+}
+
+.sk-previa-dato small,
+.sk-previa-reciente small {
+	color: #52525b;
+	font: 500 13px/18px Figtree, system-ui, sans-serif;
+}
+
+.sk-previa-rotulo {
+	margin: 6px 0 2px;
+	color: #52525b;
+	font: 700 12px/16px Figtree, system-ui, sans-serif;
+	letter-spacing: 0.06em;
+	text-transform: uppercase;
+}
+
+.sk-previa-reciente {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	height: 36px;
+}
+
+.sk-previa-reciente img,
+.sk-previa-sinfoto {
+	flex: none;
+	width: 24px;
+	height: 24px;
+	border-radius: 9999px;
+	object-fit: cover;
+}
+
+.sk-previa-sinfoto {
+	display: inline-flex;
+	align-items: center;
+	justify-content: center;
+	background: #f4f4f5;
+	color: #52525b;
+}
+
+.sk-previa-reciente span {
+	flex: 1;
+	min-width: 0;
+	font: 400 14.5px/20px Figtree, system-ui, sans-serif;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* oscuro */
+html.dark .sk-previa {
+	background: rgba(31, 31, 35, 0.96);
+	box-shadow: 0 18px 44px rgba(0, 0, 0, 0.4), 0 0 0 1px rgba(255, 255, 255, 0.08);
+	color: #ececee;
+}
+
+html.dark .sk-previa-flecha {
+	background: #1f1f23;
+}
+
+html.dark .sk-previa-globo {
+	background: #27272a;
+	box-shadow: inset 0 0 0 1px #3f3f46;
+	color: #ececee;
+}
+
+html.dark .sk-previa-yo .sk-previa-globo {
+	background: rgba(35, 97, 199, 0.22);
+}
+
+html.dark .sk-previa-cab,
+html.dark .sk-previa-pie {
+	box-shadow: inset 0 -1px 0 #3f3f46;
+}
+
+html.dark .sk-previa-pie {
+	box-shadow: inset 0 1px 0 #3f3f46;
+}
+
+html.dark .sk-previa-titulo small,
+html.dark .sk-previa-quien,
+html.dark .sk-previa-pie,
+html.dark .sk-previa-proy-cab small,
+html.dark .sk-previa-dato small,
+html.dark .sk-previa-reciente small,
+html.dark .sk-previa-rotulo {
+	color: #a1a1aa;
+}
+
+html.dark .sk-previa-dato span {
+	color: #ececee;
+}
+
+html.dark .sk-previa-linea {
+	background: #3f3f46;
+}
+
+html.dark .sk-previa-pie kbd {
+	background: #27272a;
+	box-shadow: inset 0 0 0 1px #3f3f46;
+	color: #d4d4d8;
+}
+
+/* teléfono: la barra ocupa toda la pantalla; sin la raya de 1 px a la derecha que dejaba Open WebUI */
+@media (max-width: 767px) {
+	#sidebar > div {
+		border-right: 0 !important;
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * Carbono 0.95.3 — comportamiento del tema. El lanzador lo sirve en /static/loader.js
+ * Carbono 0.95.4 — comportamiento del tema. El lanzador lo sirve en /static/loader.js
  * (que Open WebUI carga en cada página) mientras exista carbono/ACTIVO.
  *
  * Barras de desplazamiento que solo aparecen mientras haces scroll: carbono.css las deja
@@ -663,7 +663,10 @@ function skVisible(selector) {
 		mas: '<path d="M12 5v14M5 12h14"/>',
 		fijado: '<path d="M9 4h6l-1 6 3 3H7l3-3zM12 13v7"/>',
 		carpeta: '<path d="M3 7a2 2 0 0 1 2-2h4l2 2h8a2 2 0 0 1 2 2v8a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>',
-		flecha: '<path d="M9 6l6 6-6 6"/>'
+		flecha: '<path d="M9 6l6 6-6 6"/>',
+		abajo: '<path d="M6 9l6 6 6-6"/>',
+		puntos: '<circle cx="5" cy="12" r="1.3"/><circle cx="12" cy="12" r="1.3"/><circle cx="19" cy="12" r="1.3"/>',
+		proyecto: '<path d="M4 7a2 2 0 0 1 2-2h3l2 2h7a2 2 0 0 1 2 2v1H4z"/><path d="M4 10h16l-1.5 8a2 2 0 0 1-2 1.6H7.5a2 2 0 0 1-2-1.6z"/>'
 	};
 	const svg = (nombre, tam = 19) =>
 		`<svg viewBox="0 0 24 24" width="${tam}" height="${tam}" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${ICONOS[nombre]}</svg>`;
@@ -689,7 +692,7 @@ function skVisible(selector) {
 		const abrirYa = carpetas.filter((c) => c.is_expanded);
 		abrirYa.forEach((c) => abiertas.add(c.id));
 		const contenidos = Promise.all(
-			abrirYa.map(async (c) => chatsDeCarpeta.set(c.id, await pedir(`/api/v1/chats/folder/${encodeURIComponent(c.id)}/list?page=1`)))
+			carpetas.map(async (c) => chatsDeCarpeta.set(c.id, await pedir(`/api/v1/chats/folder/${encodeURIComponent(c.id)}/list?page=1`)))
 		);
 		// como la barra lateral: sin fijados ni chats de carpetas; hasta 5 páginas de 60
 		const recientes = [];
@@ -755,22 +758,23 @@ function skVisible(selector) {
 		}
 		let html = '';
 		if (!filtro) {
-			html += `<div class="sk-chats-seccion"><div class="sk-chats-etiqueta sk-chats-etiqueta-accion"><span>Carpetas</span><button type="button" class="sk-chats-accion sk-chats-mini" data-accion="nueva-carpeta" aria-label="Nueva carpeta" title="Nueva carpeta">${svg('mas', 16)}</button></div>`;
+			html += `<div class="sk-chats-seccion"><div class="sk-chats-etiqueta sk-chats-etiqueta-accion"><span>Proyectos</span><button type="button" class="sk-chats-accion sk-chats-mini" data-accion="nueva-carpeta" aria-label="Nuevo proyecto" title="Nuevo proyecto">${svg('mas', 16)}</button></div>`;
 			if (creandoCarpeta) {
-				html += `<label class="sk-chats-carpeta sk-chats-nueva">${svg('carpeta', 17)}<input type="text" placeholder="Nombre de la carpeta" aria-label="Nombre de la carpeta" maxlength="80"></label>`;
+				html += `<label class="sk-chats-carpeta sk-chats-nueva">${svg('proyecto', 17)}<input type="text" placeholder="Nombre del proyecto" aria-label="Nombre del proyecto" maxlength="80"></label>`;
 			}
 			for (const carpeta of datos.carpetas) {
 				const abierta = abiertas.has(carpeta.id);
-				html += `<button type="button" class="sk-chats-carpeta" data-carpeta="${esc(carpeta.id)}" aria-expanded="${abierta}">${svg('flecha', 14)}${svg('carpeta', 17)}<span class="sk-chats-titulo">${esc(carpeta.name)}</span></button>`;
+				const chats = chatsDeCarpeta.get(carpeta.id);
+				const n = chats?.length;
+				const cuenta = n == null ? '' : n === 1 ? '1 chat' : n >= 60 ? '60+ chats' : `${n} chats`;
+				const color = window.skProyColor ? window.skProyColor(carpeta.id) : '#7c5cff';
+				const enlace = `/folders/${esc(carpeta.id)}`;
+				html += `<div class="sk-chats-proy${abierta ? ' sk-abierta' : ''}" style="--sk-proy:${color};--sk-proy-tinta:${window.skProyTinta ? window.skProyTinta(color) : color}"><div class="sk-chats-proy-cab"><a class="sk-chats-proy-enlace" href="${enlace}"><span class="sk-chats-proy-icono">${svg('proyecto', 16)}</span><span class="sk-chats-proy-texto"><span class="sk-chats-titulo">${esc(carpeta.name)}</span>${cuenta ? `<span class="sk-chats-proy-sub">${cuenta}</span>` : ''}</span></a><a class="sk-chats-proy-boton" href="${enlace}" aria-label="Abrir el proyecto ${esc(carpeta.name)}" title="Abrir proyecto">${svg('puntos', 20)}</a><button type="button" class="sk-chats-proy-boton" data-carpeta="${esc(carpeta.id)}" aria-expanded="${abierta}" aria-label="${abierta ? 'Contraer' : 'Expandir'} ${esc(carpeta.name)}">${svg(abierta ? 'abajo' : 'flecha', 18)}</button></div>`;
 				if (abierta) {
-					const chats = chatsDeCarpeta.get(carpeta.id);
-					const contenido = !chats
-						? '<p class="sk-chats-vacio">Cargando…</p>'
-						: chats.length
-							? chats.map(fila).join('')
-							: '<p class="sk-chats-vacio">Sin chats</p>';
-					html += `<div class="sk-chats-dentro">${contenido}</div>`;
+					html += !chats ? '<p class="sk-chats-vacio">Cargando…</p>' : chats.map(fila).join('');
+					html += `<a class="sk-chats-proy-nuevo" href="${enlace}">${svg('mas', 16)}<span>Nuevo chat en ${esc(carpeta.name)}</span></a>`;
 				}
+				html += '</div>';
 			}
 			html += '</div>';
 		}
@@ -4556,8 +4560,21 @@ function skVisible(selector) {
 		try {
 			const r = await fetch('/api/models', { headers: headers() });
 			const d = await r.json();
-			modelos = (d.data || d || []).map((m) => {
+			const lista = d.data || d || [];
+			const nombreDe = (id) => lista.find((x) => x.id === id)?.name || id;
+			modelos = lista.map((m) => {
 				const meta = m.info?.meta || {};
+				// descripción corta debajo del nombre (lienzo "Barra escritorio · al tocar «Lain ▾»"): la del modelo, o su
+				// modelo base y dónde corre ("Qwen3.8-27B · local"), o "Local" / "Conexión externa"
+				const desc = String(meta.description || '').split(/\r?\n/)[0].trim();
+				let base = m.info?.base_model_id;
+				for (let i = 0; base && i < 6; i++) {
+					const sig = lista.find((x) => x.id === base)?.info?.base_model_id;
+					if (!sig || sig === base) break;
+					base = sig;
+				}
+				const raizModelo = (base && lista.find((x) => x.id === base)) || m;
+				const donde = raizModelo.connection_type === 'local' || raizModelo.owned_by === 'ollama' ? 'local' : '';
 				const propio = Boolean(m.info?.base_model_id);
 				let tipo = propio ? 'Personaje' : m.connection_type === 'local' ? 'Modelo base · local' : 'Conexión externa';
 				let apagado = false;
@@ -4568,7 +4585,11 @@ function skVisible(selector) {
 					tipo = 'Oculto';
 					apagado = true;
 				}
-				return { id: m.id, nombre: m.name || m.id, tipo, apagado, foto: propio || Boolean(meta.profile_image_url) };
+				const nombreBase = base ? nombreDe(base) : '';
+				const baseDistinta = nombreBase && nombreBase.toLowerCase() !== String(m.name || m.id).toLowerCase();
+				let detalle = desc.length && desc.length <= 48 ? desc : baseDistinta ? `${nombreBase}${donde ? ' · local' : ''}` : donde ? 'Local' : 'Conexión externa';
+				if (apagado) detalle = tipo;
+				return { id: m.id, nombre: m.name || m.id, tipo, detalle, apagado, foto: propio || Boolean(meta.profile_image_url) };
 			});
 		} catch {
 			modelos = [];
@@ -4654,8 +4675,8 @@ function skVisible(selector) {
 		const color = c ? `hsl(${c.m})` : '#52525b';
 		const imagen = m.foto
 			? `<img alt="" src="${avatar(m.id)}">`
-			: `<span class="sk-sel-letra">${esc((m.nombre.match(/[a-z0-9]/i) || ['?'])[0].toUpperCase())}</span>`;
-		const sub = esActivo ? 'Activo' : fijado && m.tipo === 'Personaje' ? '' : m.tipo;
+			: `<span class="sk-sel-letra" style="--sk-letra:${window.skProyColor ? window.skProyColor(m.id) : '#71717a'}">${esc((m.nombre.match(/[a-z0-9]/i) || ['?'])[0].toUpperCase())}</span>`;
+		const sub = m.detalle || m.tipo;
 		return `<div class="sk-sel-fila${esActivo ? ' sk-activo' : ''}${m.apagado ? ' sk-apagado' : ''}" role="option" aria-selected="${esActivo}" data-id="${esc(m.id)}" tabindex="${m.apagado ? -1 : 0}" style="--sk-sel-color:${color}">
 			${imagen}
 			<span class="sk-sel-texto"><b>${esc(m.nombre)}</b>${sub ? `<small>${esc(sub)}</small>` : ''}</span>
@@ -5303,18 +5324,7 @@ function skVisible(selector) {
 		if (!s || /translateX\(-100%\)/.test(s.getAttribute('style') || '')) return false;
 		activo.abierta ??= performance.now();
 		const completa = s.querySelector('.sk-barra-modelo') && s.querySelector('.sk-barra-fijados') && s.querySelector('#sidebar-chat-item');
-		// Open WebUI pide las carpetas después de los chats (~0,8 s más): si tienes carpetas se esperan también, para que
-		// no aparezcan después empujando la lista (a lo más 1,2 s)
-		const carpetas = s.querySelector("[id^='folder-'][id$='-button']");
-		const transcurrido = performance.now() - activo.abierta;
-		let hay = false;
-		try {
-			if (carpetas) localStorage.setItem('sk-hay-carpetas', '1');
-			hay = localStorage.getItem('sk-hay-carpetas') === '1';
-			if (hay && !carpetas && completa && transcurrido > 1200) localStorage.removeItem('sk-hay-carpetas');
-		} catch {}
-		if (completa && hay && !carpetas) return transcurrido > 1200;
-		return Boolean(completa) || transcurrido > 150;
+		return Boolean(completa) || performance.now() - activo.abierta > 150;
 	};
 
 	const apagar = () => {
@@ -5721,6 +5731,20 @@ function skVisible(selector) {
 			if (!s || /translateX\(-100%\)/.test(s.getAttribute('style') || '')) return;
 			const destino = e.target.closest?.('#sidebar a[href], .sk-barra-nuevo');
 			if (!destino || !s.contains(destino) || e.target.closest('#sidebar-chat-item-menu, [role="menu"]')) return;
+			// el chat donde ya estás (o "Nuevo chat" con un chat nuevo vacío a la vista): solo se cierra la barra. Open WebUI
+			// volvía a abrir la misma página y armaba otra vez la bienvenida o los mensajes que ya estaban cargados.
+			let ruta = null;
+			try {
+				ruta = destino.matches('.sk-barra-nuevo') ? '/' : new URL(destino.getAttribute('href'), location.origin).pathname;
+			} catch {}
+			const vacio = !document.querySelector("#messages-container [id^='message-']");
+			if (ruta && ruta === location.pathname && (ruta !== '/' || vacio) && !location.search) {
+				e.preventDefault();
+				e.stopPropagation();
+				e.stopImmediatePropagation();
+				salir(s, 0, () => document.querySelector(BOTON_CERRAR)?.click());
+				return;
+			}
 			salir(s);
 		},
 		true
@@ -6357,9 +6381,11 @@ function skVisible(selector) {
 	new MutationObserver(pedir).observe(raiz, { attributes: true, attributeFilter: ['class'] });
 })();
 
-/* al cargar: si tienes carpetas, la lista de la barra espera a que lleguen (ver carbono.css, "Open WebUI pide las
-   carpetas al final"). Además, una carpeta abierta reserva la altura que tenía su contenido la última vez hasta que
-   Open WebUI lo vuelve a pedir (~0,6 s después): el chat aparece en su lugar sin empujar la lista */
+/* Carpetas sin saltos: Open WebUI arma la sección de carpetas al final (primero el rótulo y las carpetas, ~0,8 s
+   después que los chats, y los chats de las carpetas abiertas otro poco después). Mientras tanto la sección reserva la
+   altura que tenía la última vez, así llega en su lugar sin empujar la lista. En escritorio, además, al cargar la
+   página la lista espera a las carpetas (ver carbono.css, "Open WebUI pide las carpetas al final"); en el teléfono no se
+   espera, para que la barra entre en cuanto se toca. */
 (() => {
 	const raiz = document.documentElement;
 	const leer = (clave, defecto) => {
@@ -6375,7 +6401,7 @@ function skVisible(selector) {
 		} catch {}
 	};
 	const inicio = performance.now();
-	let esperando = leer('sk-hay-carpetas', 0) === 1;
+	let esperando = leer('sk-hay-carpetas', 0) === 1 && matchMedia('(min-width: 768px)').matches;
 	if (esperando) raiz.classList.add('sk-esperando-carpetas');
 	const soltar = () => {
 		esperando = false;
@@ -6392,7 +6418,8 @@ function skVisible(selector) {
 	}, 1500);
 
 	const altos = leer('sk-carpetas-alto', {});
-	const vistas = new WeakMap(); // contenido -> primera vez sin chats (ms)
+	let montada = 0; // cuándo apareció la lista de chats
+	let ultimoAlto = -1;
 	let pendiente = false;
 
 	const revisar = () => {
@@ -6402,45 +6429,54 @@ function skVisible(selector) {
 		if (botones.length && leer('sk-hay-carpetas', 0) !== 1) guardar('sk-hay-carpetas', 1);
 		if (esperando && (botones.length || (performance.now() - inicio > 400 && (!s || s.getBoundingClientRect().width < 100)))) soltar();
 		let cambio = false;
+		// la sección de carpetas completa (rótulo, carpetas y chats de las abiertas) reserva la altura que tenía la última
+		// vez mientras Open WebUI la arma: antes de que exista, como margen bajo las píldoras; después, bajo ella misma
 		let reservando = false;
-		for (const b of s ? s.querySelectorAll("div[id^='folder-'][id$='-button']") : []) {
-			const id = b.id.slice(7, -7);
-			const grupo = b.closest('.w-full.cursor-pointer');
-			const contenido = grupo?.nextElementSibling;
-			if (!grupo) continue;
-			const reservar = (px) => {
-				const v = px > 0 ? `${px}px` : '';
-				if (grupo.style.marginBottom !== v) grupo.style.marginBottom = v;
-			};
-			const abierta = b.querySelector('button[aria-expanded]')?.getAttribute('aria-expanded') === 'true';
-			const tieneChats = Boolean(contenido?.querySelector('#sidebar-chat-item'));
-			const alto = contenido?.offsetHeight || 0; // el contenedor se despliega con animación: se mide el real
-			if (!abierta) {
-				reservar(0);
-				vistas.delete(grupo);
-				continue;
-			}
-			if (!vistas.has(grupo)) vistas.set(grupo, performance.now());
-			const listo = tieneChats && altos[id] && alto >= altos[id] - 1;
-			if (listo || performance.now() - vistas.get(grupo) > 3000) {
-				reservar(0);
-				if (tieneChats && alto && altos[id] !== alto) {
-					altos[id] = alto;
+		const lista = s?.querySelector('.overflow-y-auto');
+		const pildoras = lista?.querySelector(':scope > .pb-1');
+		const seccion = lista ? [...lista.children].find((c) => c.querySelector('#sidebar-folders-button')) : null;
+		const poner = (el, px) => {
+			const v = px > 0 ? `${px}px` : '';
+			if (el && el.style.marginBottom !== v) el.style.marginBottom = v;
+		};
+		const caja = lista?.getBoundingClientRect();
+		const visible = Boolean(caja && caja.width > 100 && caja.left > -10 && caja.right <= innerWidth + 10 && lista.querySelector('#sidebar-chat-item'));
+		if (!visible) {
+			montada = 0;
+		} else {
+			montada ||= performance.now();
+			const guardado = altos.seccion || 0;
+			const alto = seccion?.offsetHeight || 0;
+			// ¿falta contenido? alguna carpeta abierta sin sus chats a la vista, o la sección aún no llega
+			const incompleta =
+				!seccion ||
+				[...seccion.querySelectorAll("div[id^='folder-'][id$='-button']")].some((b) => {
+					if (b.querySelector('button[aria-expanded]')?.getAttribute('aria-expanded') !== 'true') return false;
+					const c = b.closest('.w-full.cursor-pointer')?.nextElementSibling;
+					return !c || !c.querySelector('#sidebar-chat-item') || c.offsetHeight < 8;
+				});
+			const vencida = performance.now() - montada > 3000;
+			if (!incompleta || vencida) {
+				poner(pildoras, 0);
+				poner(seccion, 0);
+				// estable: se guarda la altura (si cambió en este cuadro, se vuelve a medir en el siguiente)
+				if (seccion && alto !== ultimoAlto) {
+					ultimoAlto = alto;
+					reservando = true;
+				} else if (seccion && alto && altos.seccion !== alto) {
+					altos.seccion = alto;
 					cambio = true;
-				} else if (!tieneChats && altos[id]) {
-					delete altos[id]; // carpeta abierta pero vacía de verdad
+				} else if (!seccion && vencida && altos.seccion) {
+					delete altos.seccion; // ya no hay carpetas
 					cambio = true;
 				}
-				continue;
+			} else {
+				poner(seccion ? pildoras : null, 0);
+				poner(seccion || pildoras, guardado - alto);
+				ultimoAlto = alto;
+				reservando = true;
 			}
-			if (tieneChats && !altos[id] && alto) {
-				altos[id] = alto;
-				cambio = true;
-			}
-			reservar((altos[id] || 0) - alto);
-			reservando = true;
 		}
-		// mientras se despliega no hay cambios en la página que avisen: se vuelve a medir en cada cuadro
 		if (reservando) pedir();
 		if (cambio) guardar('sk-carpetas-alto', altos);
 	};
@@ -6525,4 +6561,1792 @@ function skVisible(selector) {
 		},
 		{ capture: true, passive: true }
 	);
+})();
+
+/* Proyectos (lienzos "R2 · pensada para el pulgar", "Barra lateral móvil · diseño final" y "Barra escritorio · diseño
+ * final"): la sección "Carpetas" de la barra se llama "Proyectos" y cada carpeta es una tarjeta: ícono de carpeta en un
+ * cuadro de color, nombre en seminegrita con "N chats" debajo, ⋯ y la flecha a la derecha. Abierta, la tarjeta es
+ * blanca, agrupa sus chats con sangría y termina en "Nuevo chat en <proyecto>" (abre la página de la carpeta, donde el
+ * chat nuevo queda dentro). Las filas siguen siendo las de Open WebUI: arrastrar, renombrar y el menú ⋯ funcionan igual. */
+(() => {
+	// paleta del lienzo "Proyectos · elegir color": 12 colores en el orden del círculo cromático (de rojo a rosa y al
+	// final los neutros), los de los botones y modelos que ya usamos más amarillo, lima y magenta. En naranja y amarillo
+	// el ícono va en un tono más oscuro para tener contraste de 3:1 sobre su fondo al 12 %.
+	const PALETA = [
+		['#e5484d', 'Rojo'],
+		['#e8772e', 'Naranja'],
+		['#b38a00', 'Amarillo'],
+		['#5c940d', 'Lima'],
+		['#2b8a5a', 'Verde'],
+		['#1a8a9a', 'Turquesa'],
+		['#2361c7', 'Azul'],
+		['#7c5cff', 'Morado'],
+		['#ae3ec9', 'Magenta'],
+		['#d6336c', 'Rosa Sakura'],
+		['#3f3f46', 'Grafito'],
+		['#71717a', 'Gris']
+	];
+	const COLORES = PALETA.map((p) => p[0]);
+	const TINTAS = { '#e8772e': '#c25e1a', '#b38a00': '#8f6e00' };
+	window.skProyTinta = (color) => TINTAS[String(color).toLowerCase()] || color;
+	// color elegido de cada proyecto: se guarda en la carpeta (meta.sk_color, Open WebUI lo conserva al editarla) y una
+	// copia local para pintar desde el primer cuadro
+	let elegidos = {};
+	try {
+		elegidos = JSON.parse(localStorage.getItem('sk-proy-colores') || '{}');
+	} catch {}
+	const guardarElegidos = () => {
+		try {
+			localStorage.setItem('sk-proy-colores', JSON.stringify(elegidos));
+		} catch {}
+	};
+	// la lista de carpetas solo trae meta.icon: el color se lee de cada carpeta (son pocas)
+	const leerElegidos = async () => {
+		try {
+			const h = { headers: { Authorization: `Bearer ${localStorage.token || ''}` } };
+			const lista = await fetch('/api/v1/folders/', h).then((r) => (r.ok ? r.json() : null));
+			if (!Array.isArray(lista)) return;
+			const carpetas = await Promise.all(
+				lista.slice(0, 40).map((c) => fetch(`/api/v1/folders/${encodeURIComponent(c.id)}`, h).then((r) => (r.ok ? r.json() : null), () => null))
+			);
+			if (carpetas.some((c) => !c)) return; // sin respuesta completa se queda la copia local
+			const antes = JSON.stringify(elegidos);
+			elegidos = {};
+			for (const c of carpetas) if (c.meta?.sk_color) elegidos[c.id] = c.meta.sk_color;
+			if (JSON.stringify(elegidos) !== antes) {
+				guardarElegidos();
+				repintarTodo();
+			}
+		} catch {}
+	};
+	const SVG_CARPETA =
+		'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 7a2 2 0 0 1 2-2h3l2 2h7a2 2 0 0 1 2 2v1H4z"/><path d="M4 10h16l-1.5 8a2 2 0 0 1-2 1.6H7.5a2 2 0 0 1-2-1.6z"/></svg>';
+	const SVG_MAS =
+		'<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M12 5v14M5 12h14"/></svg>';
+	// el color de cada proyecto sale de su id: es el mismo en la barra, el panel de Chats y la página del proyecto
+	const colorDe = (id) => {
+		if (elegidos[id]) return elegidos[id];
+		let h = 0;
+		for (const c of String(id)) h = (h * 31 + c.charCodeAt(0)) >>> 0;
+		return COLORES[h % COLORES.length];
+	};
+	window.skProyColor = colorDe;
+	const repintarTodo = () => {
+		revisar();
+		window.skPanelChats?.repintar();
+		window.dispatchEvent(new Event('sk-proy-color'));
+	};
+
+	const elegir = (id, color) => {
+		elegidos[id] = color;
+		guardarElegidos();
+		repintarTodo();
+		fetch(`/api/v1/folders/${encodeURIComponent(id)}/update`, {
+			method: 'POST',
+			headers: { Authorization: `Bearer ${localStorage.token || ''}`, 'Content-Type': 'application/json' },
+			body: JSON.stringify({ meta: { sk_color: color } })
+		}).catch(() => {});
+	};
+
+	// menú ⋯ del proyecto: debajo de "Editar", "Color" con el nombre del elegido y una fila de 10 muestras (40 px de
+	// área táctil, la elegida con aro y palomita); "Eliminar" en rojo
+	let menuDe = null; // id del proyecto cuyo ⋯ se tocó
+	window.skProyMenuDe = () => menuDe;
+	window.skProyPaleta = PALETA;
+	window.skProyElegir = (id, color) => elegir(id, color);
+	document.addEventListener(
+		'pointerdown',
+		(e) => {
+			const b = e.target.closest?.("button[aria-label='Opciones de la Carpeta'], button[aria-label='Folder Options']");
+			if (!b) return;
+			const fila = b.closest("div[id^='folder-'][id$='-button']");
+			menuDe = fila ? fila.id.slice(7, -7) : location.pathname.match(/^\/folders\/([^/?#]+)/)?.[1] || null;
+		},
+		true
+	);
+	const SVG_PALETA =
+		'<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3a9 9 0 1 0 0 18c1.1 0 1.6-.8 1.6-1.6 0-.5-.2-.8-.4-1.1-.3-.3-.4-.6-.4-1 0-.9.7-1.6 1.6-1.6H16a5 5 0 0 0 5-5c0-4.2-4-7.7-9-7.7z"/><circle cx="7.5" cy="11.5" r="1"/><circle cx="10.5" cy="7.5" r="1"/><circle cx="15" cy="7.5" r="1"/></svg>';
+	const SVG_PALOMITA =
+		'<svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12l5 5 9-10"/></svg>';
+	const pintarMuestras = (caja, id) => {
+		const actual = colorDe(id);
+		const nombre = PALETA.find((p) => p[0] === actual)?.[1] || '';
+		caja.querySelector('.sk-proy-color-nombre').textContent = nombre;
+		caja.querySelectorAll('[role=radio]').forEach((r) => {
+			const si = r.dataset.color === actual;
+			r.setAttribute('aria-checked', String(si));
+			r.tabIndex = si ? 0 : -1;
+			r.querySelector('span').innerHTML = si ? SVG_PALOMITA : '';
+		});
+	};
+	const menuColor = () => {
+		const menus = document.querySelectorAll('[role=menu] .app-dropdown-menu');
+		for (const menu of menus) {
+			const botones = [...menu.querySelectorAll(':scope > button')];
+			const texto = (b) => b.textContent.trim();
+			const editar = botones.find((b) => /^(Editar|Edit)$/.test(texto(b)));
+			if (!editar || !botones.some((b) => /^(Crear Carpeta|Crear carpeta|Create Folder)$/.test(texto(b)))) continue;
+			menu.classList.add('sk-menu-proy');
+			// textos en minúscula como en el lienzo ("Nuevo chat", "Crear carpeta")
+			for (const b of botones) {
+				const w = document.createTreeWalker(b, NodeFilter.SHOW_TEXT);
+				for (let n = w.nextNode(); n; n = w.nextNode()) {
+					const t = n.textContent.trim();
+					const nuevo = { 'Nuevo Chat': 'Nuevo chat', 'Crear Carpeta': 'Crear carpeta' }[t];
+					if (nuevo) n.textContent = n.textContent.replace(t, nuevo);
+				}
+			}
+			botones.find((b) => /^(Eliminar|Delete)$/.test(texto(b)))?.classList.add('sk-menu-peligro');
+			const id = menuDe;
+			if (!id || menu.querySelector('.sk-proy-color')) continue;
+			const caja = document.createElement('div');
+			caja.className = 'sk-proy-color';
+			caja.innerHTML = `<div class="sk-proy-color-cab">${SVG_PALETA}<span>Color</span><span class="sk-proy-color-nombre"></span></div><div class="sk-proy-muestras" role="radiogroup" aria-label="Color del proyecto">${PALETA.map(
+				([c, n]) => `<button type="button" role="radio" aria-checked="false" aria-label="${n}" title="${n}" data-color="${c}"><span style="background:${c};--sk-m:${c}"></span></button>`
+			).join('')}</div>`;
+			caja.addEventListener('click', (e) => {
+				const r = e.target.closest('[role=radio]');
+				if (!r) return;
+				e.preventDefault();
+				e.stopPropagation();
+				elegir(id, r.dataset.color);
+				pintarMuestras(caja, id);
+			});
+			caja.addEventListener('keydown', (e) => {
+				if (!/^Arrow(Left|Right|Up|Down)$/.test(e.key)) return;
+				e.preventDefault();
+				e.stopPropagation();
+				const lista = [...caja.querySelectorAll('[role=radio]')];
+				const i = lista.indexOf(document.activeElement);
+				const paso = e.key === 'ArrowLeft' ? -1 : e.key === 'ArrowRight' ? 1 : e.key === 'ArrowUp' ? -5 : 5;
+				const sig = lista[(Math.max(0, i) + paso + lista.length) % lista.length];
+				sig.focus();
+				sig.click();
+			});
+			editar.after(caja);
+			pintarMuestras(caja, id);
+		}
+	};
+	skVigilar(menuColor);
+	leerElegidos();
+	const cuentas = new Map(); // id -> { n, t }
+	const pidiendo = new Set();
+	const VIGENCIA = 30000;
+	const TARJETA = 'div.relative[draggable]:not(#sidebar-chat-group)';
+
+	const textoCuenta = (n) => (n == null ? '' : n === 1 ? '1 chat' : n >= 60 ? '60+ chats' : `${n} chats`);
+
+	const pedirCuenta = (id) => {
+		if (pidiendo.has(id)) return;
+		pidiendo.add(id);
+		fetch(`/api/v1/chats/folder/${encodeURIComponent(id)}/list?page=1`, {
+			headers: { Authorization: `Bearer ${localStorage.token || ''}` }
+		})
+			.then((r) => (r.ok ? r.json() : null))
+			.then((lista) => {
+				if (Array.isArray(lista)) cuentas.set(id, { n: lista.length, t: Date.now() });
+			})
+			.catch(() => {})
+			.finally(() => {
+				pidiendo.delete(id);
+				revisar();
+			});
+	};
+
+	const revisar = () => {
+		const seccion = document.getElementById('sidebar-folders-button');
+		if (!seccion) return;
+		// rótulo
+		const rotulo = [...seccion.querySelectorAll('span')].find((e) => !e.children.length && e.textContent.trim());
+		if (rotulo && rotulo.textContent.trim() !== 'Proyectos') rotulo.textContent = 'Proyectos';
+		const nueva = seccion.closest('div.h-6')?.querySelector("button[aria-label='Nueva Carpeta'], button[aria-label='New Folder']");
+		if (nueva && nueva.title !== 'Nuevo proyecto') nueva.title = 'Nuevo proyecto';
+
+		const filas = [...document.querySelectorAll("#sidebar div[id^='folder-'][id$='-button']")];
+		filas.forEach((fila) => {
+			const id = fila.id.slice(7, -7);
+			const tarjeta = fila.closest(TARJETA);
+			const enlace = fila.querySelector('a');
+			if (!tarjeta || !enlace) return;
+			const raiz = tarjeta.parentElement?.parentElement?.id === 'sidebar-folders-content';
+			const color = colorDe(id);
+			if (tarjeta.style.getPropertyValue('--sk-proy') !== color) {
+				tarjeta.style.setProperty('--sk-proy', color);
+				tarjeta.style.setProperty('--sk-proy-tinta', window.skProyTinta(color));
+			}
+			tarjeta.classList.add('sk-proy');
+			tarjeta.classList.toggle('sk-proy-raiz', raiz);
+
+			const flecha = fila.querySelector(':scope > button');
+			const etiqueta = flecha?.getAttribute('aria-label') || '';
+			const abierta = /^(Plegar|Collapse|Contraer)/i.test(etiqueta);
+			tarjeta.classList.toggle('sk-proy-abierta', abierta);
+
+			// ícono de color y "N chats"
+			if (!enlace.querySelector(':scope > .sk-proy-icono')) {
+				const icono = document.createElement('span');
+				icono.className = 'sk-proy-icono';
+				icono.innerHTML = SVG_CARPETA;
+				enlace.prepend(icono);
+			}
+			let sub = enlace.querySelector(':scope > .sk-proy-sub');
+			if (!sub) {
+				sub = document.createElement('span');
+				sub.className = 'sk-proy-sub';
+				enlace.append(sub);
+			}
+			// abierta: se cuentan los chats a la vista (al día); cerrada: lo que diga el servidor
+			const contenido = fila.closest('.w-full.cursor-pointer')?.nextElementSibling;
+			if (abierta && contenido) {
+				const propios = [...contenido.querySelectorAll('#sidebar-chat-item')].filter((c) => c.closest(TARJETA) === tarjeta).length;
+				if (propios) cuentas.set(id, { n: propios, t: Date.now() });
+			}
+			const c = cuentas.get(id);
+			if (!c || Date.now() - c.t > VIGENCIA) pedirCuenta(id);
+			const texto = textoCuenta(c?.n);
+			if (sub.textContent !== texto) sub.textContent = texto;
+
+			// "Nuevo chat en <proyecto>" al final de la tarjeta abierta
+			const nombre = enlace.querySelector('.truncate')?.textContent.trim() || '';
+			let boton = tarjeta.querySelector(':scope > .sk-proy-nuevo');
+			if (!boton) {
+				boton = document.createElement('button');
+				boton.type = 'button';
+				boton.className = 'sk-proy-nuevo';
+				boton.innerHTML = `${SVG_MAS}<span></span>`;
+				boton.addEventListener('click', (e) => {
+					e.preventDefault();
+					e.stopPropagation();
+					tarjeta.querySelector("div[id^='folder-'][id$='-button'] a")?.click();
+				});
+				tarjeta.append(boton);
+			}
+			const rotuloNuevo = `Nuevo chat en ${nombre}`;
+			const span = boton.querySelector('span');
+			if (span.textContent !== rotuloNuevo) span.textContent = rotuloNuevo;
+		});
+	};
+
+	skVigilar(revisar);
+	revisar();
+})();
+
+/* Archivos del proyecto · visor y confirmación (lienzos "Archivos · escritorio · visor / confirmar eliminación" y
+ * "Archivos · móvil"): window.skVisorArchivos.abrir(archivos, i, opciones) muestra el archivo a pantalla completa con
+ * Descargar, Abrir en pestaña (Compartir en el teléfono) y Eliminar, flechas y tira de miniaturas (← → para cambiar,
+ * deslizar en el teléfono); window.skVisorArchivos.confirmar(archivo, proyecto) pide confirmación antes de quitar un
+ * archivo del proyecto. Cada archivo: { id, name, size, tipo: 'imagen' | 'video' | 'doc', ext }. */
+(() => {
+	const SVG = (d, tam = 18, ancho = 1.9) =>
+		`<svg viewBox="0 0 24 24" width="${tam}" height="${tam}" fill="none" stroke="currentColor" stroke-width="${ancho}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+	const D = {
+		descargar: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
+		pestana: '<path d="M14 4h6v6M20 4l-9 9M18 14v5a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h5"/>',
+		compartir: '<path d="M12 15V4M7 9l5-5 5 5M5 14v5a1 1 0 0 1 1 1h12a1 1 0 0 1 1-1v-5"/>',
+		basura: '<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>',
+		cerrar: '<path d="M6 6l12 12M18 6L6 18"/>',
+		izq: '<path d="M15 6l-6 6 6 6"/>',
+		der: '<path d="M9 6l6 6-6 6"/>',
+		doc: '<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/>',
+		play: '<path d="M8 5l11 7-11 7z" fill="currentColor"/>'
+	};
+	const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+	const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ESC[c]);
+	const telefono = () => matchMedia('(max-width: 767px)').matches;
+	const contenido = (a) => `/api/v1/files/${encodeURIComponent(a.id)}/content`;
+	const tamano = (b) => {
+		if (!b && b !== 0) return '';
+		if (b < 1024) return `${b} B`;
+		if (b < 1024 * 1024) return `${Math.round(b / 1024)} KB`;
+		return `${(b / 1024 / 1024).toFixed(1)} MB`;
+	};
+	const tipoTexto = (a) => (a.tipo === 'video' ? 'Video' : (a.ext || 'Archivo').toUpperCase());
+	const mini = (a, clase = '') => {
+		if (a.tipo === 'imagen') return `<span class="sk-va-mini ${clase}"><img alt="" loading="lazy" src="${contenido(a)}"></span>`;
+		if (a.tipo === 'video') return `<span class="sk-va-mini ${clase}"><video muted preload="metadata" src="${contenido(a)}#t=0.5"></video></span>`;
+		return `<span class="sk-va-mini sk-va-doc ${clase}" data-ext="${esc(a.ext)}">${SVG(D.doc, 16)}<b>${esc((a.ext || '').toUpperCase().slice(0, 4))}</b></span>`;
+	};
+	window.skVisorMini = mini;
+	window.skVisorTamano = tamano;
+	window.skVisorTipo = tipoTexto;
+
+	// ---------- confirmación ----------
+	const confirmar = (a, proyecto) =>
+		new Promise((listo) => {
+			const capa = document.createElement('div');
+			capa.className = 'sk-confirma-capa';
+			capa.innerHTML = `<div class="sk-confirma" role="alertdialog" aria-modal="true" aria-labelledby="sk-confirma-t" aria-describedby="sk-confirma-d">
+				<span class="sk-confirma-icono">${SVG(D.basura, 18)}</span>
+				<div class="sk-confirma-cab">${mini(a, 'sk-confirma-mini')}<span><b id="sk-confirma-t">¿Eliminar este archivo?</b><small>${esc(a.name)} · ${esc(tamano(a.size))}</small></span></div>
+				<h2 class="sk-confirma-titulo">¿Eliminar este archivo?</h2>
+				<div class="sk-confirma-archivo">${mini(a)}<span><b>${esc(a.name)}</b><small>${esc(tipoTexto(a))} · ${esc(tamano(a.size))}</small></span></div>
+				<p id="sk-confirma-d">Se quitará del proyecto «${esc(proyecto)}» y los modelos ya no podrán consultarlo.<span class="sk-confirma-extra"> Los chats donde ya se usó no cambian.</span> <b>No se puede deshacer.</b></p>
+				<div class="sk-confirma-botones"><button type="button" class="sk-confirma-no">Cancelar</button><button type="button" class="sk-confirma-si">${SVG(D.basura, 16)}<span>Eliminar archivo</span></button></div>
+			</div>`;
+			const cerrar = (si) => {
+				capa.remove();
+				document.removeEventListener('keydown', tecla, true);
+				listo(si);
+			};
+			const tecla = (e) => {
+				if (e.key === 'Escape') {
+					e.stopPropagation();
+					e.preventDefault();
+					cerrar(false);
+				}
+			};
+			capa.addEventListener('click', (e) => {
+				if (e.target === capa || e.target.closest('.sk-confirma-no')) cerrar(false);
+				if (e.target.closest('.sk-confirma-si')) cerrar(true);
+			});
+			document.addEventListener('keydown', tecla, true);
+			document.body.append(capa);
+			capa.querySelector('.sk-confirma-no').focus();
+		});
+
+	// ---------- visor ----------
+	let visor = null;
+	const abrir = (archivos, inicio, opciones = {}) => {
+		if (!archivos.length) return;
+		visor?.cerrar();
+		let i = Math.max(0, Math.min(inicio, archivos.length - 1));
+		const capa = document.createElement('div');
+		capa.className = 'sk-visor';
+		capa.setAttribute('role', 'dialog'); // sin aria-modal: las reglas de ventanas del tema no lo tocan
+		capa.innerHTML = `<div class="sk-visor-cab"><button type="button" class="sk-visor-x sk-visor-x-tel" aria-label="Cerrar">${SVG(D.cerrar, 22)}</button><span class="sk-visor-cab-mini"></span><span class="sk-visor-titulo"><b></b><small></small></span>
+			<div class="sk-visor-acciones"><a class="sk-visor-boton" data-v="descargar">${SVG(D.descargar, 15)}<span>Descargar</span></a><a class="sk-visor-boton" data-v="pestana" target="_blank" rel="noopener">${SVG(D.pestana, 15)}<span>Abrir en pestaña</span></a><button type="button" class="sk-visor-boton sk-visor-peligro" data-v="eliminar">${SVG(D.basura, 15)}<span>Eliminar</span></button><button type="button" class="sk-visor-x" aria-label="Cerrar">${SVG(D.cerrar, 18)}</button></div></div>
+			<div class="sk-visor-escena"></div>
+			<button type="button" class="sk-visor-flecha sk-visor-ant" aria-label="Anterior">${SVG(D.izq, 20)}</button><button type="button" class="sk-visor-flecha sk-visor-sig" aria-label="Siguiente">${SVG(D.der, 20)}</button>
+			<div class="sk-visor-pie"><div class="sk-visor-tira"></div><div class="sk-visor-ayuda"></div><div class="sk-visor-puntos" aria-hidden="true"></div>
+			<div class="sk-visor-barra"><a class="sk-visor-tel-boton" data-v="descargar">${SVG(D.descargar, 22)}<span>Descargar</span></a><button type="button" class="sk-visor-tel-boton" data-v="compartir">${SVG(D.compartir, 22)}<span>Compartir</span></button><button type="button" class="sk-visor-tel-boton sk-visor-peligro" data-v="eliminar">${SVG(D.basura, 22)}<span>Eliminar</span></button></div></div>`;
+
+		const pintar = () => {
+			const a = archivos[i];
+			capa.setAttribute('aria-label', a.name);
+			capa.querySelector('.sk-visor-cab-mini').innerHTML = mini(a);
+			capa.querySelector('.sk-visor-titulo b').textContent = a.name;
+			const meta = [tipoTexto(a), a.dim, tamano(a.size), a.subido].filter(Boolean).join(' · ');
+			capa.querySelector('.sk-visor-titulo small').textContent = telefono() ? `${i + 1} de ${archivos.length} · ${[tipoTexto(a), tamano(a.size)].filter(Boolean).join(' · ')}` : meta;
+			capa.querySelectorAll("[data-v='descargar']").forEach((b) => {
+				b.href = `${contenido(a)}?attachment=true`;
+				b.setAttribute('download', a.name);
+			});
+			capa.querySelector("[data-v='pestana']").href = contenido(a);
+			const escena = capa.querySelector('.sk-visor-escena');
+			escena.innerHTML =
+				a.tipo === 'imagen'
+					? `<img class="sk-visor-obra" alt="${esc(a.name)}" src="${contenido(a)}">`
+					: a.tipo === 'video'
+						? `<video class="sk-visor-obra" controls playsinline src="${contenido(a)}"></video>`
+						: a.ext === 'pdf'
+							? `<iframe class="sk-visor-obra sk-visor-pdf" title="${esc(a.name)}" src="${contenido(a)}"></iframe>`
+							: `<div class="sk-visor-obra sk-visor-sinvista">${mini(a)}<b>${esc(a.name)}</b><small>Sin vista previa · usa Descargar o Abrir en pestaña</small></div>`;
+			const img = escena.querySelector('img');
+			img?.addEventListener('load', () => {
+				if (!a.dim && img.naturalWidth) {
+					a.dim = `${img.naturalWidth} × ${img.naturalHeight}`;
+					if (archivos[i] === a) pintar();
+				}
+			});
+			capa.querySelector('.sk-visor-tira').innerHTML = archivos
+				.map((x, n) => `<button type="button" class="sk-visor-t${n === i ? ' sk-activa' : ''}" data-n="${n}" aria-label="${esc(x.name)}"${n === i ? ' aria-current="true"' : ''}>${mini(x)}</button>`)
+				.join('');
+			capa.querySelector('.sk-visor-ayuda').textContent = `${i + 1} de ${archivos.length} · usa ← → para cambiar`;
+			capa.querySelector('.sk-visor-puntos').innerHTML = archivos.map((_, n) => `<span${n === i ? ' class="sk-activo"' : ''}></span>`).join('');
+			capa.classList.toggle('sk-visor-uno', archivos.length < 2);
+			// "subido el …" se pide una vez
+			if (!a.subido && !a.pidiendo) {
+				a.pidiendo = true;
+				fetch(`/api/v1/files/${encodeURIComponent(a.id)}`, { headers: { Authorization: `Bearer ${localStorage.token || ''}` } })
+					.then((r) => (r.ok ? r.json() : null))
+					.then((f) => {
+						if (!f?.created_at) return;
+						const d = new Date(f.created_at * 1000);
+						const hoy = new Date();
+						hoy.setHours(0, 0, 0, 0);
+						const dias = Math.round((hoy - new Date(d).setHours(0, 0, 0, 0)) / 86400000);
+						a.subido = dias <= 0 ? 'subido hoy' : dias === 1 ? 'subido ayer' : dias < 7 ? `subido el ${d.toLocaleDateString('es', { weekday: 'long' })}` : `subido el ${d.toLocaleDateString('es', { day: 'numeric', month: 'long' })}`;
+						if (archivos[i] === a) pintar();
+					})
+					.catch(() => {});
+			}
+		};
+		const ir = (paso) => {
+			if (archivos.length < 2) return;
+			i = (i + paso + archivos.length) % archivos.length;
+			pintar();
+		};
+		const cerrar = () => {
+			capa.remove();
+			document.removeEventListener('keydown', tecla, true);
+			visor = null;
+			opciones.alCerrar?.();
+		};
+		const eliminar = async () => {
+			const a = archivos[i];
+			if (!(await confirmar(a, opciones.proyecto || ''))) return;
+			const ok = await opciones.quitar?.(a);
+			if (ok === false) return;
+			archivos.splice(i, 1);
+			if (!archivos.length) return cerrar();
+			i = Math.min(i, archivos.length - 1);
+			pintar();
+		};
+		const compartir = async () => {
+			const a = archivos[i];
+			try {
+				const blob = await fetch(contenido(a)).then((r) => r.blob());
+				const file = new File([blob], a.name, { type: blob.type });
+				if (navigator.canShare?.({ files: [file] })) return await navigator.share({ files: [file], title: a.name });
+				if (navigator.share) return await navigator.share({ title: a.name, url: new URL(contenido(a), location.origin).href });
+			} catch {}
+			window.open(contenido(a), '_blank', 'noopener');
+		};
+		const tecla = (e) => {
+			if (document.querySelector('.sk-confirma-capa')) return;
+			if (e.key === 'Escape') {
+				e.stopPropagation();
+				e.preventDefault();
+				cerrar();
+			} else if (e.key === 'ArrowLeft') {
+				e.preventDefault();
+				ir(-1);
+			} else if (e.key === 'ArrowRight') {
+				e.preventDefault();
+				ir(1);
+			}
+		};
+		capa.addEventListener('click', (e) => {
+			const v = e.target.closest('[data-v]')?.dataset.v;
+			if (v === 'eliminar') eliminar();
+			if (v === 'compartir') compartir();
+			if (e.target.closest('.sk-visor-x')) cerrar();
+			if (e.target.closest('.sk-visor-ant')) ir(-1);
+			if (e.target.closest('.sk-visor-sig')) ir(1);
+			const t = e.target.closest('.sk-visor-t');
+			if (t) {
+				i = Number(t.dataset.n);
+				pintar();
+			}
+			if (e.target.classList.contains('sk-visor-escena')) cerrar();
+		});
+		// deslizar en el teléfono
+		let x0 = null;
+		capa.addEventListener('touchstart', (e) => (x0 = e.touches.length === 1 ? e.touches[0].clientX : null), { passive: true });
+		capa.addEventListener(
+			'touchend',
+			(e) => {
+				if (x0 == null) return;
+				const dx = e.changedTouches[0].clientX - x0;
+				x0 = null;
+				if (Math.abs(dx) > 50) ir(dx < 0 ? 1 : -1);
+			},
+			{ passive: true }
+		);
+		document.addEventListener('keydown', tecla, true);
+		document.body.append(capa);
+		pintar();
+		capa.querySelector(telefono() ? '.sk-visor-x-tel' : '.sk-visor-acciones .sk-visor-x')?.focus();
+		visor = { cerrar };
+	};
+
+	window.skVisorArchivos = { abrir, confirmar };
+})();
+
+/* Página del proyecto (lienzos "Proyecto «Hola» · escritorio" y "· móvil"): en /folders/<id> el encabezado lleva el
+ * ícono de 56 px en el color del proyecto, el nombre de 30 px y "Proyecto · N chats · actualizado el …", con "Editar" y
+ * ⋯ a la derecha. Debajo, las tarjetas Instrucciones y Archivos (abren la ventana Editar de Open WebUI, donde están el
+ * prompt del sistema y los archivos de la carpeta), "Chats del proyecto · N" con orden por fecha y cada chat como
+ * tarjeta con el avatar de su modelo, la última respuesta y el punto de respuesta nueva. El composer baja al final con
+ * la píldora "En el proyecto <nombre>". El ícono, el nombre y el ⋯ siguen siendo los de Open WebUI. */
+(() => {
+	const SVG = (d, tam = 18, ancho = 1.9) =>
+		`<svg viewBox="0 0 24 24" width="${tam}" height="${tam}" fill="none" stroke="currentColor" stroke-width="${ancho}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+	const D = {
+		proyecto: '<path d="M4 7a2 2 0 0 1 2-2h3l2 2h7a2 2 0 0 1 2 2v1H4z"/><path d="M4 10h16l-1.5 8a2 2 0 0 1-2 1.6H7.5a2 2 0 0 1-2-1.6z"/>',
+		lapiz: '<path d="M4 20h4L19 9l-4-4L4 16z"/>',
+		chispa: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>',
+		archivo: '<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/>',
+		orden: '<path d="M8 4v16M8 20l-3-3M8 20l3-3M16 20V4M16 4l-3 3M16 4l3 3"/>'
+	};
+	const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+	const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ESC[c]);
+	const headers = () => ({ Authorization: `Bearer ${localStorage.token || ''}` });
+	const pedir = (url) =>
+		fetch(url, { headers: headers() })
+			.then((r) => (r.ok ? r.json() : null))
+			.catch(() => null);
+	const leer = (clave) => {
+		try {
+			return JSON.parse(localStorage.getItem(clave) || '{}');
+		} catch {
+			return {};
+		}
+	};
+
+	let idActual = null;
+	let datos = null; // { carpeta, chats }
+	let cargando = null;
+	let recientesPrimero = true;
+	let editandoIns = false;
+	let subiendo = false;
+	let aviso = '';
+	const vistas = new Map(); // id del chat -> { t, texto, modelo }
+
+	const telefono = matchMedia('(max-width: 767px)');
+	const raiz = document.documentElement;
+
+	const idDeRuta = () => {
+		const m = location.pathname.match(/^\/folders\/([^/?#]+)/);
+		return m ? decodeURIComponent(m[1]) : null;
+	};
+
+	const diaRelativo = (seg) => {
+		if (!seg) return '';
+		const f = new Date(seg * 1000);
+		const hoy = new Date();
+		hoy.setHours(0, 0, 0, 0);
+		const dias = Math.round((hoy - new Date(f).setHours(0, 0, 0, 0)) / 86400000);
+		if (dias <= 0) return 'hoy';
+		if (dias === 1) return 'ayer';
+		if (dias < 7) return `el ${f.toLocaleDateString('es', { weekday: 'long' })}`;
+		return `el ${f.toLocaleDateString('es', { day: 'numeric', month: 'long' })}`;
+	};
+
+	const hora = (f) => f.toLocaleTimeString('es-MX', { hour: 'numeric', minute: '2-digit' }).replace(/\s?([ap])\.\s?m\./i, ' $1. m.');
+	const fechaCorta = (seg) => {
+		const f = new Date(seg * 1000);
+		const hoy = new Date();
+		hoy.setHours(0, 0, 0, 0);
+		const dias = Math.round((hoy - new Date(f).setHours(0, 0, 0, 0)) / 86400000);
+		const dia = f.toLocaleDateString('es', { weekday: 'short' }).replace('.', '');
+		if (telefono.matches) {
+			if (dias <= 0) return hora(f);
+			if (dias === 1) return 'ayer';
+			if (dias < 7) return dia;
+			return f.toLocaleDateString('es', { day: 'numeric', month: 'short' }).replace('.', '');
+		}
+		if (dias <= 0) return hora(f);
+		if (dias === 1) return `ayer ${hora(f)}`;
+		if (dias < 7) return `${dia} ${hora(f)}`;
+		return f.toLocaleDateString('es', { day: 'numeric', month: 'short' }).replace('.', '');
+	};
+
+	const cargar = (id) => {
+		cargando = id;
+		Promise.all([pedir(`/api/v1/folders/${encodeURIComponent(id)}`), pedir(`/api/v1/chats/folder/${encodeURIComponent(id)}/list?page=1`)]).then(
+			([carpeta, chats]) => {
+				if (cargando !== id) return;
+				cargando = null;
+				if (idDeRuta() !== id) return;
+				datos = { id, carpeta: carpeta || { name: '', data: {} }, chats: Array.isArray(chats) ? chats : [] };
+				pintar(true);
+				// la última respuesta de cada chat (hasta 30), una sola vez por versión del chat
+				for (const c of datos.chats.slice(0, 30)) {
+					const v = vistas.get(c.id);
+					if (v && v.t === c.updated_at) continue;
+					pedir(`/api/v1/chats/${encodeURIComponent(c.id)}`).then((d) => {
+						const chat = d?.chat;
+						if (!chat) return;
+						const msgs = chat.history?.messages || {};
+						const ultimo = msgs[chat.history?.currentId] || Object.values(msgs).pop();
+						const modelo = ultimo?.model || chat.models?.[0] || null;
+						const nombres = leer('sk-modelo-nombres');
+						let texto = String(ultimo?.content || '')
+							.replace(/<details[\s\S]*?<\/details>/g, '')
+							.replace(/[#*_`>~|-]+/g, ' ')
+							.replace(/\s+/g, ' ')
+							.trim();
+						if (texto && ultimo?.role === 'assistant') texto = `${nombres[modelo] || modelo || 'Modelo'}: ${texto}`;
+						if (texto && ultimo?.role === 'user') texto = `Tú: ${texto}`;
+						vistas.set(c.id, { t: c.updated_at, texto: texto.slice(0, 160), modelo: chat.models?.[0] || modelo });
+						if (datos?.id === id) pintarLista();
+					});
+				}
+			}
+		);
+	};
+
+	const abrirEditar = () => {
+		const b = document.querySelector("#chat-pane button[aria-label='Opciones de la Carpeta'], #chat-pane button[aria-label='Folder Options']");
+		if (!b) return;
+		b.dispatchEvent(new PointerEvent('pointerdown', { bubbles: true })); // para que "Editar proyecto" sepa de qué proyecto es
+		b.click();
+		setTimeout(() => {
+			const item = [...document.querySelectorAll('[role=menu] [role=menuitem], [role=menu] button')].find((x) => /^(Editar|Edit)$/i.test(x.textContent.trim()));
+			item?.click();
+			// al cerrar la ventana se vuelven a leer el nombre, las instrucciones y los archivos
+			const t0 = Date.now();
+			const esperar = setInterval(() => {
+				if (document.querySelector('.modal, [role=dialog]') && Date.now() - t0 < 600000) return;
+				if (Date.now() - t0 < 400) return;
+				clearInterval(esperar);
+				if (idDeRuta()) cargar(idDeRuta());
+			}, 400);
+		}, 220);
+	};
+
+	const repintarTarjetas = () => {
+		const caja = document.querySelector('.sk-pp-tarjetas');
+		if (caja && datos) caja.innerHTML = tarjetas();
+		const movil = document.querySelector('.sk-pp-archivos-movil');
+		if (movil && datos) {
+			const lista = archivosDe();
+			movil.innerHTML = telefono.matches && lista.length ? `<div class="sk-pp-rotulo-arch">Archivos · ${lista.length}</div><div class="sk-pp-archivos">${tiras(lista)}</div>` : '';
+		}
+		// duración de los videos
+		document.querySelectorAll('.sk-pp-arch video').forEach((v) => {
+			if (v.dataset.skDur) return;
+			v.dataset.skDur = '1';
+			v.addEventListener('loadedmetadata', () => {
+				const s = Math.round(v.duration || 0);
+				const dur = v.closest('.sk-pp-arch-caja')?.querySelector('.sk-pp-arch-dur');
+				if (dur && s) dur.textContent = `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+			});
+		});
+	};
+
+	// guarda en la carpeta: Open WebUI aplica data.system_prompt y data.files a cada chat del proyecto
+	const guardarCarpeta = async (data) => {
+		const id = datos.id;
+		const r = await fetch(`/api/v1/folders/${encodeURIComponent(id)}/update`, {
+			method: 'POST',
+			headers: { ...headers(), 'Content-Type': 'application/json' },
+			body: JSON.stringify({ data })
+		});
+		if (!r.ok) throw new Error(String(r.status));
+		const nueva = await pedir(`/api/v1/folders/${encodeURIComponent(id)}`);
+		if (nueva && datos?.id === id) datos.carpeta = nueva;
+	};
+
+	const subirArchivos = async (lista) => {
+		if (!lista.length || !datos) return;
+		subiendo = true;
+		aviso = '';
+		repintarTarjetas();
+		try {
+			const nuevos = [];
+			for (const archivo of lista) {
+				const cuerpo = new FormData();
+				cuerpo.append('file', archivo);
+				const r = await fetch('/api/v1/files/', { method: 'POST', headers: headers(), body: cuerpo });
+				const f = r.ok ? await r.json() : null;
+				if (!f?.id) throw new Error(`No se pudo subir ${archivo.name}`);
+				nuevos.push({ type: 'file', id: f.id, name: f.meta?.name || f.filename || archivo.name, size: f.meta?.size ?? archivo.size, status: 'uploaded', url: `/api/v1/files/${f.id}` });
+			}
+			const actuales = Array.isArray(datos.carpeta.data?.files) ? datos.carpeta.data.files : [];
+			await guardarCarpeta({ files: [...actuales, ...nuevos] });
+		} catch (e) {
+			aviso = e?.message?.startsWith('No se pudo') ? e.message : 'No se pudieron guardar los archivos';
+		}
+		subiendo = false;
+		repintarTarjetas();
+	};
+
+	let selector = null;
+	const elegirArchivos = () => {
+		if (!selector) {
+			selector = document.createElement('input');
+			selector.type = 'file';
+			selector.multiple = true;
+			selector.hidden = true;
+			selector.addEventListener('change', () => {
+				const lista = [...selector.files];
+				selector.value = '';
+				subirArchivos(lista);
+			});
+			document.body.append(selector);
+		}
+		selector.click();
+	};
+
+	// archivos del proyecto como miniaturas (lienzo "Archivos del proyecto · ver y eliminar")
+	const EXT_IMAGEN = /^(png|jpe?g|gif|webp|avif|bmp|svg)$/;
+	const EXT_VIDEO = /^(mp4|webm|mov|m4v|mkv|ogv)$/;
+	const archivosDe = () =>
+		(Array.isArray(datos?.carpeta?.data?.files) ? datos.carpeta.data.files : [])
+			.filter((f) => f && f.type === 'file' && f.id)
+			.map((f) => {
+				const name = f.name || f.meta?.name || f.file?.meta?.name || f.filename || 'archivo';
+				const ext = (name.match(/\.([a-z0-9]+)$/i)?.[1] || '').toLowerCase();
+				const ct = String(f.meta?.content_type || f.file?.meta?.content_type || '');
+				const tipo = ct.startsWith('image/') || EXT_IMAGEN.test(ext) ? 'imagen' : ct.startsWith('video/') || EXT_VIDEO.test(ext) ? 'video' : 'doc';
+				return { id: f.id, name, ext, tipo, size: f.size ?? f.meta?.size ?? f.file?.meta?.size };
+			});
+	const nombreCorto = (n) => {
+		const m = n.match(/^(.*?)(\.[a-z0-9]{1,5})?$/i);
+		const base = m?.[1] || n;
+		const ext = m?.[2] || '';
+		return base.length > 10 ? `${base.slice(0, 9)}…${ext}` : n;
+	};
+	const tiras = (lista) =>
+		lista
+			.map(
+				(a, n) =>
+					`<div class="sk-pp-arch" role="button" tabindex="0" data-arch="${n}" aria-label="Abrir ${esc(a.name)}" title="${esc(a.name)}"><span class="sk-pp-arch-caja">${window.skVisorMini ? window.skVisorMini(a) : ''}${a.tipo === 'video' ? '<span class="sk-pp-arch-play" aria-hidden="true"><svg viewBox="0 0 24 24" width="14" height="14"><path d="M8 5l11 7-11 7z" fill="#fff"/></svg></span><span class="sk-pp-arch-dur" aria-hidden="true"></span>' : ''}<button type="button" class="sk-pp-arch-quitar" data-quitar="${n}" aria-label="Eliminar ${esc(a.name)}" title="Eliminar">${SVG('<path d="M4 7h16M9 7V4h6v3M6 7l1 13h10l1-13M10 11v6M14 11v6"/>', 15)}</button></span><span class="sk-pp-arch-nombre">${esc(nombreCorto(a.name))}</span><span class="sk-pp-arch-meta">${esc([window.skVisorTipo?.(a), window.skVisorTamano?.(a.size)].filter(Boolean).join(' · '))}</span></div>`
+			)
+			.join('');
+
+	const quitarArchivo = async (a) => {
+		const actuales = Array.isArray(datos.carpeta.data?.files) ? datos.carpeta.data.files : [];
+		try {
+			await guardarCarpeta({ files: actuales.filter((f) => f.id !== a.id) });
+			repintarTarjetas();
+			return true;
+		} catch {
+			aviso = 'No se pudo quitar el archivo';
+			repintarTarjetas();
+			return false;
+		}
+	};
+	const abrirVisor = (n) =>
+		window.skVisorArchivos?.abrir(archivosDe(), n, { proyecto: datos?.carpeta?.name || '', quitar: quitarArchivo });
+	const pedirQuitar = async (n) => {
+		const a = archivosDe()[n];
+		if (a && (await window.skVisorArchivos?.confirmar(a, datos?.carpeta?.name || ''))) quitarArchivo(a);
+	};
+
+	const tarjetas = () => {
+		const d = datos.carpeta.data || {};
+		const prompt = String(d.system_prompt || '').trim();
+		const archivos = Array.isArray(d.files) ? d.files : [];
+		const nombresArchivos = archivos.map((f) => f.name || f.meta?.name || f.file?.meta?.name || f.filename || 'archivo').join(', ');
+		const ins = telefono.matches
+			? prompt
+				? esc(prompt.slice(0, 60))
+				: 'Sin instrucciones'
+			: prompt
+				? esc(prompt.slice(0, 220))
+				: 'Indica cómo debe responder el modelo en todos los chats de este proyecto: tono, idioma, contexto.';
+		const arc = telefono.matches
+			? archivos.length
+				? `${archivos.length} ${archivos.length === 1 ? 'archivo' : 'archivos'}`
+				: 'Ninguno'
+			: archivos.length
+				? esc(nombresArchivos)
+				: 'Sube documentos para que los modelos los consulten en cualquier chat del proyecto.';
+		const accion = (texto, pp) => `<button type="button" class="sk-pp-accion" data-pp="${pp}">${texto}</button>`;
+		const accIns = accion(prompt ? 'Editar' : 'Agregar', 'instrucciones');
+		const accArc = subiendo ? '<span class="sk-pp-subiendo" role="status">Subiendo…</span>' : accion('Subir', 'subir');
+		const tarjetaIns = editandoIns
+			? `<div class="sk-pp-tarjeta sk-pp-editando"><div class="sk-pp-tarjeta-cab">${SVG(D.chispa, 17)}<span>Instrucciones</span></div><textarea class="sk-pp-texto" rows="4" aria-label="Instrucciones del proyecto" placeholder="Por ejemplo: responde en español, con tono cercano y respuestas cortas.">${esc(d.system_prompt || '')}</textarea><div class="sk-pp-botones"><button type="button" class="sk-pp-boton" data-pp="cancelar">Cancelar</button><button type="button" class="sk-pp-boton sk-pp-guardar" data-pp="guardar">Guardar</button></div></div>`
+			: `<div class="sk-pp-tarjeta"><div class="sk-pp-tarjeta-cab">${SVG(D.chispa, 17)}<span>Instrucciones</span>${telefono.matches ? '' : accIns}</div><p>${ins}${telefono.matches ? ` · ${accIns}` : ''}</p></div>`;
+		const lista = archivosDe();
+		const cuerpoArc =
+			lista.length && !telefono.matches
+				? `<p class="sk-pp-arch-ayuda">Los modelos los consultan en cualquier chat del proyecto.</p><div class="sk-pp-archivos">${tiras(lista)}</div>`
+				: `<p>${arc}${telefono.matches ? ` · ${accArc}` : ''}</p>`;
+		return `${tarjetaIns}<div class="sk-pp-tarjeta sk-pp-tarjeta-arch"><div class="sk-pp-tarjeta-cab">${SVG(D.archivo, 17)}<span>Archivos${lista.length && !telefono.matches ? ` <i>· ${lista.length}</i>` : ''}</span>${telefono.matches ? '' : accArc}</div>${cuerpoArc}${aviso ? `<p class="sk-pp-aviso" role="alert">${esc(aviso)}</p>` : ''}</div>`;
+	};
+
+	const pintarLista = () => {
+		const lista = document.querySelector('.sk-pp-chats');
+		if (!lista || !datos) return;
+		const estado = window.skAvisos?.estado();
+		const chatModelo = leer('sk-chat-modelo');
+		const chats = [...datos.chats].sort((a, b) => (recientesPrimero ? b.updated_at - a.updated_at : a.updated_at - b.updated_at));
+		const n = chats.length;
+		const rotulo = document.querySelector('.sk-pp-rotulo span');
+		if (rotulo) rotulo.textContent = `Chats del proyecto · ${n}`;
+		const orden = document.querySelector('.sk-pp-orden span');
+		if (orden) orden.textContent = recientesPrimero ? 'Más recientes' : 'Más antiguos';
+		lista.innerHTML = n
+			? chats
+					.map((c) => {
+						const v = vistas.get(c.id);
+						const modelo = v?.modelo || chatModelo[c.id];
+						const nuevo = estado?.nuevos.has(c.id) || (c.last_read_at != null && c.updated_at > c.last_read_at + 2);
+						const pensando = estado?.pensando.has(c.id);
+						const foto = modelo
+							? `<img alt="" src="/api/v1/models/model/profile/image?id=${encodeURIComponent(modelo)}">`
+							: `<span class="sk-pp-sinfoto">${SVG(D.proyecto, 18)}</span>`;
+						return `<a class="sk-pp-chat${nuevo ? ' sk-pp-nuevo' : ''}" href="/c/${esc(c.id)}">${foto}<span class="sk-pp-chat-texto"><span class="sk-pp-chat-titulo">${esc(c.title)}</span>${v?.texto ? `<span class="sk-pp-chat-vista">${esc(v.texto)}</span>` : ''}</span><span class="sk-pp-chat-fin">${pensando ? '<span class="sk-pp-pensando" role="status">Pensando…</span>' : `<span>${esc(fechaCorta(c.updated_at))}</span>`}${nuevo ? '<span class="sk-pp-punto" aria-label="Respuesta nueva"></span>' : ''}</span></a>`;
+					})
+					.join('')
+			: '<p class="sk-pp-vacio">Aún no hay chats en este proyecto. Escribe abajo para empezar el primero.</p>';
+	};
+
+	const pintar = (nuevo) => {
+		const pagina = document.querySelector('#chat-pane div.m-auto.w-full');
+		if (!pagina || !datos) return;
+		const color = window.skProyColor ? window.skProyColor(datos.id) : '#7c5cff';
+		raiz.style.setProperty('--sk-pp', color);
+		raiz.style.setProperty('--sk-pp-tinta', window.skProyTinta ? window.skProyTinta(color) : color);
+		const nombre = datos.carpeta.name || '';
+		raiz.style.setProperty('--sk-pp-ph', JSON.stringify(telefono.matches ? 'Escribe para empezar un chat…' : `Escribe para empezar un chat en «${nombre}»…`));
+
+		// encabezado: subtítulo y "Editar"
+		const cab = pagina.querySelector(':scope > div > div > div.mb-2');
+		if (cab) {
+			cab.classList.add('sk-pp-cab');
+			const izquierda = cab.firstElementChild;
+			const titulo = izquierda?.querySelector('.line-clamp-1');
+			let sub = izquierda?.querySelector('.sk-pp-sub');
+			if (izquierda && titulo && !sub) {
+				sub = document.createElement('span');
+				sub.className = 'sk-pp-sub';
+				titulo.after(sub);
+			}
+			const ultimo = Math.max(0, ...datos.chats.map((c) => c.updated_at || 0)) || datos.carpeta.updated_at;
+			const n = datos.chats.length;
+			const texto = `Proyecto · ${n === 1 ? '1 chat' : `${n} chats`} · actualizado ${diaRelativo(ultimo)}`;
+			if (sub && sub.textContent !== texto) sub.textContent = texto;
+			if (!cab.querySelector('.sk-pp-editar') && !telefono.matches) {
+				const b = document.createElement('button');
+				b.type = 'button';
+				b.className = 'sk-pp-editar';
+				b.dataset.pp = 'editar';
+				b.innerHTML = `${SVG(D.lapiz, 15)}<span>Editar</span>`;
+				b.addEventListener('click', (e) => {
+					e.stopPropagation();
+					abrirEditar();
+				});
+				cab.lastElementChild?.before(b);
+			}
+		}
+
+		// tarjetas y lista (al final de la página; el CSS las acomoda antes del composer)
+		let bloque = pagina.querySelector(':scope > .sk-pp');
+		if (!bloque) {
+			bloque = document.createElement('div');
+			bloque.className = 'sk-pp';
+			bloque.innerHTML = `<div class="sk-pp-tarjetas"></div><div class="sk-pp-archivos-movil"></div><div class="sk-pp-rotulo"><span></span><button type="button" class="sk-pp-orden" data-pp="orden">${SVG(D.orden, 15)}<span>Más recientes</span></button></div><div class="sk-pp-chats"></div><p class="sk-pp-nota-nuevos"><span class="sk-pp-chip-esc">Los chats nuevos que escribas abajo se guardan en este proyecto</span><span class="sk-pp-chip-tel">Los chats nuevos se guardan en este proyecto</span></p>`;
+			bloque.addEventListener('click', (e) => {
+				const accion = e.target.closest('[data-pp]')?.dataset.pp;
+				const quitar = e.target.closest('[data-quitar]');
+				if (quitar) {
+					e.stopPropagation();
+					pedirQuitar(Number(quitar.dataset.quitar));
+					return;
+				}
+				const arch = e.target.closest('[data-arch]');
+				if (arch) abrirVisor(Number(arch.dataset.arch));
+				if (accion === 'editar') abrirEditar();
+				if (accion === 'subir') elegirArchivos();
+				if (accion === 'instrucciones' || accion === 'cancelar') {
+					editandoIns = accion === 'instrucciones';
+					repintarTarjetas();
+					if (editandoIns) {
+						const t = bloque.querySelector('.sk-pp-texto');
+						t?.focus();
+						t?.setSelectionRange(t.value.length, t.value.length);
+					}
+				}
+				if (accion === 'guardar') {
+					const t = bloque.querySelector('.sk-pp-texto');
+					const boton = e.target.closest('button');
+					boton.disabled = true;
+					boton.textContent = 'Guardando…';
+					guardarCarpeta({ system_prompt: t.value.trim() }).then(
+						() => {
+							editandoIns = false;
+							repintarTarjetas();
+						},
+						() => {
+							boton.disabled = false;
+							boton.textContent = 'Guardar';
+							aviso = 'No se pudieron guardar las instrucciones';
+						}
+					);
+				}
+				if (accion === 'orden') {
+					recientesPrimero = !recientesPrimero;
+					pintarLista();
+				}
+			});
+			bloque.addEventListener('keydown', (e) => {
+				const arch = e.target.closest?.('[data-arch]');
+				if (arch && (e.key === 'Enter' || e.key === ' ')) {
+					e.preventDefault();
+					abrirVisor(Number(arch.dataset.arch));
+				}
+				if (arch && (e.key === 'Delete' || e.key === 'Backspace')) {
+					e.preventDefault();
+					pedirQuitar(Number(arch.dataset.arch));
+				}
+			});
+			pagina.append(bloque);
+			nuevo = true;
+		}
+		if (nuevo || bloque.dataset.id !== datos.id || bloque.dataset.tel !== String(telefono.matches)) {
+			bloque.dataset.id = datos.id;
+			bloque.dataset.tel = String(telefono.matches);
+			repintarTarjetas();
+			pintarLista();
+		}
+
+		// píldora del composer
+		const caja = document.querySelector('#chat-pane #message-input-container');
+		if (caja) {
+			let chip = caja.querySelector(':scope > .sk-pp-chip');
+			if (!chip) {
+				chip = document.createElement('span');
+				chip.className = 'sk-pp-chip';
+				caja.prepend(chip);
+			}
+			const html = `${SVG(D.proyecto, 15, 2)}<span class="sk-pp-chip-esc">En el proyecto ${esc(nombre)}</span><span class="sk-pp-chip-tel">Nuevo chat en ${esc(nombre)}</span>`;
+			if (chip.dataset.nombre !== nombre) {
+				chip.dataset.nombre = nombre;
+				chip.innerHTML = html;
+			}
+		}
+		raiz.classList.add('sk-pp-lista');
+	};
+
+	const limpiar = () => {
+		raiz.classList.remove('sk-pag-proy', 'sk-pp-lista');
+		document.querySelectorAll('.sk-pp, .sk-pp-chip, .sk-pp-editar, .sk-pp-sub').forEach((e) => e.remove());
+		document.querySelectorAll('.sk-pp-cab').forEach((e) => e.classList.remove('sk-pp-cab'));
+	};
+
+	const revisar = () => {
+		const id = idDeRuta();
+		if (!id) {
+			if (idActual) {
+				idActual = null;
+				datos = null;
+				limpiar();
+			}
+			return;
+		}
+		raiz.classList.add('sk-pag-proy');
+		if (id !== idActual) {
+			idActual = id;
+			datos = null;
+			editandoIns = false;
+			aviso = '';
+			raiz.classList.remove('sk-pp-lista');
+			document.querySelectorAll('.sk-pp, .sk-pp-chip').forEach((e) => e.remove());
+			cargar(id);
+			return;
+		}
+		if (datos) pintar(false);
+	};
+
+	skVigilar(revisar);
+	telefono.addEventListener('change', () => datos && pintar(true));
+	window.addEventListener('sk-avisos', () => datos && pintarLista());
+	window.addEventListener('sk-proy-color', () => datos && pintar(true));
+	revisar();
+})();
+
+/* Editar proyecto (lienzos "Editar proyecto · escritorio" y "· móvil"): la ventana "Editar Carpeta" de Open WebUI se
+ * presenta como "Editar proyecto": ícono del proyecto en su color, Nombre con contador (60), Descripción opcional,
+ * Color (los 12 de la paleta; se guarda al tocar "Guardar cambios"), Imagen de fondo como tarjeta con "Subir", y Acceso
+ * y Avanzado como filas de una lista; abajo Cancelar y "Guardar cambios". En el teléfono sale desde abajo como hoja.
+ * Los controles siguen siendo los de Open WebUI (Acceso, imagen y Avanzado funcionan igual). */
+(() => {
+	const SVG = (d, tam = 18, ancho = 1.9) =>
+		`<svg viewBox="0 0 24 24" width="${tam}" height="${tam}" fill="none" stroke="currentColor" stroke-width="${ancho}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+	const D = {
+		proyecto: '<path d="M4 7a2 2 0 0 1 2-2h3l2 2h7a2 2 0 0 1 2 2v1H4z"/><path d="M4 10h16l-1.5 8a2 2 0 0 1-2 1.6H7.5a2 2 0 0 1-2-1.6z"/>',
+		candado: '<rect x="5" y="11" width="14" height="10" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/>',
+		ajustes: '<path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/>',
+		imagen: '<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-9 8"/>',
+		palomita: '<path d="M5 12l5 5 9-10"/>'
+	};
+	const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+	const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ESC[c]);
+	const headers = () => ({ Authorization: `Bearer ${localStorage.token || ''}` });
+	const textoDe = (el, nuevo) => {
+		if (!el) return;
+		const w = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+		for (let n = w.nextNode(); n; n = w.nextNode()) {
+			if (n.textContent.trim()) {
+				if (n.textContent.trim() !== nuevo) n.textContent = nuevo;
+				return;
+			}
+		}
+	};
+
+	const preparar = (modal) => {
+		modal.classList.add('sk-ep');
+		const caja = modal.firstElementChild;
+		const form = modal.querySelector('form');
+		const titulo0 = caja.querySelector(':scope > div > div:first-child > div:first-child')?.textContent.trim() || '';
+		const esEditar = /^(Editar|Edit)/i.test(titulo0);
+		const id = esEditar ? window.skProyMenuDe?.() || location.pathname.match(/^\/folders\/([^/?#]+)/)?.[1] || null : null;
+		const paleta = window.skProyPaleta || [];
+		const original = id && window.skProyColor ? window.skProyColor(id) : '#7c5cff';
+		let elegido = original;
+		modal.style.setProperty('--sk-ep', elegido);
+		modal.style.setProperty('--sk-ep-tinta', window.skProyTinta ? window.skProyTinta(elegido) : elegido);
+
+		// cabecera
+		const cab = caja.querySelector(':scope > div > div:first-child');
+		cab?.classList.add('sk-ep-cab');
+		const titulo = cab?.firstElementChild;
+		textoDe(titulo, esEditar ? 'Editar proyecto' : 'Nuevo proyecto');
+		if (titulo && !cab.querySelector('.sk-ep-icono')) {
+			const icono = document.createElement('span');
+			icono.className = 'sk-ep-icono';
+			icono.innerHTML = SVG(D.proyecto, 22, 2);
+			titulo.before(icono);
+		}
+
+		// Nombre y Descripción
+		const nombre = form.querySelector('#folder-name');
+		const campoNombre = nombre?.closest('form > div');
+		if (campoNombre) {
+			campoNombre.classList.add('sk-ep-campo');
+			textoDe(campoNombre.querySelector('label'), 'Nombre');
+			nombre.maxLength = 60;
+			nombre.placeholder = 'Nombre del proyecto';
+			const cuenta = document.createElement('span');
+			cuenta.className = 'sk-ep-nota';
+			campoNombre.querySelector('label')?.after(cuenta);
+			const contar = () => (cuenta.textContent = `${nombre.value.length} / 60`);
+			nombre.addEventListener('input', contar);
+			contar();
+			setTimeout(contar, 300); // Open WebUI llena el nombre al abrir
+		}
+		const desc = form.querySelector('#folder-description');
+		const campoDesc = desc?.closest('form > div');
+		if (campoDesc) {
+			campoDesc.classList.add('sk-ep-campo');
+			textoDe(campoDesc.querySelector('label'), 'Descripción');
+			desc.placeholder = '¿De qué trata este proyecto?';
+			const nota = document.createElement('span');
+			nota.className = 'sk-ep-nota';
+			nota.textContent = 'Opcional';
+			campoDesc.querySelector('label')?.after(nota);
+		}
+
+		// Color
+		if (id && paleta.length && campoDesc) {
+			const color = document.createElement('div');
+			color.className = 'sk-ep-campo sk-ep-color';
+			color.innerHTML = `<span class="sk-ep-rotulo" id="sk-ep-color-rotulo">Color</span><span class="sk-ep-nota sk-ep-color-nombre"></span><div class="sk-ep-muestras" role="radiogroup" aria-labelledby="sk-ep-color-rotulo">${paleta
+				.map(([c, n]) => `<button type="button" role="radio" aria-checked="false" aria-label="${n}" title="${n}" data-color="${c}"><span style="background:${c};--sk-m:${c}"></span></button>`)
+				.join('')}</div>`;
+			const pintar = () => {
+				color.querySelector('.sk-ep-color-nombre').textContent = paleta.find((p) => p[0] === elegido)?.[1] || '';
+				color.querySelectorAll('[role=radio]').forEach((r) => {
+					const si = r.dataset.color === elegido;
+					r.setAttribute('aria-checked', String(si));
+					r.tabIndex = si ? 0 : -1;
+					r.firstElementChild.innerHTML = si ? SVG(D.palomita, 15, 3).replace('currentColor', '#fff') : '';
+				});
+				modal.style.setProperty('--sk-ep', elegido);
+				modal.style.setProperty('--sk-ep-tinta', window.skProyTinta ? window.skProyTinta(elegido) : elegido);
+			};
+			color.addEventListener('click', (e) => {
+				const r = e.target.closest('[role=radio]');
+				if (!r) return;
+				elegido = r.dataset.color;
+				pintar();
+			});
+			color.addEventListener('keydown', (e) => {
+				if (!/^Arrow(Left|Right)$/.test(e.key)) return;
+				e.preventDefault();
+				const lista = [...color.querySelectorAll('[role=radio]')];
+				const i = lista.findIndex((r) => r.dataset.color === elegido);
+				const sig = lista[(i + (e.key === 'ArrowRight' ? 1 : -1) + lista.length) % lista.length];
+				elegido = sig.dataset.color;
+				pintar();
+				sig.focus();
+			});
+			campoDesc.after(color);
+			pintar();
+		}
+
+		// Imagen de fondo: tarjeta con miniatura, texto y el botón "Subir" de Open WebUI
+		const etiquetaFondo = form.querySelector('#folder-background-image-label');
+		const filaFondo = etiquetaFondo?.parentElement;
+		if (filaFondo) {
+			filaFondo.classList.add('sk-ep-fondo');
+			const rotulo = document.createElement('div');
+			rotulo.className = 'sk-ep-campo sk-ep-solo-rotulo';
+			rotulo.innerHTML = '<span class="sk-ep-rotulo">Imagen de fondo</span><span class="sk-ep-nota">Opcional</span>';
+			filaFondo.before(rotulo);
+			const info = document.createElement('span');
+			info.className = 'sk-ep-fondo-info';
+			info.innerHTML = `<span class="sk-ep-fondo-mini">${SVG(D.imagen, 20)}</span><span class="sk-ep-fondo-texto"><b>Sin imagen</b><small>Se muestra detrás de los chats del proyecto · JPG o PNG</small></span>`;
+			etiquetaFondo.after(info);
+			const estado = form.querySelector('#folder-background-image-state');
+			const mirar = () => {
+				const hay = estado && !/^(Subir|Upload)$/i.test(estado.textContent.trim());
+				info.querySelector('b').textContent = hay ? 'Imagen elegida' : 'Sin imagen';
+			};
+			if (estado) new MutationObserver(mirar).observe(estado, { childList: true, characterData: true, subtree: true });
+			mirar();
+			if (id) {
+				fetch(`/api/v1/folders/${encodeURIComponent(id)}`, { headers: headers() })
+					.then((r) => (r.ok ? r.json() : null))
+					.then((f) => {
+						const url = f?.meta?.background_image_url;
+						if (url) {
+							info.querySelector('.sk-ep-fondo-mini').style.backgroundImage = `url("${String(url).replace(/"/g, '%22')}")`;
+							info.querySelector('.sk-ep-fondo-mini').classList.add('sk-con-imagen');
+							info.querySelector('b').textContent = 'Imagen elegida';
+						}
+						const n = Array.isArray(f?.access_grants) ? f.access_grants.length : 0;
+						modal.dataset.skAcceso = n ? `Compartido · ${n} ${n === 1 ? 'acceso' : 'accesos'}` : 'Privado · solo tú puedes verlo';
+						const sub = modal.querySelector('.sk-ep-acceso small');
+						if (sub) sub.textContent = modal.dataset.skAcceso;
+					})
+					.catch(() => {});
+			}
+		}
+
+		// Acceso y Avanzado como una lista
+		const avanzado = [...form.querySelectorAll(':scope > div')].find((d) => /^(Avanzado|Advanced)/.test(d.textContent.trim()));
+		if (avanzado) {
+			avanzado.classList.add('sk-ep-avanzado');
+			const boton = avanzado.querySelector('button');
+			if (boton && !boton.querySelector('.sk-ep-fila-icono')) {
+				const icono = document.createElement('span');
+				icono.className = 'sk-ep-fila-icono';
+				icono.innerHTML = SVG(D.ajustes, 19);
+				boton.prepend(icono);
+				const texto = boton.querySelector('div > div');
+				if (texto) {
+					const sub = document.createElement('small');
+					sub.textContent = 'Modelo predeterminado y otras opciones';
+					texto.append(sub);
+				}
+			}
+		}
+		form.querySelector(':scope > hr')?.classList.add('sk-ep-oculto');
+
+		// pie: Cancelar y "Guardar cambios"
+		const guardar = form.querySelector("button[type='submit']");
+		const pie = guardar?.parentElement;
+		if (pie) {
+			pie.classList.add('sk-ep-pie');
+			textoDe(guardar, esEditar ? 'Guardar cambios' : 'Crear proyecto');
+			const cancelar = document.createElement('button');
+			cancelar.type = 'button';
+			cancelar.className = 'sk-ep-cancelar';
+			cancelar.textContent = 'Cancelar';
+			cancelar.addEventListener('click', () => caja.querySelector("button[aria-label='Cerrar'], button[aria-label='Close']")?.click());
+			guardar.before(cancelar);
+		}
+		form.addEventListener(
+			'submit',
+			() => {
+				if (id && elegido !== original) window.skProyElegir?.(id, elegido);
+			},
+			true
+		);
+	};
+
+	const ponerAcceso = (modal) => {
+		const cab = modal.querySelector('.sk-ep-cab');
+		const avanzado = modal.querySelector('.sk-ep-avanzado');
+		const acceso = cab && [...cab.querySelectorAll('button')].find((b) => /^(Acceso|Access)$/.test(b.textContent.trim()));
+		if (!acceso || !avanzado || modal.querySelector('.sk-ep-acceso')) return;
+		acceso.classList.add('sk-ep-acceso-original');
+		const fila = document.createElement('button');
+		fila.type = 'button';
+		fila.className = 'sk-ep-acceso';
+		fila.innerHTML = `<span class="sk-ep-fila-icono">${SVG(D.candado, 19)}</span><span class="sk-ep-fila-texto"><b>Acceso</b><small>${esc(modal.dataset.skAcceso || 'Privado · solo tú puedes verlo')}</small></span><span class="sk-ep-cambiar">Cambiar</span>`;
+		fila.addEventListener('click', () => acceso.click());
+		avanzado.before(fila);
+	};
+
+	skVigilar(() => {
+		for (const modal of document.querySelectorAll('.modal')) {
+			if (!modal.classList.contains('sk-ep') && modal.querySelector('#folder-name') && modal.querySelector('#folder-background-image-input')) preparar(modal);
+			if (modal.classList.contains('sk-ep')) ponerAcceso(modal);
+		}
+	});
+})();
+
+/* Visor de imágenes del chat (lienzos "Visor de imagen · escritorio · imagen que enviaste / generada, con prompt" y
+ * "Visor de imagen · móvil"): el visor de Open WebUI (con el zoom del tema) se completa como el visor de archivos.
+ * Arriba quién la hizo ("Imagen que enviaste" / "Imagen generada por Sakura"), hora, tamaño y el chat; acciones Usar como
+ * referencia (solo las tuyas), Descargar, Copiar e Ir al mensaje. Flechas y tira con las imágenes del chat (← →, o
+ * deslizar en el teléfono). Si la imagen salió de generate_image, "Prompt usado" con Copiar. En el teléfono, barra
+ * Descargar · Compartir · Prompt · Ir al mensaje y puntos. */
+(() => {
+	const SVG = (d, tam = 18, ancho = 1.9) =>
+		`<svg viewBox="0 0 24 24" width="${tam}" height="${tam}" fill="none" stroke="currentColor" stroke-width="${ancho}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+	const D = {
+		descargar: '<path d="M12 4v11M7 10l5 5 5-5M5 20h14"/>',
+		copiar: '<rect x="8" y="8" width="12" height="12" rx="2"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/>',
+		mensaje: '<path d="M4 5h16v11H9l-5 4z"/>',
+		referencia: '<rect x="3" y="5" width="18" height="14" rx="2"/><circle cx="9" cy="10" r="1.6"/><path d="M21 16l-5-5-9 8"/>',
+		compartir: '<path d="M12 15V4M7 9l5-5 5 5M5 14v5a1 1 0 0 1 1 1h12a1 1 0 0 1 1-1v-5"/>',
+		chispa: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>',
+		cerrar: '<path d="M6 6l12 12M18 6L6 18"/>',
+		izq: '<path d="M15 6l-6 6 6 6"/>',
+		der: '<path d="M9 6l6 6-6 6"/>',
+		arriba: '<path d="M6 15l6-6 6 6"/>'
+	};
+	const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+	const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ESC[c]);
+	const headers = () => ({ Authorization: `Bearer ${localStorage.token || ''}` });
+	const telefono = () => matchMedia('(max-width: 767px)').matches;
+	const idArchivo = (src) => String(src || '').match(/\/api\/v1\/files\/([^/?#]+)/)?.[1] || null;
+	const hora = (seg) =>
+		seg ? new Date(seg * 1000).toLocaleTimeString('es-MX', { hour: 'numeric', minute: '2-digit' }).replace(/\s?([ap])\.\s?m\./i, ' $1. m.') : '';
+	const nombres = () => {
+		try {
+			return JSON.parse(localStorage.getItem('sk-modelo-nombres') || '{}');
+		} catch {
+			return {};
+		}
+	};
+
+	let yo = null; // { name }
+	const cache = new Map(); // id del chat -> Promise<Map(idArchivo -> datos)>
+	const datosDelChat = (chatId) => {
+		if (cache.has(chatId)) return cache.get(chatId);
+		const p = fetch(`/api/v1/chats/${encodeURIComponent(chatId)}`, { headers: headers() })
+			.then((r) => (r.ok ? r.json() : null))
+			.then((d) => {
+				const mapa = new Map();
+				for (const m of Object.values(d?.chat?.history?.messages || {})) {
+					const imagenes = (m.files || []).filter((f) => f.type === 'image' && (f.id || idArchivo(f.url)));
+					if (!imagenes.length) continue;
+					const prompts = (Array.isArray(m.output) ? m.output : [])
+						.filter((o) => o.type === 'function_call' && /image/i.test(o.name || ''))
+						.map((o) => {
+							try {
+								return JSON.parse(o.arguments || '{}').prompt || '';
+							} catch {
+								return '';
+							}
+						})
+						.filter(Boolean);
+					imagenes.forEach((f, k) => {
+						mapa.set(f.id || idArchivo(f.url), {
+							msg: m.id,
+							rol: m.role,
+							modelo: m.model || d.chat.models?.[0] || '',
+							t: m.timestamp,
+							prompt: m.role === 'assistant' ? prompts[k] || prompts[prompts.length - 1] || '' : ''
+						});
+					});
+				}
+				return mapa;
+			})
+			.catch(() => new Map());
+		cache.set(chatId, p);
+		setTimeout(() => cache.delete(chatId), 60000);
+		return p;
+	};
+
+	const imagenesDelChat = () => {
+		const vistas = new Set();
+		return [...document.querySelectorAll("#messages-container button img[src*='/api/v1/files/']")].filter((img) => {
+			const id = idArchivo(img.getAttribute('src'));
+			if (!id || vistas.has(id)) return false;
+			vistas.add(id);
+			return true;
+		});
+	};
+
+	const copiarImagen = async (src) => {
+		const blob = await fetch(src).then((r) => r.blob());
+		let png = blob;
+		if (blob.type !== 'image/png') {
+			const bmp = await createImageBitmap(blob);
+			const lienzo = document.createElement('canvas');
+			lienzo.width = bmp.width;
+			lienzo.height = bmp.height;
+			lienzo.getContext('2d').drawImage(bmp, 0, 0);
+			png = await new Promise((r) => lienzo.toBlob(r, 'image/png'));
+		}
+		await navigator.clipboard.write([new ClipboardItem({ 'image/png': png })]);
+	};
+
+	const usarComoReferencia = async (src, nombre) => {
+		const blob = await fetch(src).then((r) => r.blob());
+		const archivo = new File([blob], nombre || 'referencia.png', { type: blob.type || 'image/png' });
+		const caja = document.querySelector('#chat-input');
+		if (!caja) return false;
+		const dt = new DataTransfer();
+		dt.items.add(archivo);
+		caja.focus();
+		caja.dispatchEvent(new ClipboardEvent('paste', { clipboardData: dt, bubbles: true, cancelable: true }));
+		return true;
+	};
+
+	const avisar = (capa, texto) => {
+		let t = capa.querySelector('.sk-vi-aviso');
+		if (!t) {
+			t = document.createElement('div');
+			t.className = 'sk-vi-aviso';
+			t.setAttribute('role', 'status');
+			capa.append(t);
+		}
+		t.textContent = texto;
+		t.classList.add('sk-visible');
+		clearTimeout(t.skT);
+		t.skT = setTimeout(() => t.classList.remove('sk-visible'), 1600);
+	};
+
+	const preparar = (modal) => {
+		const chatId = location.pathname.match(/^\/c\/([^/?#]+)/)?.[1];
+		const img = modal.querySelector(':scope > div > img, img');
+		if (!chatId || !img || !idArchivo(img.getAttribute('src'))) return;
+		modal.classList.add('sk-vi');
+		const lista = imagenesDelChat();
+		let i = Math.max(0, lista.findIndex((x) => idArchivo(x.getAttribute('src')) === idArchivo(img.getAttribute('src'))));
+		let mapa = new Map();
+		let promptAbierto = !telefono();
+		const tituloChat = document.title.replace(/\s*\/\s*Sakura OI Web\s*$/, '').trim();
+		const fotoYo = document.querySelector("#sidebar button[aria-label='Tu cuenta'] img, #sidebar .sk-barra-cuenta img")?.getAttribute('src') || '';
+
+		const capa = document.createElement('div');
+		capa.className = 'sk-vi-capa';
+		capa.innerHTML = `<div class="sk-visor-cab sk-vi-cab"><button type="button" class="sk-visor-x sk-visor-x-tel" data-vi="cerrar" aria-label="Cerrar">${SVG(D.cerrar, 22)}</button><span class="sk-vi-foto"></span><span class="sk-visor-titulo"><b></b><small></small></span>
+			<div class="sk-visor-acciones"><button type="button" class="sk-visor-boton" data-vi="referencia">${SVG(D.referencia, 15)}<span>Usar como referencia</span></button><a class="sk-visor-boton" data-vi="descargar">${SVG(D.descargar, 15)}<span>Descargar</span></a><button type="button" class="sk-visor-boton" data-vi="copiar">${SVG(D.copiar, 15)}<span>Copiar</span></button><button type="button" class="sk-visor-boton" data-vi="ir">${SVG(D.mensaje, 15)}<span>Ir al mensaje</span></button><button type="button" class="sk-visor-x" data-vi="cerrar" aria-label="Cerrar">${SVG(D.cerrar, 18)}</button></div></div>
+			<button type="button" class="sk-visor-flecha sk-visor-ant" data-vi="ant" aria-label="Imagen anterior">${SVG(D.izq, 20)}</button><button type="button" class="sk-visor-flecha sk-visor-sig" data-vi="sig" aria-label="Imagen siguiente">${SVG(D.der, 20)}</button>
+			<div class="sk-visor-pie sk-vi-pie"><div class="sk-vi-prompt"><div class="sk-vi-prompt-cab">${SVG(D.chispa, 14)}<b>Prompt usado</b><button type="button" data-vi="copiar-prompt">${SVG(D.copiar, 13)}<span>Copiar</span></button><button type="button" class="sk-vi-plegar" data-vi="plegar" aria-label="Ocultar el prompt">${SVG(D.arriba, 14)}</button></div><p></p></div>
+			<div class="sk-visor-tira"></div><div class="sk-visor-ayuda"></div><div class="sk-visor-puntos" aria-hidden="true"></div>
+			<div class="sk-visor-barra"><a class="sk-visor-tel-boton" data-vi="descargar">${SVG(D.descargar, 22)}<span>Descargar</span></a><button type="button" class="sk-visor-tel-boton" data-vi="compartir">${SVG(D.compartir, 22)}<span>Compartir</span></button><button type="button" class="sk-visor-tel-boton" data-vi="prompt">${SVG(D.chispa, 22)}<span>Prompt</span></button><button type="button" class="sk-visor-tel-boton" data-vi="ir">${SVG(D.mensaje, 22)}<span>Ir al mensaje</span></button></div></div>`;
+		modal.append(capa);
+
+		const actual = () => lista[i]?.getAttribute('src') || img.getAttribute('src');
+		const pintar = () => {
+			const src = actual();
+			const id = idArchivo(src);
+			const dato = mapa.get(id) || {};
+			const tuya = dato.rol === 'user' || (!dato.rol && lista[i]?.closest('.user-message'));
+			const modelo = dato.modelo || '';
+			const nombreModelo = nombres()[modelo] || (modelo ? modelo.charAt(0).toUpperCase() + modelo.slice(1) : 'el modelo');
+			if (img.getAttribute('src') !== src) {
+				img.style.transform = '';
+				img.setAttribute('src', src);
+			}
+			const foto = tuya ? fotoYo : modelo ? `/api/v1/models/model/profile/image?id=${encodeURIComponent(modelo)}` : '';
+			capa.querySelector('.sk-vi-foto').innerHTML = foto ? `<img alt="" src="${esc(foto)}">` : '';
+			const tel = telefono();
+			capa.querySelector('.sk-visor-titulo b').textContent = tuya ? (tel ? 'Enviada por ti' : 'Imagen que enviaste') : tel ? `Generada por ${nombreModelo}` : `Imagen generada por ${nombreModelo}`;
+			const dim = img.naturalWidth ? `${img.naturalWidth} × ${img.naturalHeight}` : '';
+			capa.querySelector('.sk-visor-titulo small').textContent = tel
+				? [`${i + 1} de ${lista.length || 1}`, hora(dato.t)].filter(Boolean).join(' · ')
+				: [tuya ? yo?.name || 'Tú' : nombreModelo, hora(dato.t), dim, tituloChat ? `«${tituloChat}»` : ''].filter(Boolean).join(' · ');
+			capa.querySelectorAll("[data-vi='descargar']").forEach((a) => {
+				a.href = `${src.split('?')[0]}?attachment=true`;
+				a.setAttribute('download', '');
+			});
+			capa.querySelector("[data-vi='referencia']").hidden = !tuya || !document.querySelector('#chat-input');
+			const prompt = dato.prompt || '';
+			capa.classList.toggle('sk-vi-con-prompt', Boolean(prompt));
+			capa.classList.toggle('sk-vi-prompt-abierto', Boolean(prompt) && promptAbierto);
+			capa.querySelector('.sk-vi-prompt p').textContent = prompt;
+			capa.querySelector("[data-vi='prompt']").classList.toggle('sk-activo', Boolean(prompt) && promptAbierto);
+			capa.querySelector('.sk-visor-tira').innerHTML = lista
+				.map((x, n) => `<button type="button" class="sk-visor-t${n === i ? ' sk-activa' : ''}" data-n="${n}" aria-label="Imagen ${n + 1}"${n === i ? ' aria-current="true"' : ''}><span class="sk-va-mini"><img alt="" src="${esc(x.getAttribute('src'))}"></span></button>`)
+				.join('');
+			const n = lista.length || 1;
+			capa.querySelector('.sk-visor-ayuda').textContent = `${i + 1} de ${n} ${n === 1 ? 'imagen' : 'imágenes'} de este chat${n > 1 ? ' · usa ← → para cambiar' : ''}`;
+			capa.querySelector('.sk-visor-puntos').innerHTML = lista.map((_, k) => `<span${k === i ? ' class="sk-activo"' : ''}></span>`).join('');
+			capa.classList.toggle('sk-visor-uno', lista.length < 2);
+		};
+		img.addEventListener('load', pintar);
+		const ir = (paso) => {
+			if (lista.length < 2) return;
+			i = (i + paso + lista.length) % lista.length;
+			pintar();
+		};
+		const cerrar = () => modal.querySelector("button[aria-label='Cerrar'], button[aria-label='Close']")?.click();
+
+		capa.addEventListener('click', async (e) => {
+			const b = e.target.closest('[data-vi], .sk-visor-t');
+			if (!b) return;
+			e.stopPropagation();
+			const v = b.dataset.vi;
+			if (b.classList.contains('sk-visor-t')) {
+				i = Number(b.dataset.n);
+				pintar();
+			}
+			if (v === 'cerrar') cerrar();
+			if (v === 'ant') ir(-1);
+			if (v === 'sig') ir(1);
+			if (v === 'plegar' || v === 'prompt') {
+				promptAbierto = !promptAbierto;
+				pintar();
+			}
+			if (v === 'copiar') {
+				try {
+					await copiarImagen(actual());
+					avisar(capa, 'Imagen copiada');
+				} catch {
+					avisar(capa, 'No se pudo copiar la imagen');
+				}
+			}
+			if (v === 'copiar-prompt') {
+				try {
+					await navigator.clipboard.writeText(mapa.get(idArchivo(actual()))?.prompt || '');
+					avisar(capa, 'Prompt copiado');
+				} catch {
+					avisar(capa, 'No se pudo copiar');
+				}
+			}
+			if (v === 'referencia') {
+				const ok = await usarComoReferencia(actual(), 'referencia.png').catch(() => false);
+				if (ok) cerrar();
+				else avisar(capa, 'No se pudo adjuntar la imagen');
+			}
+			if (v === 'compartir') {
+				try {
+					const blob = await fetch(actual()).then((r) => r.blob());
+					const file = new File([blob], 'imagen.png', { type: blob.type });
+					if (navigator.canShare?.({ files: [file] })) await navigator.share({ files: [file] });
+					else window.open(actual(), '_blank', 'noopener');
+				} catch {}
+			}
+			if (v === 'ir') {
+				const destino = lista[i]?.closest("[id^='message-']");
+				cerrar();
+				if (destino) {
+					setTimeout(() => {
+						destino.scrollIntoView({ behavior: 'smooth', block: 'center' });
+						destino.classList.add('sk-vi-destacado');
+						setTimeout(() => destino.classList.remove('sk-vi-destacado'), 1800);
+					}, 120);
+				}
+			}
+		});
+
+		const tecla = (e) => {
+			if (!modal.isConnected) return document.removeEventListener('keydown', tecla, true);
+			if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+				e.preventDefault();
+				e.stopPropagation();
+				ir(e.key === 'ArrowLeft' ? -1 : 1);
+			}
+		};
+		document.addEventListener('keydown', tecla, true);
+		// deslizar (solo sin zoom)
+		let x0 = null;
+		modal.addEventListener('touchstart', (e) => (x0 = e.touches.length === 1 ? e.touches[0].clientX : null), { passive: true, capture: true });
+		modal.addEventListener(
+			'touchend',
+			(e) => {
+				if (x0 == null) return;
+				const dx = e.changedTouches[0].clientX - x0;
+				x0 = null;
+				const zoom = /scale\((?!1\))/.test(img.style.transform || '') || /matrix\((?!1,)/.test(img.style.transform || '');
+				if (!zoom && Math.abs(dx) > 60) ir(dx < 0 ? 1 : -1);
+			},
+			{ passive: true, capture: true }
+		);
+
+		pintar();
+		datosDelChat(chatId).then((m) => {
+			mapa = m;
+			if (modal.isConnected) pintar();
+		});
+		if (!yo) {
+			fetch('/api/v1/auths/', { headers: headers() })
+				.then((r) => (r.ok ? r.json() : null))
+				.then((u) => {
+					yo = { name: u?.name || 'Tú' };
+					if (modal.isConnected) pintar();
+				})
+				.catch(() => {});
+		}
+	};
+
+	skVigilar(() => {
+		for (const modal of document.querySelectorAll(".modal[role='dialog'][aria-modal='true'].bg-black:not(.sk-vi)")) preparar(modal);
+	});
+})();
+
+/* Vista previa al pasar el cursor (lienzo "Vista previa al pasar el cursor · chat y proyecto"), solo con ratón:
+ *  - Chat: ventanita de vidrio de 460 × 600 a 8 px de la fila con flechita; cabecera con el avatar del modelo, el
+ *    título y "Yoko · 80 mensajes · 4 imágenes" (y la chincheta si está fijado); la conversación con globos como el
+ *    chat real (tuyos en azul a la derecha, del modelo a la izquierda con nombre, hora e imágenes), abierta en el último
+ *    mensaje y con desplazamiento; pie "Desplázate para leer todo el chat · Clic para abrir ↵".
+ *  - Proyecto: tarjeta de 330 px con el ícono en su color, "Proyecto · actualizado el …", Chats, Instrucciones,
+ *    Archivos y los chats recientes; pie "Opciones en «⋯» · Clic para abrir ↵".
+ * Aparece a los 500 ms sobre la fila (o al enfocarla con Tab), sigue abierta con el cursor dentro y se cierra 150 ms
+ * después de salir; Esc la cierra. Reemplaza la vista previa de Open WebUI en la barra. */
+(() => {
+	const SVG = (d, tam = 16, ancho = 1.9) =>
+		`<svg viewBox="0 0 24 24" width="${tam}" height="${tam}" fill="none" stroke="currentColor" stroke-width="${ancho}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${d}</svg>`;
+	const D = {
+		proyecto: '<path d="M4 7a2 2 0 0 1 2-2h3l2 2h7a2 2 0 0 1 2 2v1H4z"/><path d="M4 10h16l-1.5 8a2 2 0 0 1-2 1.6H7.5a2 2 0 0 1-2-1.6z"/>',
+		chats: '<path d="M4 5h16v11H9l-5 4z"/>',
+		chispa: '<path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/>',
+		archivo: '<path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5"/>',
+		chincheta: '<path d="M9 4h6l-1 6 3 3H7l3-3zM12 13v7"/>'
+	};
+	const ESC = { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' };
+	const esc = (t) => String(t ?? '').replace(/[&<>"']/g, (c) => ESC[c]);
+	const headers = () => ({ Authorization: `Bearer ${localStorage.token || ''}` });
+	const raton = matchMedia('(hover: hover) and (pointer: fine) and (min-width: 768px)');
+	const leer = (k) => {
+		try {
+			return JSON.parse(localStorage.getItem(k) || '{}');
+		} catch {
+			return {};
+		}
+	};
+	const hora = (seg) =>
+		seg ? new Date(seg * 1000).toLocaleTimeString('es-MX', { hour: 'numeric', minute: '2-digit' }).replace(/\s?([ap])\.\s?m\./i, ' $1. m.') : '';
+	const dia = (seg) => {
+		if (!seg) return '';
+		const f = new Date(seg * 1000);
+		const hoy = new Date();
+		hoy.setHours(0, 0, 0, 0);
+		const n = Math.round((hoy - new Date(f).setHours(0, 0, 0, 0)) / 86400000);
+		if (n <= 0) return 'hoy';
+		if (n === 1) return 'ayer';
+		if (n < 7) return `el ${f.toLocaleDateString('es', { weekday: 'long' })}`;
+		return `el ${f.toLocaleDateString('es', { day: 'numeric', month: 'long' })}`;
+	};
+	const corto = (seg) => {
+		if (!seg) return '';
+		const f = new Date(seg * 1000);
+		const hoy = new Date();
+		hoy.setHours(0, 0, 0, 0);
+		const n = Math.round((hoy - new Date(f).setHours(0, 0, 0, 0)) / 86400000);
+		if (n <= 0) return hora(seg);
+		if (n === 1) return 'ayer';
+		if (n < 7) return f.toLocaleDateString('es', { weekday: 'short' }).replace('.', '');
+		return f.toLocaleDateString('es', { day: 'numeric', month: 'short' }).replace('.', '');
+	};
+	const pedir = (url) =>
+		fetch(url, { headers: headers() })
+			.then((r) => (r.ok ? r.json() : null))
+			.catch(() => null);
+	const cache = new Map(); // url -> { t, p }
+	const pedirCache = (url, vida = 30000) => {
+		const c = cache.get(url);
+		if (c && Date.now() - c.t < vida) return c.p;
+		const p = pedir(url);
+		cache.set(url, { t: Date.now(), p });
+		return p;
+	};
+
+	// markdown mínimo para los globos
+	const md = (texto) => {
+		let t = esc(
+			String(texto || '')
+				.replace(/<details[\s\S]*?<\/details>/g, '')
+				.replace(/!\[[^\]]*\]\([^)]*\)/g, '')
+				.trim()
+		).slice(0, 1600);
+		t = t
+			.replace(/^#{1,6}\s*(.+)$/gm, '<b>$1</b>')
+			.replace(/\*\*(.+?)\*\*/g, '<b>$1</b>')
+			.replace(/`([^`]+)`/g, '<code>$1</code>')
+			.replace(/^\s*---+\s*$/gm, '')
+			.replace(/\n{3,}/g, '\n\n')
+			.replace(/\n/g, '<br>');
+		return t;
+	};
+
+	let tarjeta = null;
+	let fila = null;
+	let tAbrir = 0;
+	let tCerrar = 0;
+	let pedido = 0;
+
+	const cerrar = () => {
+		clearTimeout(tAbrir);
+		clearTimeout(tCerrar);
+		tarjeta?.remove();
+		tarjeta = null;
+		fila = null;
+		document.documentElement.classList.remove('sk-previa-on');
+	};
+
+	const colocar = (el, caja, altoMax) => {
+		const barra = document.getElementById('sidebar')?.getBoundingClientRect();
+		const izq = Math.round((barra ? barra.right : caja.right) + 10);
+		el.style.left = `${izq}px`;
+		const alto = Math.min(el.offsetHeight || altoMax, innerHeight - 24);
+		const centro = caja.top + caja.height / 2;
+		let arriba = Math.round(centro - Math.min(210, alto / 2));
+		arriba = Math.max(12, Math.min(arriba, innerHeight - 12 - alto));
+		el.style.top = `${arriba}px`;
+		el.style.setProperty('--sk-flecha', `${Math.round(centro - arriba - 6)}px`);
+	};
+
+	const nueva = (clase) => {
+		cerrar();
+		const el = document.createElement('div');
+		el.className = `sk-previa ${clase}`;
+		el.addEventListener('mouseenter', () => clearTimeout(tCerrar));
+		el.addEventListener('mouseleave', programarCierre);
+		document.body.append(el);
+		document.documentElement.classList.add('sk-previa-on');
+		tarjeta = el;
+		return el;
+	};
+
+	const programarCierre = () => {
+		clearTimeout(tCerrar);
+		tCerrar = setTimeout(cerrar, 150);
+	};
+
+	// ---------- chat ----------
+	const mostrarChat = async (el, enlace) => {
+		const id = enlace.getAttribute('href').slice(3);
+		const caja = el.getBoundingClientRect();
+		const p = nueva('sk-previa-chat');
+		p.setAttribute('role', 'dialog');
+		p.innerHTML = '<div class="sk-previa-carga">Cargando…</div>';
+		p.addEventListener('click', (e) => {
+			if (e.target.closest('a, button')) return;
+			cerrar();
+			enlace.click();
+		});
+		colocar(p, caja, 600);
+		const n = ++pedido;
+		const d = await pedirCache(`/api/v1/chats/${encodeURIComponent(id)}`);
+		if (n !== pedido || !tarjeta) return;
+		const chat = d?.chat;
+		if (!chat) {
+			p.innerHTML = '<div class="sk-previa-carga">No se pudo cargar el chat</div>';
+			return;
+		}
+		const msgs = chat.history?.messages || {};
+		const hilo = [];
+		for (let m = msgs[chat.history?.currentId]; m && hilo.length < 400; m = msgs[m.parentId]) hilo.unshift(m);
+		const nombres = leer('sk-modelo-nombres');
+		const modelo = chat.models?.[0] || '';
+		const nombreDe = (mid) => nombres[mid] || (mid ? mid.charAt(0).toUpperCase() + mid.slice(1) : 'Modelo');
+		const colorDe = (mid) => {
+			const c = window.skColorModelo?.(mid);
+			return c ? `hsl(${c.oscuro || c.m})` : '#b8361f';
+		};
+		const imagenes = hilo.reduce((s, m) => s + (m.files || []).filter((f) => f.type === 'image').length, 0);
+		const subtitulo = [nombreDe(modelo), `${hilo.length} ${hilo.length === 1 ? 'mensaje' : 'mensajes'}`, imagenes ? `${imagenes} ${imagenes === 1 ? 'imagen' : 'imágenes'}` : ''].filter(Boolean).join(' · ');
+		p.setAttribute('aria-label', `Vista previa de ${chat.title || 'chat'}`);
+		const globos = hilo
+			.slice(-40)
+			.map((m) => {
+				const fotos = (m.files || [])
+					.filter((f) => f.type === 'image' && f.url)
+					.map((f) => `<img alt="" loading="lazy" src="${esc(f.url)}">`)
+					.join('');
+				const texto = md(m.content);
+				if (!texto && !fotos) return '';
+				const cuerpo = `${texto}${fotos ? `<span class="sk-previa-fotos">${fotos}</span>` : ''}`;
+				if (m.role === 'user') return `<div class="sk-previa-yo"><span class="sk-previa-quien">Tú · ${esc(hora(m.timestamp))}</span><div class="sk-previa-globo">${cuerpo}</div></div>`;
+				const mid = m.model || modelo;
+				return `<div class="sk-previa-ia"><img class="sk-previa-av" alt="" src="/api/v1/models/model/profile/image?id=${encodeURIComponent(mid)}"><div><span class="sk-previa-quien"><b style="color:${colorDe(mid)}">${esc(nombreDe(mid))}</b> · ${esc(hora(m.timestamp))}</span><div class="sk-previa-globo">${cuerpo}</div></div></div>`;
+			})
+			.join('');
+		p.innerHTML = `<span class="sk-previa-flecha" aria-hidden="true"></span>
+			<div class="sk-previa-cab"><img class="sk-previa-foto" alt="" src="/api/v1/models/model/profile/image?id=${encodeURIComponent(modelo)}"><span class="sk-previa-titulo"><b>${esc(chat.title || 'Chat')}</b><small>${esc(subtitulo)}</small></span>${d.pinned ? `<span class="sk-previa-fijado" title="Fijado">${SVG(D.chincheta, 15)}</span>` : ''}</div>
+			<div class="sk-previa-cuerpo">${globos || '<p class="sk-previa-carga">Aún no hay mensajes</p>'}</div>
+			<div class="sk-previa-pie"><span>Desplázate para leer todo el chat</span><span>Clic para abrir <kbd>↵</kbd></span></div>`;
+		const cuerpo = p.querySelector('.sk-previa-cuerpo');
+		cuerpo.scrollTop = cuerpo.scrollHeight;
+		cuerpo.querySelectorAll('img').forEach((i) => i.addEventListener('load', () => (cuerpo.scrollTop = cuerpo.scrollHeight), { once: true }));
+		colocar(p, caja, 600);
+	};
+
+	// ---------- proyecto ----------
+	const mostrarProyecto = async (el) => {
+		const id = el.id.slice(7, -7);
+		const caja = el.getBoundingClientRect();
+		const p = nueva('sk-previa-proy');
+		p.setAttribute('role', 'tooltip');
+		const color = window.skProyColor ? window.skProyColor(id) : '#7c5cff';
+		p.style.setProperty('--sk-proy', color);
+		p.style.setProperty('--sk-proy-tinta', window.skProyTinta ? window.skProyTinta(color) : color);
+		p.innerHTML = '<div class="sk-previa-carga">Cargando…</div>';
+		p.addEventListener('click', () => {
+			cerrar();
+			el.querySelector('a')?.click();
+		});
+		colocar(p, caja, 300);
+		const n = ++pedido;
+		const [carpeta, chats] = await Promise.all([pedirCache(`/api/v1/folders/${encodeURIComponent(id)}`), pedirCache(`/api/v1/chats/folder/${encodeURIComponent(id)}/list?page=1`)]);
+		if (n !== pedido || !tarjeta) return;
+		const lista = Array.isArray(chats) ? [...chats].sort((a, b) => b.updated_at - a.updated_at) : [];
+		const ultimo = Math.max(0, ...lista.map((c) => c.updated_at || 0)) || carpeta?.updated_at;
+		const prompt = String(carpeta?.data?.system_prompt || '').trim();
+		const archivos = (carpeta?.data?.files || []).length;
+		const chatModelo = leer('sk-chat-modelo');
+		const filas = [
+			[D.chats, 'Chats', String(lista.length)],
+			[D.chispa, 'Instrucciones', prompt ? 'Con instrucciones' : 'Sin instrucciones'],
+			[D.archivo, 'Archivos', archivos ? `${archivos} ${archivos === 1 ? 'archivo' : 'archivos'}` : 'Ninguno']
+		];
+		p.innerHTML = `<span class="sk-previa-flecha" aria-hidden="true"></span><div class="sk-previa-proy-cuerpo">
+			<div class="sk-previa-proy-cab"><span class="sk-previa-proy-icono">${SVG(D.proyecto, 20, 2)}</span><span><b>${esc(carpeta?.name || '')}</b><small>Proyecto · actualizado ${esc(dia(ultimo))}</small></span></div>
+			<div class="sk-previa-linea"></div>
+			${filas.map(([d, t, v]) => `<div class="sk-previa-dato">${SVG(d, 16)}<span>${t}</span><small>${esc(v)}</small></div>`).join('')}
+			${lista.length ? `<div class="sk-previa-linea"></div><div class="sk-previa-rotulo">Chats recientes</div>${lista
+				.slice(0, 3)
+				.map((c) => {
+					const m = chatModelo[c.id];
+					return `<div class="sk-previa-reciente">${m ? `<img alt="" src="/api/v1/models/model/profile/image?id=${encodeURIComponent(m)}">` : `<span class="sk-previa-sinfoto">${SVG(D.chats, 13)}</span>`}<span>${esc(c.title)}</span><small>${esc(corto(c.updated_at))}</small></div>`;
+				})
+				.join('')}` : ''}
+			</div><div class="sk-previa-pie"><span>Opciones en «⋯»</span><span>Clic para abrir <kbd>↵</kbd></span></div>`;
+		colocar(p, caja, 300);
+	};
+
+	const objetivo = (t) => {
+		if (!t?.closest || !raton.matches) return null;
+		const s = document.getElementById('sidebar');
+		if (!s || !s.contains(t) || s.getBoundingClientRect().width < 200) return null;
+		if (t.closest('button[aria-label], .hover-reveal, [role="menu"], input')) return null;
+		const chat = t.closest('#sidebar-chat-item');
+		if (chat && chat.querySelector("a[href^='/c/']")) return { el: chat, tipo: 'chat' };
+		const proy = t.closest("div[id^='folder-'][id$='-button']");
+		if (proy) return { el: proy, tipo: 'proy' };
+		return null;
+	};
+
+	const programar = (o) => {
+		clearTimeout(tCerrar);
+		if (fila === o.el && tarjeta) return;
+		clearTimeout(tAbrir);
+		tAbrir = setTimeout(() => {
+			if (!o.el.isConnected) return;
+			fila = o.el;
+			if (o.tipo === 'chat') mostrarChat(o.el, o.el.querySelector("a[href^='/c/']"));
+			else mostrarProyecto(o.el);
+		}, 500);
+	};
+
+	document.addEventListener('mouseover', (e) => {
+		const o = objetivo(e.target);
+		if (o) programar(o);
+		else if (!tarjeta?.contains(e.target)) {
+			clearTimeout(tAbrir);
+			if (tarjeta) programarCierre();
+		}
+	});
+	document.addEventListener('focusin', (e) => {
+		const o = objetivo(e.target);
+		if (o && e.target.matches(':focus-visible')) programar(o);
+	});
+	document.addEventListener(
+		'keydown',
+		(e) => {
+			if (e.key === 'Escape' && tarjeta) {
+				e.stopPropagation();
+				cerrar();
+			}
+		},
+		true
+	);
+	document.addEventListener('pointerdown', (e) => {
+		if (tarjeta && !tarjeta.contains(e.target)) cerrar();
+	}, true);
+	window.addEventListener('blur', cerrar);
+	// se cierra al desplazar la barra o la página (no por el desplazamiento interno de otras piezas, como la vista
+	// previa oculta de Open WebUI)
+	document.addEventListener(
+		'scroll',
+		(e) => {
+			if (!tarjeta || tarjeta.contains(e.target)) return;
+			if (e.target === document || document.getElementById('sidebar')?.contains(e.target)) cerrar();
+		},
+		true
+	);
+
+	// la vista previa de Open WebUI en la barra se oculta: la del tema la reemplaza
+	skVigilar(() => {
+		if (!raton.matches) return;
+		for (const c of document.querySelectorAll('[data-link-preview-content]:not(.sk-previa-vieja)')) {
+			const abierto = document.querySelector('#sidebar [data-state="open"][data-link-preview-trigger], #sidebar [data-link-preview-trigger][data-state="open"]');
+			if (abierto || document.documentElement.classList.contains('sk-previa-on') || document.querySelector('#sidebar #sidebar-chat-item:hover')) c.classList.add('sk-previa-vieja');
+		}
+	});
 })();

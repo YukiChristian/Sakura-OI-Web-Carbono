@@ -1,6 +1,6 @@
 # Carbono para Open WebUI
 
-**Versión 0.95.3** · probado con Open WebUI **0.13.3**
+**Versión 0.95.4** · probado con Open WebUI **0.13.3**
 
 Carbono es el tema recomendado para [Sakura OI Web](https://github.com/YukiChristian/Sakura-OI-Web). Deja la interfaz de Open WebUI neutra (superficies en tonos carbón y zinc, acción principal en negro), con más jerarquía en el texto, tipografía Atkinson Hyperlegible, menús de vidrio esmerilado y un composer pensado para el teléfono.
 
@@ -51,6 +51,18 @@ La guía de estilo (principios, colores, tipografía y componentes) está en [do
 - **Rendimiento:** los selectores evitan buscar por el atributo `class` dentro de `:has()`, que obliga al navegador a recalcular toda la página en cada hover.
 
 ## Cambios
+
+### 0.95.4
+
+- **Proyectos:** las carpetas se llaman Proyectos y cada una es una tarjeta con su ícono de color, «N chats», ⋯ y la flecha; abierta, agrupa sus chats y termina en «Nuevo chat en …». Igual en la barra (teléfono y escritorio) y en el panel de chats de la barra comprimida.
+- **Color del proyecto:** en el menú ⋯ (y en Editar proyecto), una fila de 12 colores en el orden del círculo cromático; el cambio se ve al instante en la barra, el panel y la página del proyecto, y se guarda en la carpeta, así que es el mismo en todos tus dispositivos.
+- **Página del proyecto:** encabezado con el nombre, «Proyecto · N chats · actualizado …», Editar y ⋯; tarjetas Instrucciones (se escriben ahí mismo) y Archivos (Subir abre el selector y los agrega al proyecto); los chats del proyecto como tarjetas con avatar, última respuesta y punto de respuesta nueva, con orden por fecha; el cuadro de escribir abajo con «En el proyecto …».
+- **Archivos del proyecto:** miniaturas (imagen, video con duración o documento con su tipo), visor a pantalla completa con Descargar, Abrir en pestaña (Compartir en el teléfono) y Eliminar, flechas y tira de miniaturas (← → o deslizar). Eliminar siempre pide confirmación y solo quita el archivo del proyecto.
+- **Editar proyecto:** la ventana de Open WebUI con el diseño nuevo: Nombre con contador, Descripción, Color, Imagen de fondo como tarjeta, Acceso y Avanzado en una lista, Cancelar y «Guardar cambios»; en el teléfono sale desde abajo como hoja.
+- **Vista previa al pasar el cursor (escritorio):** sobre un chat, una ventanita con la conversación en globos (con imágenes) que se puede desplazar; sobre un proyecto, una tarjeta con sus chats, instrucciones, archivos y chats recientes. Aparece a los 500 ms y reemplaza la de Open WebUI.
+- **Visor de imágenes del chat:** igual que el de archivos: quién hizo la imagen, hora, tamaño y chat; Usar como referencia (en tus imágenes), Descargar, Copiar e Ir al mensaje; tira con las imágenes del chat y «Prompt usado» en las generadas. En el teléfono, barra Descargar · Compartir · Prompt · Ir al mensaje.
+- **Selector de modelo:** la descripción de cada modelo debajo del nombre (o «Local» / «Conexión externa») y los modelos sin foto con su inicial en un círculo de color.
+- **Teléfono:** la barra lateral vuelve a deslizarse al abrirla; tocar el chat donde ya estás (o «Nuevo chat» en un chat nuevo) solo cierra la barra, sin volver a cargar la bienvenida ni los mensajes; íconos de acciones de 18 px y la gráfica de métricas igual que los demás; el texto de la respuesta a 16 px del nombre.
 
 ### 0.95.3
 
